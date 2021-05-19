@@ -1,45 +1,40 @@
 /*
- * @(#)RuntimeException.java	1.2 95/08/07  
+ * @(#)RuntimeException.java	1.8 01/11/29
  *
- * Copyright (c) 1995 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang;
 
 /**
- * An exception that can reasonably occur during the execution of a Java
- * program by the Virtual machine.<p>
+ * <code>RuntimeException</code> is the superclass of those 
+ * exceptions that can be thrown during the normal operation of the 
+ * Java Virtual Machine. 
+ * <p>
+ * A method is not required to declare in its <code>throws</code> 
+ * clause any subclasses of <code>RuntimeException</code> that might 
+ * be thrown during the execution of the method but not caught. 
  *
- * @version 	1.2, 08/07/95
- * @author      Frank Yellin
+ *
+ * @author  Frank Yellin
+ * @version 1.8, 11/29/01
+ * @since   JDK1.0
  */
 public
 class RuntimeException extends Exception {
     /**
-     * Constructs a RuntimeException with no detail message.
-     * A detail message is a String that describes this particular exception.
+     * Constructs a <code>RuntimeException</code> with no detail  message.
      */
     public RuntimeException() {
 	super();
     }
 
     /**
-     * Constructs a RuntimeException with the specified detail message.
-     * A detail message is a String that describes this particular exception.
-     * @param s the detail message
+     * Constructs a <code>RuntimeException</code> with the specified 
+     * detail message. 
+     *
+     * @param   s   the detail message.
      */
     public RuntimeException(String s) {
 	super(s);

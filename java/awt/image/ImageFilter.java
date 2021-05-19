@@ -1,20 +1,8 @@
 /*
- * @(#)ImageFilter.java	1.14 95/12/14 Jim Graham
+ * @(#)ImageFilter.java	1.21 01/11/29
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.awt.image;
@@ -34,7 +22,7 @@ import java.util.Hashtable;
  * @see FilteredImageSource
  * @see ImageConsumer
  *
- * @version	1.14 12/14/95
+ * @version	1.21 11/29/01
  * @author 	Jim Graham
  */
 public class ImageFilter implements ImageConsumer, Cloneable {
@@ -75,6 +63,7 @@ public class ImageFilter implements ImageConsumer, Cloneable {
      * property indicating the stream of filters it has been run through.
      */
     public void setProperties(Hashtable props) {
+	props = (Hashtable) props.clone();
 	Object o = props.get("filters");
 	if (o == null) {
 	    props.put("filters", toString());
@@ -149,7 +138,8 @@ public class ImageFilter implements ImageConsumer, Cloneable {
      * simply resend the pixels in TDLR order as specified in the
      * ImageProducer API.  <li>If the filter simply returns from this
      * method then the request will be ignored and no resend will
-     * occur.  </ol> @see ImageProducer#requestTopDownLeftRightResend
+     * occur.  </ol> 
+     * @see ImageProducer#requestTopDownLeftRightResend
      * @param ip The ImageProducer that is feeding this instance of
      * the filter - also the ImageProducer that the request should be
      * forwarded to if necessary.

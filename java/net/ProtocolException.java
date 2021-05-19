@@ -1,20 +1,8 @@
 /*
- * @(#)ProtocolException.java	1.6 95/08/16 Chris Warth
+ * @(#)ProtocolException.java	1.12 01/11/29
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.net;
@@ -22,29 +10,27 @@ package java.net;
 import java.io.IOException;
 
 /**
- * Signals when connect gets an EPROTO.  This exception is specifically
- * caught in class Socket.
- * @version 1.6, 08/16/95
- * @author Chris Warth
+ * Thrown to indicate that there is an error in the underlying 
+ * protocol, such as a TCP error. 
+ *
+ * @author  Chris Warth
+ * @version 1.12, 11/29/01
+ * @since   JDK1.0
  */
 public 
 class ProtocolException extends IOException { 
-
     /**
-     * Constructs a new ProtocolException with the specified detail 
-     * message.
-     * A detail message is a String that gives a specific description
-     * of this error. 
-     * @param host the detail message
+     * Constructs a new <code>ProtocolException</code> with the 
+     * specified detail message. 
+     *
+     * @param   host   the detail message.
      */
     public ProtocolException(String host) {
 	super(host);
     }
     
     /**
-     * Constructs a new ProtocolException with no detail message.
-     * A detail message is a String that gives a specific description
-     * of this error.  
+     * Constructs a new <code>ProtocolException</code> with no detail message.
      */
     public ProtocolException() {
     }

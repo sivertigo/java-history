@@ -1,81 +1,91 @@
 /*
- * @(#)Boolean.java	1.18 95/11/13  
+ * @(#)Boolean.java	1.33 01/11/29
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang;
 
 /**
- * The Boolean class provides an object wrapper for Boolean data values, and 
- * serves as a place for boolean-oriented operations.
- * A wrapper is useful because most of Java's utility classes require the use
- * of objects.  Since booleans are not objects in Java, they need to be
- * "wrapped" in a Boolean instance. 
- * @version 	1.18, 11/13/95
- * @author	Arthur van Hoff
+ * The Boolean class wraps a value of the primitive type 
+ * <code>boolean</code> in an object. An object of type 
+ * <code>Boolean</code> contains a single field whose type is 
+ * <code>boolean</code>. 
+ * <p>
+ * In addition, this class provides many methods for 
+ * converting a <code>boolean</code> to a <code>String</code> and a 
+ * <code>String</code> to a <code>boolean</code>, as well as other 
+ * constants and methods useful when dealing with a 
+ * <code>boolean</code>. 
+ *
+ * @author  Arthur van Hoff
+ * @version 1.29, 07/23/98
+ * @since   JDK1.0
  */
 public final
-class Boolean {
+class Boolean implements java.io.Serializable {
     /** 
-     *  Assigns this Boolean to be true.
+     * The <code>Boolean</code> object corresponding to the primitive 
+     * value <code>true</code>. 
      */
     public static final Boolean TRUE = new Boolean(true);
+
     /** 
-     * Assigns this Boolean to be false.
+     * The <code>Boolean</code> object corresponding to the primitive 
+     * value <code>false</code>. 
      */
     public static final Boolean FALSE = new Boolean(false);
 
     /**
-     * The minimum value a Charater can have.  The lowest minimum value an
-     * Integer can have is '\u0000'.
+     * The Class object representing the primitive type boolean.
+     *
+     * @since   JDK1.1
      */
-    public static final char   MIN_VALUE = '\u0000';
+    public static final Class	TYPE = Class.getPrimitiveClass("boolean");
 
     /**
-     * The maximum value a Character can have.  The greatest maximum value an
-     * Integer can have is '\uffff'.
-     */
-    public static final char   MAX_VALUE = '\uffff';
-    
-    /**
      * The value of the Boolean.
+     *
+     * @serial
      */
     private boolean value;
 
+    /** use serialVersionUID from JDK 1.0.2 for interoperability */
+    private static final long serialVersionUID = -3665804199014368530L;
+
     /**
-     * Constructs a Boolean object initialized to the specified boolean 
-     * value.
-     * @param value the value of the boolean
+     * Allocates a <code>Boolean</code> object representing the 
+     * <code>value</code> argument. 
+     *
+     * @param   value   the value of the <code>Boolean</code>.
      */
     public Boolean(boolean value) {
 	this.value = value;
     }
 
     /**
-     * Constructs a Boolean object initialized to the value specified by the
-     * String parameter. 
-     * @param s		the String to be converted to a Boolean
+     * Allocates a <code>Boolean</code> object representing the value 
+     * <code>true</code> if the string argument is not <code>null</code> 
+     * and is equal, ignoring case, to the string <code>"true"</code>. 
+     * Otherwise, allocate a <code>Boolean</code> object representing the 
+     * value <code>false</code>. Examples:<p>
+     * <tt>new&nbsp;Boolean("True")</tt> produces a <tt>Boolean</tt> object 
+     * that represents <tt>true</tt>.<br>
+     * <tt>new&nbsp;Boolean("yes")</tt> produces a <tt>Boolean</tt> object 
+     * that represents <tt>false</tt>.
+     *
+     * @param   s   the string to be converted to a <code>Boolean</code>.
      */
     public Boolean(String s) {
-	this((s != null) && s.toLowerCase().equals("true"));
+	this(toBoolean(s));
     }
 
     /**
-     * Returns the value of this Boolean object as a boolean.
+     * Returns the value of this <tt>Boolean</tt> object as a boolean 
+     * primitive.
+     *
+     * @return  the primitive <code>boolean</code> value of this object.
      */
     public boolean booleanValue() {
 	return value;
@@ -83,30 +93,51 @@ class Boolean {
 
     /**
      * Returns the boolean value represented by the specified String.
-     * @param s		the String to be parsed
+     * A new <code>Boolean</code> object is constructed. This 
+     * <code>Boolean</code> represents the value <code>true</code> if the 
+     * string argument is not <code>null</code> and is equal, ignoring 
+     * case, to the string <code>"true"</code>. <p>
+     * Example: <tt>Boolean.valueOf("True")</tt> returns <tt>true</tt>.<br>
+     * Example: <tt>Boolean.valueOf("yes")</tt> returns <tt>false</tt>.
+     *
+     * @param   s   a string.
+     * @return  the <code>Boolean</code> value represented by the string.
      */
     public static Boolean valueOf(String s) {
-	return new Boolean((s != null) && s.toLowerCase().equals("true"));
+	return new Boolean(toBoolean(s));
     }
 
     /**
-     * Returns a new String object representing this Boolean's value.
+     * Returns a String object representing this Boolean's value.
+     * If this object represents the value <code>true</code>, a string equal 
+     * to <code>"true"</code> is returned. Otherwise, a string equal to 
+     * <code>"false"</code> is returned. 
+     *
+     * @return  a string representation of this object. 
      */
     public String toString() {
 	return value ? "true" : "false";
     }
 
     /**
-     * Returns a hashcode for this Boolean.
+     * Returns a hash code for this <tt>Boolean</tt> object.
+     *
+     * @return  the integer <tt>1231</tt> if this object represents 
+     * <tt>true</tt>; returns the integer <tt>1237</tt> if this 
+     * object represents <tt>false</tt>. 
      */
     public int hashCode() {
 	return value ? 1231 : 1237;
     }
 
     /**
-     * Compares this object against the specified object.
-     * @param obj		the object to compare with
-     * @return 		true if the objects are the same; false otherwise.
+     * Returns <code>true</code> if and only if the argument is not 
+     * <code>null</code> and is a <code>Boolean </code>object that 
+     * represents the same <code>boolean</code> value as this object. 
+     *
+     * @param   obj   the object to compare with.
+     * @return  <code>true</code> if the Boolean objects represent the 
+     *          same value; <code>false</code> otherwise.
      */
     public boolean equals(Object obj) {
 	if ((obj != null) && (obj instanceof Boolean)) {
@@ -116,17 +147,24 @@ class Boolean {
     }
 
     /**
-     * Gets a Boolean from the properties.
-     * @param name the property name.
+     * Returns <code>true</code> if and only if the system property 
+     * named by the argument exists and is equal to the string 
+     * <code>"true"</code>. (Beginning with version 1.0.2 of the 
+     * Java<font size="-2"><sup>TM</sup></font> platform, the test of 
+     * this string is case insensitive.) A system property is accessible 
+     * through <code>getProperty</code>, a method defined by the 
+     * <code>System</code> class. 
+     *
+     * @param   name   the system property name.
+     * @return  the <code>boolean</code> value of the system property.
+     * @see     java.lang.System#getProperty(java.lang.String)
+     * @see     java.lang.System#getProperty(java.lang.String, java.lang.String)
      */
     public static boolean getBoolean(String name) {
-	return "true".equals(System.getProperty(name));
+	return toBoolean(System.getProperty(name));
+    }
+
+    private static boolean toBoolean(String name) { 
+	return ((name != null) && name.toLowerCase().equals("true"));
     }
 }
-
-
-
-
-
-
-
