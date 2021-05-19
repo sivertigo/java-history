@@ -1,46 +1,41 @@
 /*
- * @(#)NoSuchElementException.java	1.11 95/08/11  
+ * @(#)NoSuchElementException.java	1.17 01/11/29
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.util;
 
 /**
- * Signals that an enumeration is empty.
- * @see java.util.Enumeration
- * @version 	1.11, 08/11/95
+ * Thrown by the <code>nextElement</code> method of an 
+ * <code>Enumeration</code> to indicate that there are no more 
+ * elements in the enumeration. 
+ *
+ * @author  unascribed
+ * @version 1.17, 11/29/01
+ * @see     java.util.Enumeration
+ * @see     java.util.Enumeration#nextElement()
+ * @since   JDK1.0
  */
 public
 class NoSuchElementException extends RuntimeException {
     /**
-     * Constructs a NoSuchElementException with no detail message.
-     * A detail message is a String that describes this particular exception.
+     * Constructs a <code>NoSuchElementException</code> with <tt>null</tt> 
+     * as its error message string.
      */
     public NoSuchElementException() {
 	super();
     }
 
     /**
-     * Constructs a NoSuchElementException with the specified detail message.
-     * A detail message is a String that describes this particular exception.
-     * @param s the detail message
+     * Constructs a <code>NoSuchElementException</code>, saving a reference 
+     * to the error message string <tt>s</tt> for later retrieval by the 
+     * <tt>getMessage</tt> method.
+     *
+     * @param   s   the detail message.
      */
     public NoSuchElementException(String s) {
 	super(s);
     }
 }
-

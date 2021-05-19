@@ -1,37 +1,27 @@
 /*
- * @(#)EmptyStackException.java	1.10 95/12/15 Jonathan Payne
+ * @(#)EmptyStackException.java	1.16 01/11/29
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.util;
 
 /**
- * Signals that the stack is empty.
- * @see	Stack
- * @version 	1.10, 12/15/95
- * @author	Jonathan Payne
+ * Thrown by methods in the <code>Stack</code> class to indicate 
+ * that the stack is empty. 
+ *
+ * @author  Jonathan Payne
+ * @version 1.16, 11/29/01
+ * @see     java.util.Stack
+ * @since   JDK1.0
  */
 public
 class EmptyStackException extends RuntimeException {
     /**
-     * Constructs a new EmptyStackException with no detail message.
-     * A detail message is a String that describes the exception.
+     * Constructs a new <code>EmptyStackException</code> with <tt>null</tt> 
+     * as its error message string.
      */
     public EmptyStackException() {
     }
 }
-

@@ -1,44 +1,138 @@
 /*
- * @(#)ClassNotFoundException.java	1.1 95/08/12  
+ * @(#)ClassNotFoundException.java	1.9 01/11/29
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang;
 
+import java.io.PrintStream;
+import java.io.PrintWriter;
+
 /**
- * Signals that a class could not be found.
- * @version 	1.1, 08/12/95
+ * Thrown when an application tries to load in a class through its 
+ * string name using:
+ * <ul>
+ * <li>The <code>forName</code> method in class <code>Class</code>.
+ * <li>The <code>findSystemClass</code> method in class
+ *     <code>ClassLoader</code> .
+ * <li>The <code>loadClass</code> method in class <code>ClassLoader</code>.
+ * </ul>
+ * <p>
+ * but no definition for the class with the specifed name could be found. 
+ *
+ * @author  unascribed
+ * @version 1.9, 11/29/01
+ * @see     java.lang.Class#forName(java.lang.String)
+ * @see     java.lang.ClassLoader#findSystemClass(java.lang.String)
+ * @see     java.lang.ClassLoader#loadClass(java.lang.String, boolean)
+ * @since   JDK1.0
  */
 public
 class ClassNotFoundException extends Exception {
     /**
-     * Constructs a ClassNotFoundException with no detail message.
-     * A detail message is a String that describes this particular exception.
+     * use serialVersionUID from JDK 1.1.X for interoperability
+     */
+     private static final long serialVersionUID = 9176873029745254542L;
+
+    /**
+     * This field holds the exception ex if the 
+     * ClassNotFoundException(String s, Throwable ex) constructor was
+     * used to instantiate the object
+     * @serial 
+     * @since JDK 1.2
+     */
+    private Throwable ex;
+
+    /**
+     * Constructs a <code>ClassNotFoundException</code> with no detail message.
      */
     public ClassNotFoundException() {
 	super();
     }
 
     /**
-     * Constructs a ClassNotFoundException with the specified detail message.
-     * A detail message is a String that describes this particular exception.
-     * @param s the detail message
+     * Constructs a <code>ClassNotFoundException</code> with the 
+     * specified detail message. 
+     *
+     * @param   s   the detail message.
      */
     public ClassNotFoundException(String s) {
 	super(s);
     }
+
+    /**
+     * Constructs a <code>ClassNotFoundException</code> with the
+     * specified detail message and optional exception that was
+     * raised while loading the class.
+     *
+     * @param s the detail message
+     * @param ex the exception that was raised while loading the class
+     * @since JDK1.2
+     */
+    public ClassNotFoundException(String s, Throwable ex) {
+	super(s);
+	this.ex = ex;
+    }
+
+    /**
+     * Returns the exception that was raised if an error occurred while
+     * attempting to load the class. Otherwise, returns null.
+     *
+     * @since JDK1.2
+     */
+    public Throwable getException() {
+	return ex;
+    }
+
+    /**
+     * Prints the stack backtrace. 
+     * 
+     * If an exception occurred during class loading it prints that
+     * exception's stack trace, or else prints the stack backtrace of
+     * this exception.
+     *
+     * @see java.lang.System#err
+     */
+    public void printStackTrace() { 
+	printStackTrace(System.err);
+    }
+    
+    /**
+     * Prints the stack backtrace to the specified print stream.
+     *
+     * If an exception occurred during class loading it prints that
+     * exception's stack trace, or else prints the stack backtrace of
+     * this exception.
+     */
+    public void printStackTrace(PrintStream ps) { 
+	synchronized (ps) {
+	    if (ex != null) {
+		ps.print("java.lang.ClassNotFoundException: ");
+		ex.printStackTrace(ps);
+	    } else {
+		super.printStackTrace(ps);
+	    }
+	}
+    }
+    
+    /**
+     * Prints the stack backtrace to the specified print writer.
+     *
+     * If an exception occurred during class loading it prints that
+     * exception's stack trace, or else prints the stack backtrace of
+     * this exception.
+     */
+    public void printStackTrace(PrintWriter pw) { 
+	synchronized (pw) {
+	    if (ex != null) {
+		pw.print("java.lang.ClassNotFoundException: ");
+		ex.printStackTrace(pw);
+	    } else {
+		super.printStackTrace(pw);
+	    }
+	}
+    }
+
 }

@@ -1,20 +1,8 @@
 /*
- * @(#)SocketInputStream.java	1.11 95/11/06 Jonathan Payne
+ * @(#)SocketInputStream.java	1.21 01/11/29
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.net;
@@ -27,12 +15,16 @@ import java.io.FileInputStream;
  * SocketInputStream. Note that this class should <b>NOT</b> be
  * public.
  *
- * @version     1.11, 11/06/95
+ * @version     1.21, 11/29/01
  * @author	Jonathan Payne
  * @author	Arthur van Hoff
  */
 class SocketInputStream extends FileInputStream
 {
+    static {
+        init();
+    }
+    
     private boolean eof;
     private SocketImpl impl;
     private byte temp[] = new byte[1];
@@ -86,6 +78,8 @@ class SocketInputStream extends FileInputStream
 	if (eof) {
 	    return -1;
 	}
+        if (length == 0)
+            return 0;
 	int n = socketRead(b, off, length);
 	if (n <= 0) {
 	    eof = true;
@@ -112,14 +106,24 @@ class SocketInputStream extends FileInputStream
     /** 
      * Skips n bytes of input.
      * @param n the number of bytes to skip
+     * @return	the actual number of bytes skipped.
+     * @exception IOException If an I/O error has occurred.
      */
-    public int skip(int numbytes) throws IOException {
-	int n = numbytes;
-	byte data[] = new byte[n];
-	while (n > 0) {
-	    n -= read(data, 0, n);
+    public long skip(long numbytes) throws IOException {
+	if (numbytes <= 0) {
+	    return 0;
 	}
-	return numbytes;
+	long n = numbytes;
+	int buflen = (int) Math.min(1024, n);
+	byte data[] = new byte[buflen];
+	while (n > 0) {
+	    int r = read(data, 0, (int) Math.min((long) buflen, n));
+	    if (r < 0) {
+		break;
+	    }
+	    n -= r;
+	}
+	return numbytes - n;
     }
 
     /**
@@ -141,5 +145,10 @@ class SocketInputStream extends FileInputStream
      * Overrides finalize, the fd is closed by the Socket.
      */
     protected void finalize() {}
+
+    /**
+     * Perform class load-time initializations.
+     */
+    private native static void init();
 }
 
