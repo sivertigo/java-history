@@ -1,41 +1,46 @@
 /*
- * @(#)DatagramPacket.java	1.7 96/01/11 Pavani Diwanji
+ * @(#)DatagramPacket.java	1.14 01/12/10
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.net;
 
 /**
- * A class that represents a datagram packet containing packet data, packet
- * length, internet addresses and port.
- * @author 	Pavani Diwanji
+ * This class represents a datagram packet. 
+ * <p>
+ * Datagram packets are used to implement a connectionless packet 
+ * delivery service. Each message is routed from one machine to 
+ * another based solely on information contained within that packet. 
+ * Multiple packets sent from one machine to another might be routed 
+ * differently, and might arrive in any order. 
+ *
+ * @author  Pavani Diwanji
+ * @version 1.14, 12/10/01
+ * @since   JDK1.0
  */
 public final 
 class DatagramPacket {
-    private byte[] buf;
-    private int length;
-    private InetAddress address;
-    private int port;
+    /*
+     * The fields of this class are package-private since DatagramSocketImpl 
+     * classes needs to access them.
+     */
+    byte[] buf;
+    int length;
+    InetAddress address;
+    int port;
 
     /**
-     * This constructor is used to create a DatagramPacket object used 
-     * for receiving datagrams.
-     * @param ibuf is where packet data is to be received.
-     * @param ilength is the number of bytes to be received.
+     * Constructs a <code>DatagramPacket</code> for receiving packets of 
+     * length <code>ilength</code>. 
+     * <p>
+     * The <code>length</code> argument must be less than or equal to 
+     * <code>ibuf.length</code>. 
+     *
+     * @param   ibuf      buffer for holding the incoming datagram.
+     * @param   ilength   the number of bytes to read.
+     * @since   JDK1.0
      */
     public DatagramPacket(byte ibuf[], int ilength) {
 	if (ilength > ibuf.length) {
@@ -48,15 +53,25 @@ class DatagramPacket {
     }
     
     /**
-     * This constructor is used construct the DatagramPacket to be sent.
-     * @param ibuf contains the packet data.
-     * @param ilength contains the packet length
-     * @param iaddr and iport contains destination ip addr and port number.
+     * Constructs a datagram packet for sending packets of length 
+     * <code>ilength</code> to the specified port number on the specified 
+     * host. The <code>length</code> argument must be less than or equal 
+     * to <code>ibuf.length</code>. 
+     *
+     * @param   ibuf      the packet data.
+     * @param   ilength   the packet length.
+     * @param   iaddr     the destination address.
+     * @param   iport     the destination port number.
+     * @see     java.net.InetAddress
+     * @since   JDK1.0
      */
     public DatagramPacket(byte ibuf[], int ilength,
 			  InetAddress iaddr, int iport) {
 	if (ilength > ibuf.length) {
 	    throw new IllegalArgumentException("illegal length");
+	}
+	if (iport < 0 || iport > 0xFFFF) {
+	    throw new IllegalArgumentException("Port out of range:"+ iport);
 	}
 	buf = ibuf;
 	length = ilength;
@@ -64,19 +79,84 @@ class DatagramPacket {
 	port = iport;
     }
     
-    public InetAddress getAddress() {
+    /**
+     * Returns the IP address of the machine to which this datagram is being
+     * sent or from which the datagram was received.
+     *
+     * @return  the IP address of the machine to which this datagram is being
+     *          sent or from which the datagram was received.
+     * @see     java.net.InetAddress
+     * @since   JDK1.0
+     */
+    public synchronized InetAddress getAddress() {
 	return address;
     }
-    public int getPort() {
+    
+    /**
+     * Returns the port number on the remote host to which this datagram is
+     * being sent or from which the datagram was received.
+     *
+     * @return  the port number on the remote host to which this datagram is
+     *          being sent or from which the datagram was received.
+     * @since   JDK1.0
+     */
+    public synchronized int getPort() {
 	return port;
     }
-    public byte[] getData() {
+    
+    /**
+     * Returns the data received or the data to be sent.
+     *
+     * @return  the data received or the data to be sent.
+     * @since   JDK1.0
+     */
+    public synchronized byte[] getData() {
 	return buf;
     }
-    public int getLength() {
+    
+    /**
+     * Returns the length of the data to be sent or the length of the
+     * data received.
+     *
+     * @return  the length of the data to be sent or the length of the
+     *          data received.
+     * @since   JDK1.0
+     */
+    public synchronized int getLength() {
 	return length;
     }
+
+    /**
+     * @since   JDK1.1
+     */
+    public synchronized void setAddress(InetAddress iaddr) {
+	address = iaddr;
+    }
+
+    /**
+     * @since   JDK1.1
+     */
+    public synchronized void setPort(int iport) {
+	if (iport < 0 || iport > 0xFFFF) {
+	    throw new IllegalArgumentException("Port out of range:"+ iport);
+	}
+	port = iport;
+    }
+
+    /**
+     * @since   JDK1.1
+     */
+    public synchronized void setData(byte[] ibuf) {
+	buf = ibuf;
+    }
+
+    /**
+     * @since   JDK1.1
+     */
+    public synchronized void setLength(int ilength) {
+	if (ilength > buf.length) {
+	    throw new IllegalArgumentException("illegal length");
+	}
+	length = ilength;
+    }
 }
-
-
-

@@ -1,20 +1,8 @@
 /*
- * @(#)IndexColorModel.java	1.12 95/12/14 Jim Graham
+ * @(#)IndexColorModel.java	1.17 01/12/10
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.awt.image;
@@ -35,15 +23,13 @@ package java.awt.image;
  *
  * @see ColorModel
  *
- * @version	1.12 12/14/95
+ * @version	1.17 12/10/01
  * @author 	Jim Graham
  */
 public class IndexColorModel extends ColorModel {
-    private byte red[];
-    private byte green[];
-    private byte blue[];
-    private byte alpha[];
+    private int rgb[];
     private int map_size;
+    private boolean opaque;
 
     private int transparent_index;
 
@@ -61,7 +47,8 @@ public class IndexColorModel extends ColorModel {
      */
     public IndexColorModel(int bits, int size,
 			   byte r[], byte g[], byte b[]) {
-	this(bits, size, r, g, b, -1);
+	super(bits);
+	setRGBs(size, r, g, b, null);
     }
 
     /**
@@ -81,16 +68,7 @@ public class IndexColorModel extends ColorModel {
     public IndexColorModel(int bits, int size,
 			   byte r[], byte g[], byte b[], int trans) {
 	super(bits);
-	if ((bits > 8) || (size > (1 << bits))) {
-	    throw new ArrayIndexOutOfBoundsException();
-	}
-	map_size = size;
-	red = new byte[256];
-	System.arraycopy(r, 0, red, 0, size);
-	green = new byte[256];
-	System.arraycopy(g, 0, green, 0, size);
-	blue = new byte[256];
-	System.arraycopy(b, 0, blue, 0, size);
+	setRGBs(size, r, g, b, null);
 	setTransparentPixel(trans);
     }
 
@@ -108,9 +86,30 @@ public class IndexColorModel extends ColorModel {
      */
     public IndexColorModel(int bits, int size,
 			   byte r[], byte g[], byte b[], byte a[]) {
-	this(bits, size, r, g, b, -1);
-	alpha = new byte[256];
-	System.arraycopy(a, 0, alpha, 0, size);
+	super(bits);
+	if (size > 0 && a == null) {
+	    throw new NullPointerException();
+	}
+	setRGBs(size, r, g, b, a);
+    }
+
+    private void setRGBs(int size, byte r[], byte g[], byte b[], byte a[]) {
+	map_size = size;
+	rgb = new int[Math.max(size, 256)];
+	int alpha = 0xff;
+	opaque = true;
+	for (int i = 0; i < size; i++) {
+	    if (a != null) {
+		alpha = (a[i] & 0xff);
+		if (alpha != 0xff) {
+		    opaque = false;
+		}
+	    }
+	    rgb[i] = (alpha << 24)
+		| ((r[i] & 0xff) << 16)
+		| ((g[i] & 0xff) << 8)
+		| (b[i] & 0xff);
+	}
     }
 
     /**
@@ -149,24 +148,22 @@ public class IndexColorModel extends ColorModel {
 			   boolean hasalpha, int trans) {
 	// REMIND: This assumes the ordering: RGB[A]
 	super(bits);
-	if ((bits > 8) || (size > (1 << bits))) {
-	    throw new ArrayIndexOutOfBoundsException();
-	}
 	map_size = size;
-	red = new byte[256];
-	green = new byte[256];
-	blue = new byte[256];
-	if (hasalpha) {
-	    alpha = new byte[256];
-	}
+	rgb = new int[Math.max(size, 256)];
 	int j = start;
+	int alpha = 0xff;
+	opaque = true;
 	for (int i = 0; i < size; i++) {
-	    red[i] = cmap[j++];
-	    green[i] = cmap[j++];
-	    blue[i] = cmap[j++];
+	    rgb[i] = ((cmap[j++] & 0xff) << 16)
+		| ((cmap[j++] & 0xff) << 8)
+		| (cmap[j++] & 0xff);
 	    if (hasalpha) {
-		alpha[i] = cmap[j++];
+		alpha = cmap[j++];
+		if (alpha != 0xff) {
+		    opaque = false;
+		}
 	    }
+	    rgb[i] |= (alpha << 24);
 	}
 	setTransparentPixel(trans);
     }
@@ -192,7 +189,9 @@ public class IndexColorModel extends ColorModel {
      * written.
      */
     final public void getReds(byte r[]) {
-	System.arraycopy(red, 0, r, 0, map_size);
+	for (int i = 0; i < map_size; i++) {
+	    r[i] = (byte) (rgb[i] >> 16);
+	}
     }
 
     /**
@@ -201,7 +200,9 @@ public class IndexColorModel extends ColorModel {
      *  written.
      */
     final public void getGreens(byte g[]) {
-	System.arraycopy(green, 0, g, 0, map_size);
+	for (int i = 0; i < map_size; i++) {
+	    g[i] = (byte) (rgb[i] >> 8);
+	}
     }
 
     /**
@@ -210,7 +211,9 @@ public class IndexColorModel extends ColorModel {
      * be written.
      */
     final public void getBlues(byte b[]) {
-	System.arraycopy(blue, 0, b, 0, map_size);
+	for (int i = 0; i < map_size; i++) {
+	    b[i] = (byte) rgb[i];
+	}
     }
 
     /**
@@ -219,23 +222,17 @@ public class IndexColorModel extends ColorModel {
      * be written.
      */
     final public void getAlphas(byte a[]) {
-	if (alpha != null) {
-	    System.arraycopy(alpha, 0, a, 0, map_size);
-	} else {
-	    for (int i = 0; i < map_size; i++) {
-		a[i] = (byte) 255;
-	    }
-	    if (transparent_index >= 0) {
-		a[transparent_index] = 0;
-	    }
+	for (int i = 0; i < map_size; i++) {
+	    a[i] = (byte) (rgb[i] >> 24);
 	}
     }
 
     private void setTransparentPixel(int trans) {
 	if (trans >= map_size || trans < 0) {
 	    trans = -1;
-	} else if (alpha != null) {
-	    alpha[trans] = 0;
+	} else {
+	    rgb[trans] &= 0x00ffffff;
+	    opaque = false;
 	}
 	transparent_index = trans;
     }
@@ -245,7 +242,7 @@ public class IndexColorModel extends ColorModel {
      * range 0-255.
      */
     final public int getRed(int pixel) {
-	return red[pixel];
+	return (rgb[pixel] >> 16) & 0xff;
     }
 
     /**
@@ -253,7 +250,7 @@ public class IndexColorModel extends ColorModel {
      * range 0-255.
      */
     final public int getGreen(int pixel) {
-	return green[pixel];
+	return (rgb[pixel] >> 8) & 0xff;
     }
 
     /**
@@ -261,7 +258,7 @@ public class IndexColorModel extends ColorModel {
      * range 0-255.
      */
     final public int getBlue(int pixel) {
-	return blue[pixel];
+	return rgb[pixel] & 0xff;
     }
 
     /**
@@ -269,9 +266,7 @@ public class IndexColorModel extends ColorModel {
      * range 0-255.
      */
     final public int getAlpha(int pixel) {
-	return ((pixel == transparent_index) ? 0 : ((alpha != null)
-						    ? alpha[pixel]
-						    : 255));
+	return (rgb[pixel] >> 24) & 0xff;
     }
 
     /**
@@ -279,9 +274,6 @@ public class IndexColorModel extends ColorModel {
      * @see ColorModel#getRGBdefault
      */
     final public int getRGB(int pixel) {
-	return (getAlpha(pixel) << 24)
-	    | ((red[pixel] & 0xff) << 16)
-	    | ((green[pixel] & 0xff) << 8)
-	    | (blue[pixel] & 0xff);
+	return rgb[pixel];
     }
 }

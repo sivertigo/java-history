@@ -1,35 +1,28 @@
 /*
- * @(#)Stack.java	1.12 95/08/11  
+ * @(#)Stack.java	1.18 01/12/10
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.util;
 
 /**
- * A Last-In-First-Out(LIFO) stack of objects.
+ * The <code>Stack</code> class represents a last-in-first-out 
+ * (LIFO) stack of objects. 
  *
- * @version 	1.12, 08/11/95
- * @author 	Jonathan Payne
+ * @author  Jonathan Payne
+ * @version 1.18, 12/10/01
+ * @since   JDK1.0
  */
 public
 class Stack extends Vector {
     /**
-     * Pushes an item onto the stack.
-     * @param item the item to be pushed on.
+     * Pushes an item onto the top of this stack. 
+     *
+     * @param   item   the item to be pushed onto this stack.
+     * @return  the <code>item</code> argument.
+     * @since   JDK1.0
      */
     public Object push(Object item) {
 	addElement(item);
@@ -38,10 +31,14 @@ class Stack extends Vector {
     }
 
     /**
-     * Pops an item off the stack.
-     * @exception EmptyStackException If the stack is empty.
+     * Removes the object at the top of this stack and returns that 
+     * object as the value of this function. 
+     *
+     * @return     The object at the top of this stack.
+     * @exception  EmptyStackException  if this stack is empty.
+     * @since      JDK1.0
      */
-    public Object pop() {
+    public synchronized Object pop() {
 	Object	obj;
 	int	len = size();
 
@@ -52,10 +49,14 @@ class Stack extends Vector {
     }
 
     /**
-     * Peeks at the top of the stack.
-     * @exception EmptyStackException If the stack is empty.
+     * Looks at the object at the top of this stack without removing it 
+     * from the stack. 
+     *
+     * @return     the object at the top of this stack. 
+     * @exception  EmptyStackException  if this stack is empty.
+     * @since      JDK1.0
      */
-    public Object peek() {
+    public synchronized Object peek() {
 	int	len = size();
 
 	if (len == 0)
@@ -64,18 +65,26 @@ class Stack extends Vector {
     }
 
     /**
-     * Returns true if the stack is empty.
+     * Tests if this stack is empty.
+     *
+     * @return  <code>true</code> if this stack is empty;
+     *          <code>false</code> otherwise.
+     * @since   JDK1.0
      */
     public boolean empty() {
 	return size() == 0;
     }
 
     /**
-     * Sees if an object is on the stack.
-     * @param o the desired object
-     * @return the distance from the top, or -1 if it is not found.
+     * Returns where an object is on this stack. 
+     *
+     * @param   o   the desired object.
+     * @return  the distance from the top of the stack where the object is]
+     *          located; the return value <code>-1</code> indicates that the
+     *          object is not on the stack.
+     * @since   JDK1.0
      */
-    public int search(Object o) {
+    public synchronized int search(Object o) {
 	int i = lastIndexOf(o);
 
 	if (i >= 0) {
@@ -83,4 +92,7 @@ class Stack extends Vector {
 	}
 	return -1;
     }
+
+    /** use serialVersionUID from JDK 1.0.2 for interoperability */
+    private static final long serialVersionUID = 1224463164541339165L;
 }

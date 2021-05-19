@@ -1,60 +1,75 @@
 /*
- * @(#)OutputStream.java	1.12 95/08/11 Arthur van Hoff
+ * @(#)OutputStream.java	1.16 01/12/10
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.io;
 
 /**
- * Abstract class representing an output stream of bytes.
- * All OutputStreams are based on this class.
- * @see		InputStream
- * @see		FilterOutputStream
- * @see		BufferedOutputStream
- * @see		DataOutputStream
- * @see		ByteArrayOutputStream
- * @version 	1.12, 08/11/95
- * @author	Arthur van Hoff
+ * This abstract class is the superclass of all classes representing 
+ * an output stream of bytes. 
+ * <p>
+ * Applications that need to define a subclass of 
+ * <code>OutputStream</code> must always provide at least a method 
+ * that writes one byte of output. 
+ *
+ * @author  Arthur van Hoff
+ * @version 1.16, 12/10/01
+ * @see     java.io.BufferedOutputStream
+ * @see     java.io.ByteArrayOutputStream
+ * @see     java.io.DataOutputStream
+ * @see     java.io.FilterOutputStream
+ * @see     java.io.InputStream
+ * @see     java.io.OutputStream#write(int)
+ * @since   JDK1.0
  */
 public abstract class OutputStream {
     /**
-     * Writes a byte. This method will block until the byte is actually
-     * written.
-     * @param b	the byte
-     * @exception IOException If an I/O error has occurred.
+     * Writes the specified byte to this output stream. 
+     * <p>
+     * Subclasses of <code>OutputStream</code> must provide an 
+     * implementation for this method. 
+     *
+     * @param      b   the <code>byte</code>.
+     * @exception  IOException  if an I/O error occurs.
+     * @since      JDK1.0
      */
     public abstract void write(int b) throws IOException;
 
     /**
-     * Writes an array of bytes. This method will block until the bytes
-     * are actually written.
-     * @param b	the data to be written
-     * @exception IOException If an I/O error has occurred.
+     * Writes <code>b.length</code> bytes from the specified byte array 
+     * to this output stream. 
+     * <p>
+     * The <code>write</code> method of <code>OutputStream</code> calls 
+     * the <code>write</code> method of three arguments with the three 
+     * arguments <code>b</code>, <code>0</code>, and 
+     * <code>b.length</code>. 
+     *
+     * @param      b   the data.
+     * @exception  IOException  if an I/O error occurs.
+     * @see        java.io.OutputStream#write(byte[], int, int)
+     * @since      JDK1.0
      */
     public void write(byte b[]) throws IOException {
 	write(b, 0, b.length);
     }
 
     /**
-     * Writes a sub array of bytes. 
-     * @param b	the data to be written
-     * @param off	the start offset in the data
-     * @param len	the number of bytes that are written
-     * @exception IOException If an I/O error has occurred.
+     * Writes <code>len</code> bytes from the specified byte array 
+     * starting at offset <code>off</code> to this output stream. 
+     * <p>
+     * The <code>write</code> method of <code>OutputStream</code> calls 
+     * the write method of one argument on each of the bytes to be 
+     * written out. Subclasses are encouraged to override this method and 
+     * provide a more efficient implementation. 
+     *
+     * @param      b     the data.
+     * @param      off   the start offset in the data.
+     * @param      len   the number of bytes to write.
+     * @exception  IOException  if an I/O error occurs.
+     * @since      JDK1.0
      */
     public void write(byte b[], int off, int len) throws IOException {
 	for (int i = 0 ; i < len ; i++) {
@@ -63,18 +78,25 @@ public abstract class OutputStream {
     }
 
     /**
-     * Flushes the stream. This will write any buffered
-     * output bytes.
-     * @exception IOException If an I/O error has occurred.
+     * Flushes this output stream and forces any buffered output bytes 
+     * to be written out. 
+     * <p>
+     * The <code>flush</code> method of <code>OutputStream</code> does nothing.
+     *
+     * @exception  IOException  if an I/O error occurs.
+     * @since      JDK1.0
      */
     public void flush() throws IOException {
     }
 
     /**
-     * Closes the stream. This method must be called
-     * to release any resources associated with the
-     * stream.
-     * @exception IOException If an I/O error has occurred.
+     * Closes this output stream and releases any system resources 
+     * associated with this stream. 
+     * <p>
+     * The <code>close</code> method of <code>OutputStream</code> does nothing.
+     *
+     * @exception  IOException  if an I/O error occurs.
+     * @since      JDK1.0
      */
     public void close() throws IOException {
     }

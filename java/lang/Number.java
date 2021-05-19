@@ -1,59 +1,98 @@
 /*
- * @(#)Number.java	1.15 95/07/27  
+ * @(#)Number.java	1.22 01/12/10
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang;
 
 /**
- * Number is an abstract superclass for numeric scalar types.
- * Integer, Long, Float and Double are subclasses of Number that bind
- * to a particular numeric representation.<p>
+ * The abstract class <code>Number</code> is the superclass of 
+ * classes <code>Byte</code>, <code>Double</code>, <code>Float</code>,
+ * <code>Integer</code>, <code>Long</code>, and <code>Short</code>.
+ * <p>
+ * Subclasses of <code>Number</code> must provide methods to convert 
+ * the represented numeric value to <code>byte</code>, <code>double</code>,
+ * <code>float</code>, <code>int</code>, <code>long</code>, and
+ * <code>short</code>.
  *
- * @see	Integer
- * @see	Long
- * @see	Float
- * @see	Double
- * @version 	1.15, 07/27/95
  * @author	Lee Boynton
  * @author	Arthur van Hoff
+ * @version 1.22, 12/10/01
+ * @see     java.lang.Byte
+ * @see     java.lang.Double
+ * @see     java.lang.Float
+ * @see     java.lang.Integer
+ * @see     java.lang.Long
+ * @see     java.lang.Short
+ * @since   JDK1.0
  */
-public abstract class Number {
+public abstract class Number implements java.io.Serializable {
     /**
-     * Returns the value of the number as an int.
-     * This may involve rounding if the number is not already an integer.
+     * Returns the value of the specified number as an <code>int</code>.
+     * This may involve rounding.
+     *
+     * @return  the numeric value represented by this object after conversion
+     *          to type <code>int</code>.
+     * @since   JDK1.0
      */
     public abstract int intValue();
 
     /**
-     * Returns the value of the number as a long.  This may involve rounding
-     * if the number is not already a long.
+     * Returns the value of the specified number as a <code>long</code>.
+     * This may involve rounding.
+     *
+     * @return  the numeric value represented by this object after conversion
+     *          to type <code>long</code>.
+     * @since   JDK1.0
      */
     public abstract long longValue();
 
     /**
-     * Returns the value of the number as a float.  This may involve rounding
-     * if the number is not already a float.
+     * Returns the value of the specified number as a <code>float</code>.
+     * This may involve rounding.
+     *
+     * @return  the numeric value represented by this object after conversion
+     *          to type <code>float</code>.
+     * @since   JDK1.0
      */
     public abstract float floatValue();
 
     /**
-     * Returns the value of the number as a double.  This may involve rounding
-     * if the number is not already a double.
+     * Returns the value of the specified number as a <code>double</code>.
+     * This may involve rounding.
+     *
+     * @return  the numeric value represented by this object after conversion
+     *          to type <code>double</code>.
+     * @since   JDK1.0
      */
     public abstract double doubleValue();
+
+    /**
+     * Returns the value of the specified number as a <code>byte</code>.
+     * This may involve rounding or truncation.
+     *
+     * @return  the numeric value represented by this object after conversion
+     *          to type <code>byte</code>.
+     * @since   JDK1.1
+     */
+    public byte byteValue() {
+	return (byte)intValue();
+    }
+
+    /**
+     * Returns the value of the specified number as a <code>short</code>.
+     * This may involve rounding or truncation.
+     *
+     * @return  the numeric value represented by this object after conversion
+     *          to type <code>short</code>.
+     * @since   JDK1.1
+     */
+    public short shortValue() {
+	return (short)intValue();
+    }
+
+    /** use serialVersionUID from JDK 1.0.2 for interoperability */
+    private static final long serialVersionUID = -8742448824652078965L;
 }

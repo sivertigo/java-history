@@ -1,20 +1,8 @@
 /*
- * @(#)FileDialog.java	1.13 95/12/14 Arthur van Hoff
+ * @(#)FileDialog.java	1.33 01/12/10
  *
- * Copyright (c) 1995 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package java.awt;
 
@@ -22,25 +10,34 @@ import java.awt.peer.FileDialogPeer;
 import java.io.FilenameFilter;
 
 /**
- * The File Dialog class displays a file selection dialog. It is a
- * modal dialog and will block the calling thread when the show method
- * is called to display it, until the user has chosen a file.
+ * The <code>FileDialog</code> class displays a dialog window 
+ * from which the user can select a file. 
+ * <p>
+ * Since it is a modal dialog, when the application calls 
+ * its <code>show</code> method to display the dialog, 
+ * it blocks the rest of the application until the user has 
+ * chosen a file. 
  *
  * @see Window#show
  *
- * @version 	1.13, 12/14/95
+ * @version 	1.33, 12/10/01
  * @author 	Sami Shaio
  * @author 	Arthur van Hoff
+ * @since       JDK1.0
  */
 public class FileDialog extends Dialog {
     
     /**
-     * The file load variable.
+     * This constant value indicates that the purpose of the file  
+     * dialog window is to locate a file from which to read. 
+     * @since    JDK1.0
      */
     public static final int LOAD = 0;
 
     /**
-     * The file save variable.
+     * This constant value indicates that the purpose of the file  
+     * dialog window is to locate a file to which to write. 
+     * @since    JDK1.0
      */
     public static final int SAVE = 1;
 
@@ -49,20 +46,49 @@ public class FileDialog extends Dialog {
     String file;
     FilenameFilter filter;
 
+    private static final String base = "filedlg";
+    private static int nameCounter = 0;
+
+    /*
+     * JDK 1.1 serialVersionUID 
+     */
+     private static final long serialVersionUID = 5035145889651310422L;
+
     /**
-     * Creates a file dialog for loading a file.
+     * Creates a file dialog for loading a file.  The title of the
+     * file dialog is initially empty.
      * @param parent the owner of the dialog
-     * @param title the title of the Dialog
+     * @since JDK1.1
+     */
+    public FileDialog(Frame parent) {
+	this(parent, "", LOAD);
+    }
+
+    /**
+     * Creates a file dialog window with the specified title for loading 
+     * a file. The files shown are those in the current directory. 
+     * @param     parent   the owner of the dialog.
+     * @param     title    the title of the dialog.
+     * @since     JDK1.0
      */
     public FileDialog(Frame parent, String title) {
 	this(parent, title, LOAD);
     }
 
     /**
-     * Creates a file dialog with the specified title and mode.
-     * @param parent the owner of the dialog
-     * @param title the title of the Dialog
-     * @param mode the mode of the Dialog
+     * Creates a file dialog window with the specified title for loading 
+     * or saving a file. 
+     * <p>
+     * If the value of <code>mode</code> is <code>LOAD</code>, then the 
+     * file dialog is finding a file to read. If the value of 
+     * <code>mode</code> is <code>SAVE</code>, the file dialog is finding 
+     * a place to write a file. 
+     * @param     parent   the owner of the dialog.
+     * @param     title   the title of the dialog.
+     * @param     mode   the mode of the dialog.
+     * @see       java.awt.FileDialog#LOAD
+     * @see       java.awt.FileDialog#SAVE
+     * @since     JDK1.0
      */
     public FileDialog(Frame parent, String title, int mode) {
 	super(parent, title, true);
@@ -71,70 +97,137 @@ public class FileDialog extends Dialog {
     }
 
     /**
-     * Creates the frame's peer.  The peer allows us to change the look
-     * of the file dialog without changing its functionality.
+     * Construct a name for this component.  Called by getName() when the
+     * name is null.
      */
-    public synchronized void addNotify() {
-	peer = getToolkit().createFileDialog(this);
-	super.addNotify();
+    String constructComponentName() {
+        return base + nameCounter++;
     }
 
     /**
-     * Gets the mode of the file dialog.
+     * Creates the file dialog's peer.  The peer allows us to change the look
+     * of the file dialog without changing its functionality.
+     */
+    public void addNotify() {
+        synchronized(getTreeLock()) {
+	    if (peer == null)
+			peer = getToolkit().createFileDialog(this);
+	    super.addNotify();
+        }
+    }
+
+    /**
+     * Indicates whether this file dialog box is for loading from a file 
+     * or for saving to a file. 
+     * @return   the mode of this file dialog window, either 
+     *               <code>FileDialog.LOAD</code> or 
+     *               <code>FileDialog.SAVE</code>.
+     * @see      java.awt.FileDialog#LOAD
+     * @see      java.awt.FileDialog#SAVE
+     * @see      java.awt.FileDialog#setMode
+     * @since    JDK1.0
      */
     public int getMode() {
 	return mode;
     }
 
     /**
-     * Gets the directory of the Dialog.
+     * Sets the mode of the file dialog.
+     * @param      mode  the mode for this file dialog, either 
+     *                 <code>FileDialog.LOAD</code> or 
+     *                 <code>FileDialog.SAVE</code>.
+     * @see        java.awt.FileDialog#LOAD
+     * @see        java.awt.FileDialog#SAVE
+     * @see        java.awt.FileDialog#getMode
+     * @exception  IllegalArgumentException if an illegal file 
+     *                 dialog mode is used.
+     * @since      JDK1.1
+     */
+    public void setMode(int mode) {
+	switch (mode) {
+	  case LOAD:
+	  case SAVE:
+	    this.mode = mode;
+	    break;
+	  default:
+	    throw new IllegalArgumentException("illegal file dialog mode");
+	}
+    }
+
+    /**
+     * Gets the directory of this file dialog.
+     * @return    the directory of this file dialog.
+     * @see       java.awt.FileDialog#setDirectory
+     * @since     JDK1.0
      */
     public String getDirectory() {
 	return dir;
     }
 
     /**
-     * Set the directory of the Dialog to the specified directory.
-     * @param dir the specific directory
+     * Sets the directory of this file dialog window to be the  
+     * specified directory. 
+     * @param     dir   the specific directory.
+     * @see       java.awt.FileDialog#getDirectory
+     * @since     JDK1.0
      */
     public void setDirectory(String dir) {
 	this.dir = dir;
+	FileDialogPeer peer = (FileDialogPeer)this.peer;
 	if (peer != null) {
-	    ((FileDialogPeer)peer).setDirectory(dir);
+	    peer.setDirectory(dir);
 	}
     }
 
     /**
-     * Gets the file of the Dialog.
+     * Gets the selected file of this file dialog.
+     * @return    the currently selected file of this file dialog window, 
+     *                or <code>null</code> if none is selected.
+     * @see       java.awt.FileDialog#setFile
+     * @since     JDK1.0
      */
     public String getFile() {
 	return file;
     }
 
     /**
-     * Sets the file for this dialog to the specified file. This will 
-     * become the default file if set before the dialog is shown.
-     * @param file the file being set
+     * Sets the selected file for this file dialog window to be the 
+     * specified file. This file becomes the default file if it is set 
+     * before the file dialog window is first shown. 
+     * @param    file   the file being set.
+     * @see      java.awt.FileDialog#getFile
+     * @since    JDK1.0
      */
     public void setFile(String file) {
 	this.file = file;
+	FileDialogPeer peer = (FileDialogPeer)this.peer;
 	if (peer != null) {
-	    ((FileDialogPeer)peer).setFile(file);
+	    peer.setFile(file);
 	}
     }
 	
     /**
-     * Gets the filter.
+     * Determines this file dialog's filename filter. A filename filter 
+     * allows the user to specify which files appear in the file dialog 
+     * window. 
+     * @return    this file dialog's filename filter.
+     * @see       java.io.FilenameFilter
+     * @see       java.awt.FileDialog#setFilenameFilter
+     * @since     JDK1.0
      */
     public FilenameFilter getFilenameFilter() {
 	return filter;
     }
 
     /**
-     * Sets the filter for this dialog to the specified filter.
-     * @param filter the specified filter
+     * Sets the filename filter for this file dialog window to the 
+     * specified filter. 
+     * @param   filter   the specified filter.
+     * @see     java.io.FilenameFilter
+     * @see     java.awt.FileDialog#getFilenameFilter
+     * @since   JDK1.0
      */
-    public void setFilenameFilter(FilenameFilter filter) {
+    public synchronized void setFilenameFilter(FilenameFilter filter) {
 	this.filter = filter;
 	FileDialogPeer peer = (FileDialogPeer)this.peer;
 	if (peer != null) {
@@ -143,8 +236,10 @@ public class FileDialog extends Dialog {
     }
 
     /**
-     * Returns the parameter String of this file dialog.
-     * Parameter String.
+     * Returns the parameter string representing the state of this file 
+     * dialog window. This string is useful for debugging. 
+     * @return  the parameter string of this file dialog window.
+     * @since   JDK1.0
      */
     protected String paramString() {
 	String str = super.paramString();
@@ -152,5 +247,9 @@ public class FileDialog extends Dialog {
 	    str += ",dir= " + dir;
 	}
 	return str + ((mode == LOAD) ? ",load" : ",save");
+    }
+
+    boolean postsOldMouseEvents() {
+        return false;
     }
 }

@@ -1,52 +1,60 @@
 /*
- * @(#)Label.java	1.17 95/11/21 Sami Shaio
+ * @(#)Label.java	1.32 01/12/10
  *
- * Copyright (c) 1994-1995 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package java.awt;
 
 import java.awt.peer.LabelPeer;
 
 /**
- * A component that displays a single line of read-only text.
+ * A <code>Label</code> object is a component for placing text in a 
+ * container. A label displays a single line of read-only text.
+ * The text can be changed by the application, but a user cannot edit it 
+ * directly.  
+ * <p>
+ * For example, the code&nbsp;.&nbsp;.&nbsp;.
+ * <p>
+ * <hr><blockquote><pre>
+ * setLayout(new FlowLayout(FlowLayout.CENTER, 10, 10)); 
+ * add(new Label("Hi There!")); 
+ * add(new Label("Another Label"));
+ * </pre></blockquote><hr>
+ * <p>
+ * produces the following label:
+ * <p>
+ * <img src="images-awt/Label-1.gif" 
+ * ALIGN=center HSPACE=10 VSPACE=7>
  *
- * @version	1.17, 11/21/95
+ * @version	1.32, 12/10/01
  * @author 	Sami Shaio
+ * @since       JDK1.0
  */
 public class Label extends Component {
 
     /**
-     * The left alignment.
+     * Indicates that the label should be left justified. 
+     * @since   JDK1.0
      */
     public static final int LEFT 	= 0;
 
     /** 
-     * The center alignment.
+     * Indicates that the label should be centered. 
+     * @since   JDK1.0
      */
     public static final int CENTER 	= 1;
 
     /**
-     * The right alignment.
+     * Indicates that the label should be right justified. 
+     * @since   JDK1.0t.
      */
     public static final int RIGHT 	= 2;
 
     /**
-     * The label.
+     * The text of this label.
      */
-    String label;
+    String text;
     
     /**
      * The label's alignment.  The default alignment is set
@@ -54,30 +62,53 @@ public class Label extends Component {
      */
     int	   alignment = LEFT;
 
+    private static final String base = "label";
+    private static int nameCounter = 0;
+
+    /*
+     * JDK 1.1 serialVersionUID 
+     */
+     private static final long serialVersionUID = 3094126758329070636L;
+
     /**
      * Constructs an empty label.
+     * @since JDK1.0
      */
     public Label() {
-	this("");
+	this("", LEFT);
     }
 
     /**
-     * Constructs a new label with the specified String of text.
-     * @param label the text that makes up the label
+     * Constructs a new label with the specified string of text, 
+     * left justified.
+     * @param text the string that the label presents.
+     * @since JDK1.0
      */
-    public Label(String label) {
-	this.label = label;
+    public Label(String text) {
+        this(text, LEFT);
     }
 
     /**
-     * Constructs a new label with the specified String of 
-     * text and the specified alignment.
-     * @param label the String that makes up the label
-     * @param alignment the alignment value
+     * Constructs a new label that presents the specified string of 
+     * text with the specified alignment.
+     * <p>
+     * Possible values for <code>alignment</code> are <code>Label.LEFT</code>, 
+     * <code>Label.RIGHT</code>, and <code>Label.CENTER</code>.
+     * @param     text        the string that the label presents.
+     * @param     alignment   the alignment value.
+     * @since     JDK1.0
      */
-    public Label(String label, int alignment) {
-	this.label = label;
+    public Label(String text, int alignment) {
+	this.text = text;
 	setAlignment(alignment);
+    }
+
+    /**
+     * Construct a name for this component.  Called by getName() when the
+     * name is null.
+     */
+    String constructComponentName() {
+        return base + nameCounter++;
     }
 
     /**
@@ -85,33 +116,42 @@ public class Label extends Component {
      * modify the appearance of the label without changing its 
      * functionality.
      */
-    public synchronized void addNotify() {
-	peer = getToolkit().createLabel(this);
+    public void addNotify() {
+      synchronized (getTreeLock()) {
+	  if (peer == null)
+		peer = getToolkit().createLabel(this);
 	super.addNotify();
+      }
     }
 
     /** 
-     * Gets the current alignment of this label. 
-     * @see #setAlignment
+     * Gets the current alignment of this label. Possible values are
+     * <code>Label.LEFT</code>, <code>Label.RIGHT</code>, and 
+     * <code>Label.CENTER</code>.
+     * @see        java.awt.Label#setAlignment
+     * @since      JDK1.0
      */
     public int getAlignment() {
 	return alignment;
     }
 
     /** 
-     * Sets the alignment for this label to the specified 
-     * alignment.
-     * @param alignment the alignment value
-     * @exception IllegalArgumentException If an improper alignment was given. 
-     * @see #getAlignment
+     * Sets the alignment for this label to the specified alignment.
+     * Possible values are <code>Label.LEFT</code>, 
+     * <code>Label.RIGHT</code>, and <code>Label.CENTER</code>.
+     * @param      alignment    the alignment to be set.
+     * @exception  IllegalArgumentException if an improper value for 
+     *                          <code>alignment</code> is given. 
+     * @see        java.awt.Label#getAlignment
+     * @since      JDK1.0
      */
-    public void setAlignment(int alignment) {
+    public synchronized void setAlignment(int alignment) {
 	switch (alignment) {
 	  case LEFT:
 	  case CENTER:
 	  case RIGHT:
 	    this.alignment = alignment;
-	    LabelPeer peer = (LabelPeer)this.peer;
+    	    LabelPeer peer = (LabelPeer)this.peer;
 	    if (peer != null) {
 		peer.setAlignment(alignment);
 	    }
@@ -122,30 +162,36 @@ public class Label extends Component {
 
     /** 
      * Gets the text of this label. 
-     * @see #setText
+     * @return     the text of this label.
+     * @see        java.awt.Label#setText
+     * @since      JDK1.0
      */
     public String getText() {
-	return label;
+	return text;
     }
 
     /** 
      * Sets the text for this label to the specified text.
-     * @param label the text that makes up the label 
-     * @see #getText
+     * @param      text the text that this label presents. 
+     * @see        java.awt.Label#getText
+     * @since      JDK1.0
      */
-    public void setText(String label) {
-	if (label != this.label && (this.label == null
-				    || !this.label.equals(label))) {
-	    this.label = label;
-	    LabelPeer peer = (LabelPeer)this.peer;
+    public synchronized void setText(String text) {
+	if (text != this.text && (this.text == null
+				    || !this.text.equals(text))) {
+	    this.text = text;
+    	    LabelPeer peer = (LabelPeer)this.peer;
 	    if (peer != null) {
-		peer.setText(label);
+		peer.setText(text);
 	    }
 	}
     }
 
     /**
-     * Returns the parameter String of this label.
+     * Returns the parameter string representing the state of this 
+     * label. This string is useful for debugging. 
+     * @return     the parameter string of this label.
+     * @since      JDK1.0
      */
     protected String paramString() {
 	String str = ",align=";
@@ -154,6 +200,6 @@ public class Label extends Component {
 	  case CENTER: str += "center"; break;
 	  case RIGHT:  str += "right"; break;
 	}
-	return super.paramString() + str + ",label=" + label;
+	return super.paramString() + str + ",text=" + text;
     }
 }

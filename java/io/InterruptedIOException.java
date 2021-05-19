@@ -1,53 +1,50 @@
 /*
- * @(#)IOException.java	1.10 95/08/09  
+ * @(#)InterruptedIOException.java	1.9 01/12/10
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.io;
 
 /**
- * Signals that an I/O operation has been interrupted.
- * @see	java.io.InputStream
- * @see	java.io.OutputStream
- * @version 	1.10, 09 Aug 1995
+ * Signals that an I/O operation has been interrupted. 
+ *
+ * @author  unascribed
+ * @version 1.9, 12/10/01
+ * @see     java.io.InputStream
+ * @see     java.io.OutputStream
+ * @see     java.lang.Thread#interrupt()
+ * @since   JDK1.0
  */
 public
 class InterruptedIOException extends IOException {
     /**
-     * Constructs an IOException with no detail message.
-     * A detail message is a String that describes this particular exception.
+     * Constructs an <code>InterruptedIOException</code> with no detail 
+     * message. 
+     *
+     * @since   JDK1.0
      */
     public InterruptedIOException() {
 	super();
     }
 
     /**
-     * Constructs an IOException with the specified detail message.
-     * A detail message is a String that describes this particular exception.
-     * @param s the detail message
+     * Constructs an <code>InterruptedIOException</code> with the 
+     * specified detail message. 
+     *
+     * @param   s   the detail message.
+     * @since   JDK1.0
      */
     public InterruptedIOException(String s) {
 	super(s);
     }
 
     /**
-     * Reports how many bytes had been transferred as
-     * part of the IO operation before it was interrupted.
+     * Reports how many bytes had been transferred as part of the I/O 
+     * operation before it was interrupted. 
+     *
+     * @since   JDK1.0
      */ 
     public int bytesTransferred = 0;
-    
 }

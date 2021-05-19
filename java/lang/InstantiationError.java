@@ -1,45 +1,43 @@
 /*
- * @(#)InstantiationError.java	1.2 95/08/23  
+ * @(#)InstantiationError.java	1.6 01/12/10
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang;
 
 /**
- * Signals that the interpreter has tried to instantiate an abstract class or
- * an interface.
- * @version 	1.2, 08/23/95
+ * Thrown when an application tries to use the Java <code>new</code> 
+ * construct to instantiate an abstract class or an interface. 
+ * <p>
+ * Normally, this error is caught by the compiler; this error can 
+ * only occur at run time if the definition of a class has 
+ * incompatibly changed. 
+ *
+ * @author  unascribed
+ * @version 1.6, 12/10/01
+ * @since   JDK1.0
  */
 
 
 public
 class InstantiationError extends IncompatibleClassChangeError {
     /**
-     * Constructs an InstantiationError with no detail message.  A detail 
-     * message is a String that describes this particular exception.
+     * Constructs an <code>InstantiationError</code> with no detail  message.
+     *
+     * @since   JDK1.0
      */
     public InstantiationError() {
 	super();
     }
 
     /**
-     * Constructs an InstantiationError with the specified detail message.
-     * A detail message is a String that describes this particular exception.
-     * @param s the String that contains the detail message
+     * Constructs an <code>InstantiationError</code> with the specified 
+     * detail message. 
+     *
+     * @param   s   the detail message.
+     * @since   JDK1.0
      */
     public InstantiationError(String s) {
 	super(s);

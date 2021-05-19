@@ -1,45 +1,38 @@
 /*
- * @(#)Exception.java	1.20 95/12/02
+ * @(#)Exception.java	1.24 01/12/10
  *
- * Copyright (c) 1995 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang;
 
 /**
- * Exception are a form of Throwable that normal programs may wish to try and catch.
+ * The class <code>Exception</code> and its subclasses are a form of 
+ * <code>Throwable</code> that indicates conditions that a reasonable 
+ * application might want to catch.
  *
- *
- * @version 	1.0, 10 Aug 1995
- * @author      Frank Yellin
+ * @author  Frank Yellin
+ * @version 1.24, 12/10/01
+ * @see     java.lang.Error
+ * @since   JDK1.0
  */
 public
 class Exception extends Throwable {
     /**
-     * Constructs an Exception with no specified detail message.
-     * A detail message is a String that describes this particular exception.
+     * Constructs an <code>Exception</code> with no specified detail message. 
+     *
+     * @since   JDK1.0
      */
     public Exception() {
 	super();
     }
 
     /**
-     * Constructs a Exception with the specified detail message.
-     * A detail message is a String that describes this particular exception.
-     * @param s the detail message
+     * Constructs an <code>Exception</code> with the specified detail message. 
+     *
+     * @param   s   the detail message.
+     * @since   JDK1.0
      */
     public Exception(String s) {
 	super(s);

@@ -1,64 +1,79 @@
 /*
- * @(#)Properties.java	1.21 95/12/15 Arthur van Hoff
+ * @(#)Properties.java	1.32 01/12/10
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.util;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Hashtable;
 
 /**
- * Persistent properties class. This class is basically a hashtable 
- * that can be saved/loaded from a stream. If a property is not found,
- * a property list containing defaults is searched. This allows
- * arbitrary nesting.
+ * The <code>Properties</code> class represents a persistent set of 
+ * properties. The <code>Properties</code> can be saved to a stream 
+ * or loaded from a stream. Each key and its corresponding value in 
+ * the property list is a string. 
+ * <p>
+ * A property list can contain another property list as its 
+ * "defaults"; this second property list is searched if 
+ * the property key is not found in the original property list. 
  *
- * @author Arthur van Hoff
- * @version 	1.21, 12/15/95
+ * @author  Arthur van Hoff
+ * @version 1.32, 12/10/01
+ * @since   JDK1.0
  */
 public
 class Properties extends Hashtable {
+    /**
+     * A property list that contains default values for any keys not 
+     * found in this property list. 
+     *
+     * @since   JDK1.0
+     */
     protected Properties defaults;
 
     /**
-     * Creates an empty property list.
+     * Creates an empty property list with no default values. 
+     *
+     * @since   JDK1.0
      */
     public Properties() {
 	this(null);
     }
 
     /**
-     * Creates an empty property list with specified defaults.
-     * @param defaults the defaults
+     * Creates an empty property list with the specified defaults. 
+     *
+     * @param   defaults   the defaults.
+     * @since   JDK1.0
      */
     public Properties(Properties defaults) {
 	this.defaults = defaults;
     }
 
     /**
-     * Loads properties from an InputStream.
-     * @param in the input stream
-     * @exception IOException Error when reading from input stream.
+     * Reads a property list from an input stream. 
+     *
+     * @param      in   the input stream.
+     * @exception  IOException  if an error occurred when reading from the
+     *               input stream.
+     * @since   JDK1.0
      */
     public synchronized void load(InputStream in) throws IOException {
+	/**
+	 * Use char array to collect the key and val chars.  Use an initial
+	 * size of 80 chars and double the array during expansion.  
+	 */
+	int buflen = 80;
+	char[] buf = new char[buflen];
+	int bufindx = 0;
+	
 	in = Runtime.getRuntime().getLocalizedInputStream(in);
 
 	int ch = in.read();
@@ -82,39 +97,56 @@ class Properties extends Hashtable {
 		continue;
 	    }
 
-	    // Read the key
-	    StringBuffer key = new StringBuffer();
+	    /* Read the key into buf */
+	    bufindx = 0;
 	    while ((ch >= 0) && (ch != '=') && (ch != ':') && 
 		   (ch != ' ') && (ch != '\t') && (ch != '\n') && (ch != '\r')) {
-		key.append((char)ch);
+		/* append ch to buf */
+		if (bufindx >= buflen) {
+		    /* expand buf */
+		    buflen *= 2;
+		    char[] nbuf = new char[buflen];
+		    System.arraycopy(buf, 0, nbuf, 0, buf.length);
+		    buf = nbuf;
+		}
+		buf[bufindx++] = (char)ch;
 		ch = in.read();
 	    }
-	    while ((ch == ' ') && (ch == '\t')) {
+	    while ((ch == ' ') || (ch == '\t')) {
 		ch = in.read();
 	    }
 	    if ((ch == '=') || (ch == ':')) {
 		ch = in.read();
 	    }
-	    while ((ch == ' ') && (ch == '\t')) {
+	    while ((ch == ' ') || (ch == '\t')) {
 		ch = in.read();
 	    }
+	    /* create the key */
+	    String key = new String(buf, 0, bufindx);
 
-	    // Read the value
-	    StringBuffer val = new StringBuffer();
+	    /* Read the value into buf, reuse buf */
+	    bufindx = 0;
 	    while ((ch >= 0) && (ch != '\n') && (ch != '\r')) {
+		int next = 0;
 		if (ch == '\\') {
 		    switch (ch = in.read()) {
+		      case '\r':
+			if (((ch = in.read()) == '\n') ||
+			    (ch == ' ') || (ch == '\t')) {
+			  // fall thru to '\n' case
+			} else continue;
 		      case '\n': 
 			while (((ch = in.read()) == ' ') || (ch == '\t'));
 			continue;
-		      case 't': ch = '\t'; break;
-		      case 'n': ch = '\n'; break;
-		      case 'r': ch = '\r'; break;
+		      case 't': ch = '\t'; next = in.read(); break;
+		      case 'n': ch = '\n'; next = in.read(); break;
+		      case 'r': ch = '\r'; next = in.read(); break;
 		      case 'u': {
 			while ((ch = in.read()) == 'u');
 			int d = 0;
 		      loop:
-			for (int i = 0 ; i < 4 ; i++, ch = in.read()) {
+			for (int i = 0 ; i < 4 ; i++) {
+			    next = in.read();
 			    switch (ch) {
 			      case '0': case '1': case '2': case '3': case '4':
 			      case '5': case '6': case '7': case '8': case '9':
@@ -129,23 +161,41 @@ class Properties extends Hashtable {
 			      default:
 				break loop;
 			    }	
+			    ch = next;
 			}
 			ch = d;
+			break;
 		      }
+		      default: next = in.read(); break;
 		    }
+		} else {
+		    next = in.read();
 		}
-		val.append((char)ch);
-		ch = in.read();
+		/* append ch to buf */
+		if (bufindx >= buflen) {
+		    /* expand buf */
+		    buflen *= 2;
+		    char[] nbuf = new char[buflen];
+		    System.arraycopy(buf, 0, nbuf, 0, buf.length);
+		    buf = nbuf;
+		}
+		buf[bufindx++] = (char)ch;
+		ch = next;
 	    }
+	    /* create the val */
+	    String val = new String(buf, 0, bufindx);
 
-	    //System.out.println(key + " = '" + val + "'");
-	    put(key.toString(), val.toString());
+	    put(key, val);
 	}
     }
 
     /**
-     * Save properties to an OutputStream. Use the header as
-     * a comment at the top of the file.
+     * Stores this property list to the specified output stream. The 
+     * string header is printed as a comment at the beginning of the stream.
+     *
+     * @param   out      an output stream.
+     * @param   header   a description of the property list.
+     * @since   JDK1.0
      */
     public synchronized void save(OutputStream out, String header) {
 	OutputStream localOut = Runtime.getRuntime().getLocalizedOutputStream(out);
@@ -184,10 +234,10 @@ class Properties extends Hashtable {
 			} else {
 			    prnt.write('\\');
 			    prnt.write('u');
-			    prnt.write((ch >> 12) & 0xF);
-			    prnt.write((ch >>  8) & 0xF);
-			    prnt.write((ch >>  4) & 0xF);
-			    prnt.write((ch >>  0) & 0xF);
+			    prnt.write(toHex((ch >> 12) & 0xF));
+			    prnt.write(toHex((ch >>  8) & 0xF));
+			    prnt.write(toHex((ch >>  4) & 0xF));
+			    prnt.write(toHex((ch >>  0) & 0xF));
 			}
 		    } else {
 			prnt.write(ch);
@@ -200,10 +250,15 @@ class Properties extends Hashtable {
     }
 
     /**
-     * Gets a property with the specified key. If the key is not 
-     * found in this property list, tries the defaults. This method 
-     * returns null if the property is not found.
-     * @param key the hashtable key
+     * Searches for the property with the specified key in this property list.
+     * If the key is not found in this property list, the default property list,
+     * and its defaults, recursively, are then checked. The method returns
+     * <code>null</code> if the property is not found.
+     *
+     * @param   key   the property key.
+     * @return  the value in this property list with the specified key value.
+     * @see     java.util.Properties#defaults
+     * @since   JDK1.0
      */
     public String getProperty(String key) {
 	String val = (String)super.get(key);
@@ -211,9 +266,17 @@ class Properties extends Hashtable {
     }
 
     /**
-     * Gets a property with the specified key and default. If the 
-     * key is not found in this property list, tries the defaults. 
-     * This method returns defaultValue if the property is not found.
+     * Searches for the property with the specified key in this property list.
+     * If the key is not found in this property list, the default property list,
+     * and its defaults, recursively, are then checked. The method returns the
+     * default value argument if the property is not found.
+     *
+     * @param   key            the hashtable key.
+     * @param   defaultValue   a default value.
+     *
+     * @return  the value in this property list with the specified key value.
+     * @see     java.util.Properties#defaults
+     * @since   JDK1.0
      */
     public String getProperty(String key, String defaultValue) {
 	String val = getProperty(key);
@@ -221,7 +284,14 @@ class Properties extends Hashtable {
     }
 
     /**
-     * Enumerates all the keys.
+     * Returns an enumeration of all the keys in this property list, including
+     * the keys in the default property list.
+     *
+     * @return  an enumeration of all the keys in this property list, including
+     *          the keys in the default property list.
+     * @see     java.util.Enumeration
+     * @see     java.util.Properties#defaults
+     * @since   JDK1.0
      */
     public Enumeration propertyNames() {
 	Hashtable h = new Hashtable();
@@ -230,7 +300,11 @@ class Properties extends Hashtable {
     }
 
     /**
-     * List properties, for debugging
+     * Prints this property list out to the specified output stream. 
+     * This method is useful for debugging. 
+     *
+     * @param   out   an output stream.
+     * @since   JDK1.0
      */
     public void list(PrintStream out) {
 	out.println("-- listing properties --");
@@ -244,9 +318,34 @@ class Properties extends Hashtable {
 	    }
 	    out.println(key + "=" + val);
 	}
-	
     }
-    
+
+    /**
+     * Prints this property list out to the specified output stream. 
+     * This method is useful for debugging. 
+     *
+     * @param   out   an output stream.
+     * @since   JDK1.1
+     */
+    /*
+     * Rather than use an anonymous inner class to share common code, this
+     * method is duplicated in order to ensure that a non-1.1 compiler can
+     * compile this file.
+     */
+    public void list(PrintWriter out) {
+	out.println("-- listing properties --");
+	Hashtable h = new Hashtable();
+	enumerate(h);
+	for (Enumeration e = h.keys() ; e.hasMoreElements() ;) {
+	    String key = (String)e.nextElement();
+	    String val = (String)h.get(key);
+	    if (val.length() > 40) {
+		val = val.substring(0, 37) + "...";
+	    }
+	    out.println(key + "=" + val);
+	}
+    }
+
     /**
      * Enumerates all key/value pairs in the specified hastable.
      * @param h the hashtable
@@ -260,4 +359,17 @@ class Properties extends Hashtable {
 	    h.put(key, get(key));
 	}
     }
+
+    /**
+     * Convert a nibble to a hex character
+     * @param	nibble	the nibble to convert.
+     */
+    private static char toHex(int nibble) {
+	return hexDigit[(nibble & 0xF)];
+    }
+
+    /** A table of hex digits */
+    private static char[] hexDigit = {
+	'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
+    };
 }

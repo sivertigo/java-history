@@ -1,162 +1,320 @@
 /*
- * @(#)Object.java	1.32 95/12/03  
+ * @(#)Object.java	1.41 01/12/10
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang;
 
 /**
- * The root of the Class hierarchy.  Every Class in the system
- * has Object as its ultimate parent.  Every variable and method
- * defined here is available in every Object. 
- * @see		Class
- * @version 	1.32, 12/03/95
+ * Class <code>Object</code> is the root of the class hierarchy. 
+ * Every class has <code>Object</code> as a superclass. All objects, 
+ * including arrays, implement the methods of this class. 
+ *
+ * @author  unascribed
+ * @version 1.41, 12/10/01
+ * @see     java.lang.Class
+ * @since   JDK1.0
  */
 public class Object {
     /**
-     * Returns the Class of this Object. Java has a runtime
-     * representation for classes- a descriptor of type Class- 
-     * which the method getClass() returns for any Object.
+     * Returns the runtime class of an object. 
+     *
+     * @return  the object of type <code>Class</code> that represents the
+     *          runtime class of the object.
+     * @since   JDK1.0
      */
     public final native Class getClass();
 
     /**
-     * Returns a hashcode for this Object.
-     * Each Object in the Java system has a hashcode. The hashcode
-     * is a number that is usually different for different Objects.
-     * It is used when storing Objects in hashtables.
-     * Note: hashcodes can be negative as well as positive.
-     * @see		java.util.Hashtable
+     * Returns a hash code value for the object. This method is 
+     * supported for the benefit of hashtables such as those provided by 
+     * <code>java.util.Hashtable</code>. 
+     * <p>
+     * The general contract of <code>hashCode</code> is: 
+     * <ul>
+     * <li>Whenever it is invoked on the same object more than once during 
+     *     an execution of a Java application, the <code>hashCode</code> method 
+     *     must consistently return the same integer. This integer need not 
+     *     remain consistent from one execution of an application to another 
+     *     execution of the same application. 
+     * <li>If two objects are equal according to the <code>equals</code> 
+     *     method, then calling the <code>hashCode</code> method on each of the 
+     *     two objects must produce the same integer result. 
+     * </ul>
+     *
+     * @return  a hash code value for this object.
+     * @see     java.lang.Object#equals(java.lang.Object)
+     * @see     java.util.Hashtable
+     * @since   JDK1.0
      */
     public native int hashCode();
 
     /**
      * Compares two Objects for equality.
-     * Returns a boolean that indicates whether this Object is equivalent 
-     * to the specified Object. This method is used when an Object is stored
-     * in a hashtable.
-     * @param	obj	the Object to compare with
-     * @return	true if these Objects are equal; false otherwise.
-     * @see		java.util.Hashtable
+     * <p>
+     * The <code>equals</code> method implements an equivalence relation: 
+     * <ul>
+     * <li>It is <i>reflexive</i>: for any reference value <code>x</code>, 
+     *     <code>x.equals(x)</code> should return <code>true</code>. 
+     * <li>It is <i>symmetric</i>: for any reference values <code>x</code> and 
+     *     <code>y</code>, <code>x.equals(y)</code> should return 
+     *     <code>true</code> if and only if <code>y.equals(x)</code> returns 
+     *     <code>true</code>. 
+     * <li>It is <i>transitive</i>: for any reference values <code>x</code>, 
+     *     <code>y</code>, and <code>z</code>, if <code>x.equals(y)</code>
+     *     returns  <code>true</code> and <code>y.equals(z)</code> returns 
+     *     <code>true</code>, then <code>x.equals(z)</code> should return 
+     *     <code>true</code>. 
+     * <li>It is <i>consistent</i>: for any reference values <code>x</code> 
+     *     and <code>y</code>, multiple invocations of <code>x.equals(y)</code> 
+     *     consistently return <code>true</code> or consistently return 
+     *     <code>false</code>. 
+     * <li>For any reference value <code>x</code>, <code>x.equals(null)</code> 
+     *     should return <code>false</code>.
+     * </ul>
+     * <p>
+     * The equals method for class <code>Object</code> implements the most 
+     * discriminating possible equivalence relation on objects; that is, 
+     * for any reference values <code>x</code> and <code>y</code>, this 
+     * method returns <code>true</code> if and only if <code>x</code> and 
+     * <code>y</code> refer to the same object (<code>x==y</code> has the 
+     * value <code>true</code>). 
+     *
+     * @param   obj   the reference object with which to compare.
+     * @return  <code>true</code> if this object is the same as the obj
+     *          argument; <code>false</code> otherwise.
+     * @see     java.lang.Boolean#hashCode()
+     * @see     java.util.Hashtable
+     * @since   JDK1.0
      */
     public boolean equals(Object obj) {
 	return (this == obj);
     }
 
     /**
-     * Creates a clone of the object. A new instance is allocated and a 
-     * bitwise clone of the current object is place in the new object.
-     * @return		a clone of this Object.
-     * @exception	OutOfMemoryError If there is not enough memory.
-     * @exception	CloneNotSupportedException Object explicitly does not
-     *                      want to be cloned, or it does not support the
-     *                      Cloneable interface.
+     * Creates a new object of the same class as this object. It then 
+     * initializes each of the new object's fields by assigning it the 
+     * same value as the corresponding field in this object. No 
+     * constructor is called. 
+     * <p>
+     * The <code>clone</code> method of class <code>Object</code> will 
+     * only clone an object whose class indicates that it is willing for 
+     * its instances to be cloned. A class indicates that its instances 
+     * can be cloned by declaring that it implements the 
+     * <code>Cloneable</code> interface. 
+     *
+     * @return     a clone of this instance.
+     * @exception  CloneNotSupportedException  if the object's class does not
+     *               support the <code>Cloneable</code> interface. Subclasses
+     *               that override the <code>clone</code> method can also
+     *               throw this exception to indicate that an instance cannot
+     *               be cloned.
+     * @exception  OutOfMemoryError            if there is not enough memory.
+     * @see        java.lang.Cloneable
+     * @since      JDK1.0
      */
     protected native Object clone() throws CloneNotSupportedException;
 
     /**
-     * Returns a String that represents the value of this Object.  It is recommended
-     * that all subclasses override this method.
+     * Returns a string representation of the object. In general, the 
+     * <code>toString</code> method returns a string that 
+     * "textually represents" this object. The result should 
+     * be a concise but informative representation that is easy for a 
+     * person to read.
+     * It is recommendedthat all subclasses override this method.
+     * <p>
+     * The <code>toString</code> method for class <code>Object</code> 
+     * returns a string consisting of the name of the class of which the 
+     * object is an instance, the at-sign character `<code>@</code>', and 
+     * the unsigned hexadecimal representation of the hash code of the 
+     * object. 
+     *
+     * @return  a string representation of the object.
+     * @since   JDK1.0
      */
     public String toString() {
-	return getClass().getName() + "@" + 
-                     Integer.toString(hashCode() << 1 >>> 1, 16);
+	return getClass().getName() + "@" + Integer.toHexString(hashCode());
     }
 
     /**
-     * Notifies a single waiting thread on a change in condition of another thread. 
-     * The thread effecting the change notifies the waiting thread
-     * using notify(). Threads that want to wait for a condition to 
-     * change before proceeding can call wait(). <p>
-     * <em>The method notify() can only be called from within a synchronized method.</em>
+     * Wakes up a single thread that is waiting on this object's 
+     * monitor. A thread waits on an object's monitor by calling one of 
+     * the <code>wait</code> methods.
+     * <p>
+     * This method should only be called by a thread that is the owner 
+     * of this object's monitor. A thread becomes the owner of the 
+     * object's monitor in one of three ways: 
+     * <ul>
+     * <li>By executing a synchronized instance method of that object. 
+     * <li>By executing the body of a <code>synchronized</code> statement 
+     *     that synchronizes on the object. 
+     * <li>For objects of type <code>Class,</code> by executing a 
+     *     synchronized static method of that class. 
+     * </ul>
+     * <p>
+     * Only one thread at a time can own an object's monitor. 
      *
-     * @exception	IllegalMonitorStateException If the current thread
-     *			    is not the owner of the Object's monitor.
-     * @see		Object#wait
-     * @see		Object#notifyAll
+     * @exception  IllegalMonitorStateException  if the current thread is not
+     *               the owner of this object's monitor.
+     * @see        java.lang.Object#notifyAll()
+     * @see        java.lang.Object#wait()
+     * @since      JDK1.0
      */
     public final native void notify();
 
     /**
-     * Notifies all of the threads waiting for a condition to change.
-     * Threads that are waiting are generally waiting for another thread to 
-     * change some condition. Thus, the thread effecting a change that more 
-     * than one thread is waiting for notifies all the waiting threads using
-     * the method notifyAll(). Threads that want to wait for a condition to 
-     * change before proceeding can call wait(). <p>
-     * <em>The method notifyAll() can only be called from within a synchronized method.</em>
+     * Wakes up all threads that are waiting on this object's monitor. A 
+     * thread waits on an object's monitor by calling one of the 
+     * <code>wait</code> methods.
+     * <p>
+     * This method should only be called by a thread that is the owner 
+     * of this object's monitor. See the <code>notify</code> method for a 
+     * description of the ways in which a thread can become the owner of 
+     * a monitor. 
      *
-     * @exception	IllegalMonitorStateException If the current thread
-     * 			    is not the owner of the Object's monitor.
-     * @see		Object#wait
-     * @see		Object#notify
+     * @exception  IllegalMonitorStateException  if the current thread is not
+     *               the owner of this object's monitor.
+     * @see        java.lang.Object#notify()
+     * @see        java.lang.Object#wait()
+     * @since      JDK1.0
      */
     public final native void notifyAll();
 
     /**
-     * Causes a thread to wait until it is notified or the specified timeout
-     * expires. <p>
-     * <em>The method wait() can only be called from within a synchronized method.</em>
+     * Waits to be notified by another thread of a change in this object.
+     * <p>
+     * The current thread must own this object's monitor. The thread 
+     * releases ownership of this monitor and waits until either of the 
+     * following two conditions has occurred: 
+     * <ul>
+     * <li>Another thread notifies threads waiting on this object's monitor 
+     *     to wake up either through a call to the <code>notify</code> method 
+     *     or the <code>notifyAll</code> method. 
+     * <li>The timeout period, specified by the <code>timeout</code> 
+     *     argument in milliseconds, has elapsed. 
+     * </ul>
+     * <p>
+     * The thread then waits until it can re-obtain ownership of the 
+     * monitor and resumes execution. 
+     * <p>
+     * This method should only be called by a thread that is the owner 
+     * of this object's monitor. See the <code>notify</code> method for a 
+     * description of the ways in which a thread can become the owner of 
+     * a monitor. 
      *
-     * @param timeout	the maximum time to wait in milliseconds
-     * @exception	IllegalMonitorStateException If the current thread
-     *			    is not the owner of the Object's monitor.
-     * @exception 	InterruptedException Another thread has interrupted
-     *			    this thread. 
+     * @param      timeout   the maximum time to wait in milliseconds.
+     * @exception  IllegalArgumentException      if the value of timeout is
+     *		     negative.
+     * @exception  IllegalMonitorStateException  if the current thread is not
+     *               the owner of the object's monitor.
+     * @exception  InterruptedException          if another thread has
+     *               interrupted this thread.
+     * @see        java.lang.Object#notify()
+     * @see        java.lang.Object#notifyAll()
+     * @since      JDK1.0
      */
     public final native void wait(long timeout) throws InterruptedException;
 
     /**
-     * More accurate wait.
-     * <em>The method wait() can only be called from within a synchronized method.</em>
+     * Waits to be notified by another thread of a change in this object.
+     * <p>
+     * This method is similar to the <code>wait</code> method of one 
+     * argument, but it allows finer control over the amount of time to 
+     * wait for a notification before giving up. 
+     * <p>
+     * The current thread must own this object's monitor. The thread 
+     * releases ownership of this monitor and waits until either of the 
+     * following two conditions has occurred: 
+     * <ul>
+     * <li>Another thread notifies threads waiting on this object's monitor 
+     *     to wake up either through a call to the <code>notify</code> method 
+     *     or the <code>notifyAll</code> method. 
+     * <li>The timeout period, specified by <code>timeout</code> 
+     *     milliseconds plus <code>nanos</code> nanoseconds arguments, has 
+     *     elapsed. 
+     * </ul>
+     * <p>
+     * The thread then waits until it can re-obtain ownership of the 
+     * monitor and resumes execution 
+     * <p>
+     * This method should only be called by a thread that is the owner 
+     * of this object's monitor. See the <code>notify</code> method for a 
+     * description of the ways in which a thread can become the owner of 
+     * a monitor. 
      *
-     * @param timeout	the maximum time to wait in milliseconds
-     * @param nano      additional time, in nanoseconds range 0-999999
-     * @exception	IllegalMonitorStateException If the current thread
-     *			    is not the owner of the Object's monitor.
-     * @exception 	InterruptedException Another thread has interrupted
-     *			    this thread. 
+     * @param      timeout   the maximum time to wait in milliseconds.
+     * @param      nano      additional time, in nanoseconds range
+     *                       0-999999.
+     * @exception  IllegalArgumentException      if the value of timeout is
+     *			    negative or the value of nanos is
+     *			    not in the range 0-999999.
+     * @exception  IllegalMonitorStateException  if the current thread is not
+     *               the owner of this object's monitor.
+     * @exception  InterruptedException          if another thread has
+     *               interrupted this thread.
+     * @since      JDK1.0
      */
     public final void wait(long timeout, int nanos) throws InterruptedException {
-	if (nanos >= 500000 || (nanos != 0 && timeout==0))
+        if (timeout < 0) {
+            throw new IllegalArgumentException("timeout value is negative");
+        }
+
+        if (nanos < 0 || nanos > 999999) {
+            throw new IllegalArgumentException(
+				"nanosecond timeout value out of range");
+        }
+
+	if (nanos >= 500000 || (nanos != 0 && timeout == 0)) {
 	    timeout++;
+	}
+
 	wait(timeout);
     }
 
     /**
-     * Causes a thread to wait forever until it is notified. <p>
-     * <em>The method wait() can only be called from within a synchronized method</em>
+     * Waits to be notified by another thread of a change in this object. 
+     * <p>
+     * The current thread must own this object's monitor. The thread 
+     * releases ownership of this monitor and waits until another thread 
+     * notifies threads waiting on this object's monitor to wake up 
+     * either through a call to the <code>notify</code> method or the 
+     * <code>notifyAll</code> method. The thread then waits until it can 
+     * re-obtain ownership of the monitor and resumes execution. 
+     * <p>
+     * This method should only be called by a thread that is the owner 
+     * of this object's monitor. See the <code>notify</code> method for a 
+     * description of the ways in which a thread can become the owner of 
+     * a monitor. 
      *
-     * @exception	IllegalMonitorStateException If the current thread
-     *			    is not the owner of the Object's monitor.
-     * @exception 	InterruptedException Another thread has interrupted
-     *			    this thread. 
+     * @exception  IllegalMonitorStateException  if the current thread is not
+     *               the owner of the object's monitor.
+     * @exception  InterruptedException          if another thread has
+     *               interrupted this thread.
+     * @see        java.lang.Object#notify()
+     * @see        java.lang.Object#notifyAll()
+     * @since      JDK1.0
      */
     public final void wait() throws InterruptedException {
 	wait(0);
     }
 
     /**
-     * Code to perform when this object is garbage collected.  
-     * The default is that nothing needs to be performed.
-     * 
-     * Any exception thrown by a finalize method causes the finalization to
-     * halt.  But otherwise, it is ignored.
+     * Called by the garbage collector on an object when garbage collection
+     * determines that there are no more references to the object.
+     * A subclass overrides the <code>finalize</code> method to dispose of
+     * system resources or to perform other cleanup. 
+     * <p>
+     * Any exception thrown by the <code>finalize</code> method causes 
+     * the finalization of this object to be halted, but is otherwise 
+     * ignored. 
+     * <p>
+     * The <code>finalize</code> method in <code>Object</code> does 
+     * nothing. 
+     *
+     * @exception  java.lang.Throwable  [Need description!]
+     * @since      JDK1.0
      */
     protected void finalize() throws Throwable { }
 }
-

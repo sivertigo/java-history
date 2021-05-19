@@ -1,39 +1,32 @@
 /*
- * @(#)SocketImplFactory.java	1.6 95/08/10 Jonathan Payne
+ * @(#)SocketImplFactory.java	1.10 01/12/10
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.net;
 
 /**
- * This interface defines a factory for SocketImpl instances.
- * It is used by the socket class to create socket implementations
- * that implement various policies.
+ * This interface defines a factory for socket implementations. It 
+ * is used by the classes <code>Socket</code> and 
+ * <code>ServerSocket</code> to create actual socket 
+ * implementations. 
  *
- * @version     1.6, 08/10/95
- * @author 	Arthur van Hoff
+ * @author  Arthur van Hoff
+ * @version 1.10, 12/10/01
+ * @see     java.net.Socket
+ * @see     java.net.ServerSocket
+ * @since   JDK1.0
  */
 public 
 interface SocketImplFactory {
-
     /**
-     * Creates a new SocketImpl instance.
+     * Creates a new <code>SocketImpl</code> instance.
+     *
+     * @return  a new instance of <code>SocketImpl</code>.
+     * @see     java.io.SocketImpl
+     * @since   JDK1.0
      */
     SocketImpl createSocketImpl();
 }
-
-

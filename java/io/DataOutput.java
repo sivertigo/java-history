@@ -1,124 +1,152 @@
 /*
- * @(#)DataOutput.java	1.4 95/12/18 Frank Yellin
+ * @(#)DataOutput.java	1.8 01/12/10
  *
- * Copyright (c) 1995 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.io;
 
 /**
- * DataOutput is an interface describing streams that can write 
- * output in a machine-independent format.
+ * The data output interface is implemented by streams that can 
+ * write primitive Java data types to an output stream in a 
+ * machine-independent manner. 
  *
- * @see DataOutputStream
- * @see DataInput
- * @version 	1.4, 12/18/95
- * @author	Frank Yellin
+ * @author  Frank Yellin
+ * @version 1.8, 12/10/01
+ * @see     java.io.DataInput  
+ * @see     java.io.DataOutputStream
+ * @since   JDK1.0
  */
-
 public
 interface DataOutput {
     /**
-     * Writes a byte. Will block until the byte is actually
-     * written.
-     * @param b the byte to be written
-     * @exception IOException If an I/O error has occurred.
+     * Writes the specified byte to this data output stream. 
+     *
+     * @param      b   the byte to be written.
+     * @exception  IOException  if an I/O error occurs.
+     * @since      JDK1.0
      */
     void write(int b) throws IOException;
 
     /**
-     * Writes an array of bytes.  
-     * @param b	the data to be written
-     * @exception IOException If an I/O error has occurred.
+     * Writes <code>b.length</code> bytes from the specified byte array 
+     * to this output stream. 
+     *
+     * @param      b   the data.
+     * @exception  IOException  if an I/O error occurs.
+     * @since      JDK1.0
      */
     void write(byte b[]) throws IOException;
 
     /**
-     * Writes a subarray of bytes.  
-     * @param b	the data to be written
-     * @param off	the start offset in the data
-     * @param len	the number of bytes that are written
-     * @exception IOException If an I/O error has occurred.
+     * Writes <code>len</code> bytes from the specified byte array 
+     * starting at offset <code>off</code> to this output stream. 
+     *
+     * @param      b     the data.
+     * @param      off   the start offset in the data.
+     * @param      len   the number of bytes to write.
+     * @exception  IOException  if an I/O error occurs.
+     * @since      JDK1.0
      */
     void write(byte b[], int off, int len) throws IOException;
 
-
     /**
-     * Writes a boolean.
-     * @param v the boolean to be written
+     * Writes a <code>boolean</code> value to this output stream. 
+     *
+     * @param      v   the boolean to be written.
+     * @exception  IOException  if an I/O error occurs.
+     * @since      JDK1.0
      */
     void writeBoolean(boolean v) throws IOException;
 
     /**
-     * Writes an 8 bit byte.
-     * @param v the byte value to be written
+     * Writes an 8-bit value to this output stream. 
+     *
+     * @param      v   the byte value to be written.
+     * @exception  IOException  if an I/O error occurs.
+     * @since      JDK1.0
      */
     void writeByte(int v) throws IOException;
 
     /**
-     * Writes a 16 bit short.
-     * @param v the short value to be written
+     * Writes a 16-bit value to this output stream. 
+     *
+     * @param      v   the <code>short</code> value to be written.
+     * @exception  IOException  if an I/O error occurs.
+     * @since      JDK1.0
      */
     void writeShort(int v) throws IOException;
 
     /**
-     * Writes a 16 bit char.
-     * @param v the char value to be written
+     * Writes a <code>char</code> value to this output stream. 
+     *
+     * @param      v   the <code>char</code> value to be written.
+     * @exception  IOException  if an I/O error occurs.
+     * @since      JDK1.0
      */
     void writeChar(int v) throws IOException;
 
     /**
-     * Writes a 32 bit int.
-     * @param v the integer value to be written
+     * Writes an <code>int</code> value to this output stream. 
+     *
+     * @param      v   the <code>int</code> value to be written.
+     * @exception  IOException  if an I/O error occurs.
+     * @since      JDK1.0
      */
     void writeInt(int v) throws IOException;
 
     /**
-     * Writes a 64 bit long.
-     * @param v the long value to be written
+     * Writes a <code>long</code> value to this output stream. 
+     *
+     * @param      v   the <code>long</code> value to be written.
+     * @exception  IOException  if an I/O error occurs.
+     * @since      JDK1.0
      */
     void writeLong(long v) throws IOException;
 
     /**
-     * Writes a 32 bit float.
-     * @param v the float value to be written
+     * Writes a <code>float</code> value to this output stream. 
+     *
+     * @param      v   the <code>float</code> value to be written.
+     * @exception  IOException  if an I/O error occurs.
+     * @since      JDK1.0
      */
     void writeFloat(float v) throws IOException;
 
     /**
-     * Writes a 64 bit double.
-     * @param v the double value to be written
+     * Writes a <code>double</code> value to this output stream. 
+     *
+     * @param      v   the <code>double</code> value to be written.
+     * @exception  IOException  if an I/O error occurs.
+     * @since      JDK1.0
      */
     void writeDouble(double v) throws IOException;
 
     /**
-     * Writes a String as a sequence of bytes.
-     * @param s the String of bytes to be written
+     * Writes a string to this output stream. 
+     *
+     * @param      s   the string of bytes to be written.
+     * @exception  IOException  if an I/O error occurs.
+     * @since      JDK1.0
      */
     void writeBytes(String s) throws IOException;
 
     /**
-     * Writes a String as a sequence of chars.
-     * @param s the String of chars to be written
+     * Writes a string to this output stream. 
+     *
+     * @param      s   the string value to be written.
+     * @exception  IOException  if an I/O error occurs.
+     * @since      JDK1.0
      */
     void writeChars(String s) throws IOException;
 
     /**
-     * Writes a String in UTF format.
-     * @param str the String in UTF format
+     * Writes a Unicode string by encoding it using modified UTF-8 format.
+     *
+     * @param      str   the string value to be written.
+     * @exception  IOException  if an I/O error occurs.
+     * @since   JDK1.0
      */
     void writeUTF(String str) throws IOException;
 }

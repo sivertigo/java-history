@@ -1,48 +1,48 @@
 /*
- * @(#)Throwable.java	1.24 95/12/06  
+ * @(#)Throwable.java	1.34 01/12/10
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang;
 
 /**
- * An object signalling that an exceptional condition has occurred.
- * All exceptions are a subclass of Exception. An exception contains
- * a snapshot of the execution stack, this snapshot is used to print
- * a stack backtrace. An exception also contains a message string.
- * Here is an example of how to catch an exception:
- * <pre>
- *	try {
- *	    int a[] = new int[2];
- *	    a[4];
- *	} catch (ArrayIndexOutOfBoundsException e) {
- *	    System.out.println("an exception occurred: " + e.getMessage());
- *	    e.printStackTrace();
- *	}
- * </pre>
- * @version 	1.24, 12/06/95
+ * The <code>Throwable</code> class is the superclass of all errors 
+ * and exceptions in the Java language. Only objects that are 
+ * instances of this class (or of one of its subclasses) are thrown 
+ * by the Java Virtual Machine or can be thrown by the Java 
+ * <code>throw</code> statement. Similarly, only this class or one of 
+ * its subclasses can be the argument type in a <code>catch</code> 
+ * clause. 
+ * <p>
+ * A <code>Throwable</code> class contains a snapshot of the 
+ * execution stack of its thread at the time it was created. It can 
+ * also contain a message string that gives more information about 
+ * the error. 
+ * <p>
+ * Here is one example of catching an exception: 
+ * <p><blockquote><pre>
+ *     try {
+ *         int a[] = new int[2];
+ *         a[4];
+ *     } catch (ArrayIndexOutOfBoundsException e) {
+ *         System.out.println("exception: " + e.getMessage());
+ *         e.printStackTrace();
+ *     }
+ * </pre></blockquote>
+ *
+ * @author  unascribed
+ * @version 1.31, 01/26/97
+ * @since   JDK1.0
  */
-public class Throwable {
+public class Throwable implements java.io.Serializable {
     /**
      * Native code saves some indication of the stack backtrace in this
      * slot.
      */
-    private Object backtrace;	
-    
+    private transient Object backtrace;	
+
     /**
      * Specific details about the Throwable.  For example,
      * for FileNotFoundThrowables, this contains the name of
@@ -50,18 +50,25 @@ public class Throwable {
      */
     private String detailMessage;
 
+    /** use serialVersionUID from JDK 1.0.2 for interoperability */
+    private static final long serialVersionUID = -3042686055658047285L;
+
     /**
-     * Constructs a new Throwable with no detail message. The stack
-     * trace is automatically filled in.
+     * Constructs a new <code>Throwable</code> with no detail message. 
+     * The stack trace is automatically filled in. 
+     *
+     * @since   JDK1.0
      */
     public Throwable() {
 	fillInStackTrace();
     }
 
     /**
-     * Constructs a new Throwable with the specified detail message.
-     * The stack trace is automatically filled in.
-     * @param message	the detailed message
+     * Constructs a new <code>Throwable</code> with the specified detail 
+     * message. The stack trace is automatically filled in. 
+     *
+     * @param   message   the detail message.
+     * @since   JDK1.0
      */
     public Throwable(String message) {
 	fillInStackTrace();
@@ -69,16 +76,35 @@ public class Throwable {
     }
 
     /**
-     * Gets the detail message of the Throwable.  A detail message
-     * is a String that describes the Throwable that has taken place.
-     * @return the detail message of the throwable.
+     * Returns the detail message of this throwable object.
+     *
+     * @return  the detail message of this <code>Throwable</code>,
+     *          or <code>null</code> if this <code>Throwable</code> does not
+     *          have a detail message.
+     * @since   JDK1.0
      */
     public String getMessage() {
 	return detailMessage;
     }
 
     /**
-     * Returns a short description of the Throwable.
+     * Creates a localized description of this <code>Throwable</code>.
+     * Subclasses may override this method in order to produce a
+     * locale-specific message.  For subclasses that do not override this
+     * method, the default implementation returns the same result as
+     * <code>getMessage()</code>.
+     *
+     * @since   JDK1.1
+     */
+    public String getLocalizedMessage() {
+	return getMessage();
+    }
+
+    /**
+     * Returns a short description of this throwable object.
+     *
+     * @return  a string representation of this <code>Throwable</code>.
+     * @since   JDK1.0
      */
     public String toString() {
 	String s = getClass().getName();
@@ -87,34 +113,58 @@ public class Throwable {
     }
 
     /**
-     * Prints the Throwable and the Throwable's stack trace.
+     * Prints this <code>Throwable</code> and its backtrace to the 
+     * standard error stream. 
+     *
+     * @see     java.lang.System#err
+     * @since   JDK1.0
      */
     public void printStackTrace() { 
         System.err.println(this);
 	printStackTrace0(System.err);
     }
 
+    /**
+     * Prints this <code>Throwable</code> and its backtrace to the 
+     * specified print stream. 
+     *
+     * @since   JDK1.0
+     */
     public void printStackTrace(java.io.PrintStream s) { 
         s.println(this);
 	printStackTrace0(s);
     }
 
-    private native void printStackTrace0(java.io.PrintStream s);
+    /**
+     * Prints this <code>Throwable</code> and its backtrace to the specified
+     * print writer.
+     *
+     * @since   JDK1.1
+     */
+    public void printStackTrace(java.io.PrintWriter s) { 
+        s.println(this);
+	printStackTrace0(s);
+    }
+
+    /* The given object must have a void println(char[]) method */
+    private native void printStackTrace0(Object s);
 
     /**
-     * Fills in the excecution stack trace. This is useful only
-     * when rethrowing a Throwable. For example:
-     * <p>
-     * <pre>
-     *	   try {
-     *	        a = b / c;
-     *	   } catch(ArithmeticThrowable e) {
-     *		a = Number.MAX_VALUE;
-     *	        throw e.fillInStackTrace();
-     *	   }
-     * </pre>
-     * @return the Throwable itself.
-     * @see Throwable#printStackTrace
+     * Fills in the execution stack trace. This method is useful when an 
+     * application is re-throwing an error or exception. For example: 
+     * <p><blockquote><pre>
+     *     try {
+     *         a = b / c;
+     *     } catch(ArithmeticThrowable e) {
+     *         a = Number.MAX_VALUE;
+     *         throw e.fillInStackTrace();
+     *     }
+     * </pre></blockquote>
+     *
+     * @return  this <code>Throwable</code> object.
+     * @see     java.lang.Throwable#printStackTrace()
+     * @since   JDK1.0
      */
     public native Throwable fillInStackTrace();
+
 }
