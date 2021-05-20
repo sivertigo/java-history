@@ -1,20 +1,8 @@
 /*
- * @(#)TTY.java	1.63 95/12/09
+ * @(#)TTY.java	1.82 01/12/10
  *
- * Copyright (c) 1995 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package sun.tools.ttydebug;
@@ -30,7 +18,12 @@ public class TTY implements DebuggerCallback {
     PrintStream out = null;
     PrintStream console = null;
 
+    private static final String progname = "jdb";
+    private static final String version = "01/12/10";
+
     private String lastArgs = null;
+    
+    private boolean hasRun = false;
     
     private RemoteThread indexToThread(int index) throws Exception {
 	setDefaultThreadGroup();
@@ -106,7 +99,18 @@ public class TTY implements DebuggerCallback {
     }
 
     public void quitEvent() throws Exception {
-	out.println("\nThe application has exited");
+        String msg = null;
+        if (lastArgs != null) {
+            StringTokenizer t = new StringTokenizer(lastArgs);
+            if (t.hasMoreTokens()) {
+                msg = new String("\n" + t.nextToken() + " exited");
+            }
+        }
+        if (msg == null) {
+            msg = new String("\nThe application exited");
+        }
+        out.println(msg);
+        currentThread = null;
         System.exit(0);
     }
 
@@ -131,7 +135,7 @@ public class TTY implements DebuggerCallback {
 
 	    RemoteField methods[] = cls.getMethods();
 	    for (int i = 0; i < methods.length; i++) {
-		out.println(methods[i].getType());
+		out.println(methods[i].getTypedName());
 	    }
 	} catch (IllegalArgumentException e) {
 	    out.println("\"" + idClass +
@@ -158,6 +162,9 @@ public class TTY implements DebuggerCallback {
 		maxName = name.length();
 	}
 
+        String maxNumString = String.valueOf(iThread + tlist.length);
+        int maxNumDigits = maxNumString.length();
+
 	for (int i = 0 ; i < tlist.length ; i++) {
 	    char buf[] = new char[80];
 	    for (int j = 0; j < 79; j++) {
@@ -167,9 +174,13 @@ public class TTY implements DebuggerCallback {
 	    StringBuffer sbOut = new StringBuffer();
 	    sbOut.append(buf);
 
-	    sbOut.insert(((i + iThread + 1) < 10) ? 1 : 0, (i + iThread + 1));
-	    sbOut.insert(2, ".");
-	    int iBuf = 4;
+            // Right-justify the thread number at start of output string
+            String numString = String.valueOf(iThread + i + 1);
+	    sbOut.insert(maxNumDigits - numString.length(),
+                         numString);
+	    sbOut.insert(maxNumDigits, ".");
+
+	    int iBuf = maxNumDigits + 2;
 	    sbOut.insert(iBuf, tlist[i].description());
 	    iBuf += maxId + 1;
 	    String name = tlist[i].getName();
@@ -269,6 +280,11 @@ public class TTY implements DebuggerCallback {
 	String argv[] = new String[100];
 	int argc = 0;
 
+        if ( hasRun ) {
+            out.println("Cannot restart program in this session");
+            return;
+        }
+
 	if (!t.hasMoreTokens() && lastArgs != null) {
 	    t = new StringTokenizer(lastArgs);
 	    out.println("run " + lastArgs);
@@ -298,6 +314,8 @@ public class TTY implements DebuggerCallback {
 	} else {
 	    out.println("No class name specified.");
 	}
+
+        hasRun = true;
     }
 
     void load(StringTokenizer t) throws Exception {
@@ -379,27 +397,52 @@ public class TTY implements DebuggerCallback {
     }
 
     void cont() throws Exception {
-	if (currentThread == null) {
-	    out.println("Nothing suspended.");
-	    return;
-	}
-	setDefaultThreadGroup();
-	RemoteThread list[] = currentThreadGroup.listThreads(true);
-	for (int i = 0; i < list.length; i++) {
-	    list[i].cont();
-	}
-	currentThread.resetCurrentFrameIndex();
+        if (currentThread == null) {
+            out.println("Nothing suspended.");
+            return;
+        }
+	debugger.cont();
     }
 
-    void step() throws Exception {
+    /* step
+     *
+     * step up (out of a function).
+     * Courtesy of Gordon Hirsch of SAS.
+     */
+    void step(StringTokenizer t) throws Exception {
 	if (currentThread == null) {
 	    out.println("Nothing suspended.");
 	    return;
 	}
 	try {
-	    currentThread.step(true);
+	    if (t.hasMoreTokens()) {
+		String nt = t.nextToken().toLowerCase();
+		if (nt.equals("up")) {
+		    currentThread.stepOut();               
+		} else {
+		    currentThread.step(true);
+		}
+	    } else {
+		currentThread.step(true);
+	    }
 	} catch (IllegalAccessError e) {
-	    out.println("Current thread is not at breakpoint.");
+	    out.println("Current thread is not suspended.");
+	}
+    }
+
+    /* stepi
+     * step instruction.
+     * Courtesy of Gordon Hirsch of SAS.
+     */
+    void stepi() throws Exception {
+	if (currentThread == null) {
+	    out.println("Nothing suspended.");
+	    return;
+	}
+	try {
+	    currentThread.step(false);
+	} catch (IllegalAccessError e) {
+	    out.println("Current thread is not suspended.");
 	}
     }
 
@@ -411,7 +454,7 @@ public class TTY implements DebuggerCallback {
 	try {
 	    currentThread.next();
 	} catch (IllegalAccessError e) {
-	    out.println("Current thread is not at breakpoint.");
+	    out.println("Current thread is not suspended.");
 	}
     }
 
@@ -553,7 +596,7 @@ public class TTY implements DebuggerCallback {
 	}
     }
 
-    void dumpStack(RemoteThread thread) throws Exception {
+    void dumpStack(RemoteThread thread, boolean showPC) throws Exception {
 	RemoteStackFrame[] stack = thread.dumpStack();
 	if (stack.length == 0) {
 	    out.println("Thread is not running (no stack).");
@@ -561,18 +604,22 @@ public class TTY implements DebuggerCallback {
 	    int nFrames = stack.length;
 	    for (int i = thread.getCurrentFrameIndex(); i < nFrames; i++) {
 		out.print("  [" + (i + 1) + "] ");
-		out.println(stack[i].toString());
+		out.print(stack[i].toString());
+		if (showPC) {
+		    out.print(", pc = " + stack[i].getPC());
+		}
+		out.println();
 	    }
 	}
     }
 
-    void where(StringTokenizer t) throws Exception {
+    void where(StringTokenizer t, boolean showPC) throws Exception {
 	if (!t.hasMoreTokens()) {
 	    if (currentThread == null) {
 		out.println("No thread specified.");
 		return;
 	    }
-	    dumpStack(currentThread);
+	    dumpStack(currentThread, showPC);
 	} else {
 	    String token = t.nextToken();
 	    if (token.toLowerCase().equals("all")) {
@@ -580,14 +627,14 @@ public class TTY implements DebuggerCallback {
 		RemoteThread list[] = currentThreadGroup.listThreads(true);
 		for (int i = 0; i < list.length; i++) {
 		    out.println(list[i].getName() + ": ");
-		    dumpStack(list[i]);
+		    dumpStack(list[i], showPC);
 		}
 	    } else {
 		int threadId = parseThreadId(token);
 		if (threadId == 0) {
 		    return;
 		}
-		dumpStack(indexToThread(threadId));
+		dumpStack(indexToThread(threadId), showPC);
 	    }
 	}
     }
@@ -723,8 +770,28 @@ public class TTY implements DebuggerCallback {
                 if (idMethod == null) {
                     idMethod = t.nextToken();
                 }
-		RemoteField method = cls.getMethod(idMethod);
-		if (method == null) {
+                RemoteField method;
+                try {
+                    method = cls.getMethod(idMethod);
+
+                    /*
+                     * Prevent a breakpoint on overloaded method, since there
+                     * is, currently,  no way to choose among the overloads.
+                     */
+                    RemoteField[] allMethods = cls.getMethods();
+                    for (int i = 0; i < allMethods.length; i++) {
+                        if (allMethods[i].getName().equals(idMethod)
+                                        && (allMethods[i] != method)) {
+                            out.println(cls.getName() + "." + idMethod 
+                                + " is overloaded. Use the 'stop at' command to " 
+                                + "set a breakpoint in one of the overloads");
+                            return;
+                            
+                        }
+                    }
+
+
+                } catch (NoSuchMethodException nsme) {
 		    out.println("Class " + cls.getName() +
 				       " doesn't have a method " + idMethod);
 		    return;
@@ -772,8 +839,10 @@ public class TTY implements DebuggerCallback {
                 idMethod = idClass.substring(idot + 1);
                 idClass = idClass.substring(0, idot);
                 cls = getClassFromToken(idClass);
-		RemoteField method = cls.getMethod(idMethod);
-		if (method == null) {
+                RemoteField method;
+                try {
+                    method = cls.getMethod(idMethod);
+                } catch (NoSuchMethodException nsme) {
 		    out.println("\"" + idMethod + 
 				"\" is not a valid method name of class " +
 				cls.getName());
@@ -829,8 +898,26 @@ public class TTY implements DebuggerCallback {
 	
 	int lineno;
 	if (t.hasMoreTokens()) {
-	    String idLine = t.nextToken();
-	    lineno = Integer.valueOf(idLine).intValue();
+	    String id = t.nextToken();
+
+            // See if token is a line number.
+            try {
+                lineno = Integer.valueOf(id).intValue();
+            } catch (NumberFormatException nfe) {
+                // It isn't -- see if it's a method name.
+                try {
+                    lineno = frame.getRemoteClass().getMethodLineNumber(id);
+                } catch (NoSuchMethodException iobe) {
+                    out.println(id + " is not a valid line number or " +
+                                "method name for class " + 
+                                frame.getRemoteClass().getName());
+                    return;
+                } catch (NoSuchLineNumberException nse) {
+                    out.println("Line number information not found in " +
+                                frame.getRemoteClass().getName());
+                    return;
+                }
+            }
 	} else {
 	    lineno = frame.getLineNumber();
 	}
@@ -876,6 +963,17 @@ public class TTY implements DebuggerCallback {
 	}
     }
 
+    /* Print a stack variable */
+    private void printVar(RemoteStackVariable var) {
+        out.print("  " + var.getName());
+        if (var.inScope()) {
+            RemoteValue val = var.getValue();
+            out.println(" = " + (val == null? "null" : val.toString()) );
+        } else {
+            out.println(" is not in scope");
+        }
+    }
+
     /* Print all local variables in current stack frame. */
     void locals() throws Exception {
 	if (currentThread == null) {
@@ -883,254 +981,326 @@ public class TTY implements DebuggerCallback {
 			       "use the \"thread\" command first.");
 	    return;
 	}
+        if (!currentThread.isSuspended()) {
+            out.println("Thread isn't suspended.");
+            return;
+        }
 	RemoteStackVariable rsv[] = currentThread.getStackVariables();
 	if (rsv == null || rsv.length == 0) {
 	    out.println("No local variables: try compiling with -g");
 	    return;
 	}
-	out.println("Local variables and arguments:");
+	out.println("Method arguments:");
 	for (int i = 0; i < rsv.length; i++) {
-	    out.print("  " + rsv[i].getName());
-	    if (rsv[i].inScope()) {
-		out.println(" = " + rsv[i].getValue().toString());
-	    } else {
-		out.println(" is not in scope.");
+	    if (rsv[i].methodArgument()) {
+		printVar(rsv[i]);
 	    }
+	}
+	out.println("Local variables:");
+	for (int i = 0; i < rsv.length; i++) {
+	    if (!rsv[i].methodArgument()) {
+		printVar(rsv[i]);
+            }
 	}
 	return;
     }
 
-    /* Print a specified reference.  Returns success in resolving reference. */
-    boolean print(StringTokenizer t, boolean dumpObject, boolean recursing) throws Exception {
+    static final String printDelimiters = ".[(";
+
+    /* Print a specified reference. 
+     * New print() implementation courtesy of S. Blackheath of IBM
+     */
+    void print(StringTokenizer t, boolean dumpObject) throws Exception {
 	if (!t.hasMoreTokens()) {
 	    out.println("No objects specified.");
-	    return false;
+            return;
 	}
 
-	while (t.hasMoreTokens()) {
-	    int id;
-	    RemoteValue obj = null;
+	int id;
+	RemoteValue obj = null;
 
-	    String delimiters = ".[(";
+        while (t.hasMoreTokens()) {
 	    String expr = t.nextToken();
 	    StringTokenizer pieces =
-		new StringTokenizer(expr, delimiters, true);
+	       new StringTokenizer(expr, printDelimiters, true);
 
 	    String idToken = pieces.nextToken(); // There will be at least one.
-	    String varName = expr;
 	    if (idToken.startsWith("t@")) {
-		/* It's a thread */
-		setDefaultThreadGroup();
-		RemoteThread tlist[] = currentThreadGroup.listThreads(true);
-		try {
-		    id = Integer.valueOf(idToken.substring(2)).intValue();
-		} catch (NumberFormatException e) {
+	        /* It's a thread */
+	        setDefaultThreadGroup();
+	        RemoteThread tlist[] = currentThreadGroup.listThreads(true);
+	        try {
+	            id = Integer.valueOf(idToken.substring(2)).intValue();
+	        } catch (NumberFormatException e) {
 		    id = 0;
-		}
-		if (id <= 0 || id > tlist.length) {
-		    out.println("\"" + idToken +
-				       "\" is not a valid thread id.");
-		    return false;
-		}
-		obj = tlist[id - 1];
+	        }
+	        if (id <= 0 || id > tlist.length) {
+	            out.println("\"" + idToken +
+		           "\" is not a valid thread id.");
+                    continue;
+	        }
+	        obj = tlist[id - 1];
 
 	    } else if (idToken.startsWith("$s")) {
-		int slotnum;
-		try {
-		    slotnum = Integer.valueOf(idToken.substring(2)).intValue();
-		} catch (NumberFormatException e) {
-		    out.println("\"" + idToken +
-				       "\" is not a valid slot.");
-		    return false;
-		}
-		if (currentThread != null) {
-		    RemoteStackVariable rsv[] = currentThread.getStackVariables();
+	        int slotnum;
+	        try {
+	            slotnum = Integer.valueOf(idToken.substring(2)).intValue();
+	        } catch (NumberFormatException e) {
+
+	            out.println("\"" + idToken + "\" is not a valid slot.");
+                    continue;
+	        }
+	        if (currentThread != null) {
+	            RemoteStackVariable rsv[] = currentThread.getStackVariables();
 		    if (rsv == null || slotnum >= rsv.length) {
-			out.println("\"" + idToken +
-					   "\" is not a valid slot.");
-			return false;
+		        out.println("\"" + idToken + "\" is not a valid slot.");
+                        continue;
 		    }
 		    obj = rsv[slotnum].getValue();
-		}
+	        }
 		
 	    } else if (idToken.startsWith("0x") ||
 		       Character.isDigit(idToken.charAt(0))) {
-		/* It's an object id. */
-		try {
-		    id = RemoteObject.fromHex(idToken);
-		} catch (NumberFormatException e) {
-		    id = 0;
-		}
-		if (id == 0 || (obj = debugger.get(new Integer(id))) == null) {
-		    out.println("\"" + idToken +
-				       "\" is not a valid id.");
-		    return false;
-		}
+	        /* It's an object id. */
+	        try {
+	            id = RemoteObject.fromHex(idToken);
+	        } catch (NumberFormatException e) {
+	            id = 0;
+	        }
+                if (id == 0 || (obj = debugger.get(new Integer(id))) == null) {
+	            out.println("\"" + idToken + "\" is not a valid id.");
+                    continue;
+	        }
 	    } else {
-		/* See if it's a local stack variable */
-		if (currentThread != null) {
-		    RemoteStackVariable rsv =
-			currentThread.getStackVariable(idToken);
+	        /* See if it's a local stack variable */
+                RemoteStackVariable rsv = null;
+	        if (currentThread != null) {
+		    rsv = currentThread.getStackVariable(idToken);
 		    if (rsv != null && !rsv.inScope()) {
 		        out.println(idToken + " is not in scope.");
-			return false;
+                        continue;
 		    }
 		    obj = (rsv == null) ? null : rsv.getValue();
-		}
-		if (obj == null) {
-		    if (idToken.equals("this") == false) {
-			/* See if it's an instance variable */
-			String instanceStr = "this." + idToken;
-			if (print(new StringTokenizer(instanceStr),
-				  dumpObject, true))
-			    return true;
-		    }
-		    
-		    /* It's a class */
-		    obj = debugger.findClass(idToken);
-		    if (obj == null) {
-			if (!recursing) {
-			    out.println("\"" + expr + "\" is not a " +
-					       "valid id or class name.");
-			}
-			return false;
-		    }
-		}
+	        }
+	        if (rsv == null) {
+                    String error = null;
+                    /* See if it's an instance variable */
+                    String instanceStr = idToken;
+                    try {
+                        instanceStr = instanceStr + pieces.nextToken("");
+                    }
+                    catch (NoSuchElementException e) {}
+
+                    if (currentThread != null)
+                        rsv = currentThread.getStackVariable("this");
+                    if (rsv != null && rsv.inScope()) {
+                        obj = rsv.getValue();
+
+                        error = printModifiers(expr,
+                              new StringTokenizer("."+instanceStr, printDelimiters, true),
+                              dumpObject, obj, true);
+                        if (error == null)
+                            continue;
+                    }
+
+                    // If the above failed, then re-construct the same
+                    // string tokenizer we had before.
+                    pieces = new StringTokenizer(instanceStr, printDelimiters, true);
+                    idToken = pieces.nextToken();
+
+		    /* Try interpreting it as a class */
+                    while (true) {
+		        obj = debugger.findClass(idToken);
+		        if (obj != null)             // break if this is a valid class name
+                            break;
+                        if (!pieces.hasMoreTokens()) // break if we run out of input
+                            break;
+                        String dot = pieces.nextToken();
+                        if (!dot.equals("."))        // break if this token is not a dot
+                            break;
+                        if (!pieces.hasMoreTokens())
+                            break;
+                        // If it is a dot, then add the next token, and loop
+                        idToken = idToken + dot + pieces.nextToken();
+                    }
+                    if (obj == null) {
+                        if (error == null)
+		            error = "\"" + expr + "\" is not a " + "valid local or class name.";
+                    }
+                    else {
+                        String error2 = printModifiers(expr, pieces, dumpObject, obj, false);
+                        if (error2 == null)
+                            continue;
+                        if (error == null)
+                            error = error2;
+                    }
+                    out.println(error);
+                    continue;
+	        }
 	    }
-
-	    RemoteInt noValue = new RemoteInt(-1);
-	    RemoteValue rv = noValue;
-	    String lastField = "";
-	    idToken = pieces.hasMoreTokens() ? pieces.nextToken() : null;
-	    while (idToken != null) {
-
-		if (idToken.equals(".")) {
-		    if (pieces.hasMoreTokens() == false) {
-			out.println("\"" + expr +
-					   "\" is not a valid expression.");
-			return false;
-		    }
-		    idToken = pieces.nextToken();
-
-		    if (rv != noValue) {
-			/* attempt made to get a field on a non-object */
-			out.println("\"" + lastField +
-					   "\" is not an object.");
-			return false;
-		    }
-		    lastField = idToken;
-			
-		    rv = ((RemoteObject)obj).getFieldValue(idToken);
-		    if (rv == null) {
-			out.println("\"" + idToken +
-					   "\" is not a valid field of " +
-					   obj.description());
-			return false;
-		    }
-		    if (rv.isObject()) {
-			obj = rv;
-			rv = noValue;
-		    }
-		    idToken =
-			pieces.hasMoreTokens() ? pieces.nextToken() : null;
-
-		} else if (idToken.equals("[")) {
-		    if (pieces.hasMoreTokens() == false) {
-			out.println("\"" + expr +
-					   "\" is not a valid expression.");
-			return false;
-		    }
-		    idToken = pieces.nextToken("]");
-		    try {
-			int index = Integer.valueOf(idToken).intValue();
-			rv = ((RemoteArray)rv).getElement(index);
-		    } catch (NumberFormatException e) {
-			out.println("\"" + idToken +
-					   "\" is not a valid decimal number.");
-			return false;
-		    } catch (ArrayIndexOutOfBoundsException e) {
-			out.println(idToken + " is out of bounds for " +
-					   obj.description());
-			return false;
-		    }
-		    if (rv != null && rv.isObject()) {
-			obj = rv;
-			rv = noValue;
-		    }
-		    if (pieces.hasMoreTokens() == false ||
-			(idToken = pieces.nextToken()).equals("]") == false) {
-			out.println("\"" + expr +
-					   "\" is not a valid expression.");
-			return false;
-		    }
-		    idToken = pieces.hasMoreTokens() ?
-			pieces.nextToken(delimiters) : null;
-
-		} else if (idToken.equals("(")) {
-		    out.println("print <method> not supported yet.");
-		    return false;
-		} else {
-		    /* Should never get here. */
-		    out.println("invalid expression");
-		    return false;
-		}
-	    }
-
-	    out.print(varName + " = ");
-	    if (rv != noValue) {
-		out.println((rv == null) ? "null" : rv.description());
-	    } else if (dumpObject && obj instanceof RemoteObject) {
-		out.println(obj.description() + " {");
-
-		if (obj instanceof RemoteClass) {
-		    RemoteClass cls = (RemoteClass)obj;
-
-		    out.print("    superclass = ");
-		    RemoteClass superClass = cls.getSuperclass();
-		    out.println((superClass == null) ?
-				       "null" : superClass.description());
-
-		    out.print("    loader = ");
-		    RemoteObject loader = cls.getClassLoader();
-		    out.println((loader == null) ?
-				       "null" : loader.description());
-
-		    RemoteClass interfaces[] = cls.getInterfaces();
-		    if (interfaces != null && interfaces.length > 0) {
-			out.println("    interfaces:");
-			for (int i = 0; i < interfaces.length; i++) {
-			    out.println("        " + interfaces[i]);
-			}
-		    }
-		}
-
-		RemoteField fields[] = ((RemoteObject)obj).getFields();
-		if (obj instanceof RemoteClass && fields.length > 0) {
-		    out.println();
-		}
-		for (int i = 0; i < fields.length; i++) {
-		    String name = fields[i].getType();
-		    String modifiers = fields[i].getModifiers();
-		    out.print("    " + modifiers + name + " = ");
-		    RemoteValue v = ((RemoteObject)obj).getFieldValue(i);
-		    out.println((v == null) ? "null" : v.description());
-		}
-		out.println("}");
-	    } else {
-		out.println(obj.toString());
-	    }
-	}
-	return true;
+            String error = printModifiers(expr, pieces, dumpObject, obj, false);
+            if (error != null)
+                out.println(error);
+        }
     }
 
-    void help
-	() {
+    String printModifiers(String expr, StringTokenizer pieces, boolean dumpObject, RemoteValue obj,
+        boolean could_be_local_or_class)
+        throws Exception
+    {
+        RemoteInt noValue = new RemoteInt(-1);
+        RemoteValue rv = noValue;
+
+        // If the object is null, or a non-object type (integer, array, etc...)
+        // then the value must be in rv.
+        if (obj == null)
+            rv = null;
+        else
+        if (!obj.isObject())
+            rv = obj;
+
+	String lastField = "";
+	String idToken = pieces.hasMoreTokens() ? pieces.nextToken() : null;
+	while (idToken != null) {
+
+	    if (idToken.equals(".")) {
+	        if (pieces.hasMoreTokens() == false) {
+		    return "\"" + expr + "\" is not a valid expression.";
+		}
+		idToken = pieces.nextToken();
+
+		if (rv != noValue) {
+		    /* attempt made to get a field on a non-object */
+		    return "\"" + lastField + "\" is not an object.";
+		}
+		lastField = idToken;
+
+                /* Rather than calling RemoteObject.getFieldValue(), we do this so that
+                 * we can report an error if the field doesn't exist. */
+                {
+	            RemoteField fields[] = ((RemoteObject)obj).getFields();
+                    boolean found = false;
+                    for (int i = fields.length-1; i >= 0; i--)
+                        if (idToken.equals(fields[i].getName())) {
+                            rv = ((RemoteObject)obj).getFieldValue(i);
+                            found = true;
+                            break;
+                        }
+
+                    if (!found) {
+                        if (could_be_local_or_class)
+                            /* expr is used here instead of idToken, because:
+                             *   1. we know that we're processing the first token in the line,
+                             *   2. if the user specified a class name with dots in it, 'idToken'
+                             *      will only give the first token. */
+                            return "\"" + expr + "\" is not a valid local, class name, or field of "
+                                + obj.description();
+                        else
+                            return "\"" + idToken + "\" is not a valid field of "
+                                + obj.description();
+                    }
+                }
+
+                  // don't give long error message next time round the loop
+                could_be_local_or_class = false;
+
+		if (rv != null && rv.isObject()) {
+		    obj = rv;
+		    rv = noValue;
+		}
+		idToken =
+		    pieces.hasMoreTokens() ? pieces.nextToken() : null;
+
+	    } else if (idToken.equals("[")) {
+		if (pieces.hasMoreTokens() == false) {
+		    return "\"" + expr +
+					"\" is not a valid expression.";
+		}
+		idToken = pieces.nextToken("]");
+		try {
+		    int index = Integer.valueOf(idToken).intValue();
+		    rv = ((RemoteArray)obj).getElement(index);
+		} catch (NumberFormatException e) {
+		    return "\"" + idToken +
+					   "\" is not a valid decimal number.";
+		} catch (ArrayIndexOutOfBoundsException e) {
+		    return idToken + " is out of bounds for " +
+				obj.description();
+		}
+		if (rv != null && rv.isObject()) {
+		    obj = rv;
+		    rv = noValue;
+		}
+		if (pieces.hasMoreTokens() == false ||
+		    (idToken = pieces.nextToken()).equals("]") == false) {
+		    return "\"" + expr +
+				        "\" is not a valid expression.";
+		}
+		idToken = pieces.hasMoreTokens() ?
+		    pieces.nextToken(printDelimiters) : null;
+
+	    } else if (idToken.equals("(")) {
+	        return "print <method> not supported yet.";
+	    } else {
+		/* Should never get here. */
+		return "invalid expression";
+	    }
+	}
+
+	out.print(expr + " = ");
+	if (rv != noValue) {
+	    out.println((rv == null) ? "null" : rv.description());
+	} else if (dumpObject && obj instanceof RemoteObject) {
+	    out.println(obj.description() + " {");
+
+	    if (obj instanceof RemoteClass) {
+		RemoteClass cls = (RemoteClass)obj;
+
+		out.print("    superclass = ");
+		RemoteClass superClass = cls.getSuperclass();
+		out.println((superClass == null) ?
+				   "null" : superClass.description());
+
+		out.print("    loader = ");
+		RemoteObject loader = cls.getClassLoader();
+		out.println((loader == null) ?
+				   "null" : loader.description());
+
+		RemoteClass interfaces[] = cls.getInterfaces();
+		if (interfaces != null && interfaces.length > 0) {
+		    out.println("    interfaces:");
+		    for (int i = 0; i < interfaces.length; i++) {
+		        out.println("        " + interfaces[i]);
+		    }
+		}
+	    }
+
+	    RemoteField fields[] = ((RemoteObject)obj).getFields();
+	    if (obj instanceof RemoteClass && fields.length > 0) {
+		out.println();
+	    }
+	    for (int i = 0; i < fields.length; i++) {
+		String name = fields[i].getTypedName();
+		String modifiers = fields[i].getModifiers();
+		out.print("    " + modifiers + name + " = ");
+		RemoteValue v = ((RemoteObject)obj).getFieldValue(i);
+		out.println((v == null) ? "null" : v.description());
+	    }
+	    out.println("}");
+	} else {
+            out.println(obj.toString());
+        }
+        return null;
+    }
+
+    void help() {
 	    out.println("** command list **");
 	    out.println("threads [threadgroup]     -- list threads");
 	    out.println("thread <thread id>        -- set default thread");
 	    out.println("suspend [thread id(s)]    -- suspend threads (default: all)");
 	    out.println("resume [thread id(s)]     -- resume threads (default: all)");
 	    out.println("where [thread id] | all   -- dump a thread's stack");
+	    out.println("wherei [thread id] | all  -- dump a thread's stack, with pc info");
 	    out.println("threadgroups              -- list threadgroups");
 	    out.println("threadgroup <name>        -- set current threadgroup\n");
 	    out.println("print <id> [id(s)]        -- print object or field");
@@ -1144,10 +1314,13 @@ public class TTY implements DebuggerCallback {
 	    out.println("down [n frames]           -- move down a thread's stack");
 	    out.println("clear <class id>:<line>   -- clear a breakpoint");
 	    out.println("step                      -- execute current line");
+	    out.println("step up                   -- execute until the current method returns to its caller");  // SAS GVH step out
+	    out.println("stepi                     -- execute current instruction");
+	    out.println("next                      -- step one line (step OVER calls)");
 	    out.println("cont                      -- continue execution from breakpoint\n");
 	    out.println("catch <class id>          -- break for the specified exception");
 	    out.println("ignore <class id>         -- ignore when the specified exception\n");
-	    out.println("list [line number]        -- print source code");
+	    out.println("list [line number|method] -- print source code");
 	    out.println("use [source file path]    -- display or change the source path\n");
 	    out.println("memory                    -- report memory usage");
 	    out.println("gc                        -- free unused objects\n");
@@ -1164,9 +1337,9 @@ public class TTY implements DebuggerCallback {
 
 	try {
 	    if (cmd.equals("print")) {
-		print(t, false, false);
+		print(t, false);
 	    } else if (cmd.equals("dump")) {
-		print(t, true, false);
+		print(t, true);
 	    } else if (cmd.equals("locals")) {
 		locals();
 	    } else if (cmd.equals("classes")) {
@@ -1192,13 +1365,17 @@ public class TTY implements DebuggerCallback {
 	    } else if (cmd.equals("cont")) {
 		cont();
 	    } else if (cmd.equals("step")) {
-		step();
+		step(t);
+	    } else if (cmd.equals("stepi")) {
+		stepi();
 	    } else if (cmd.equals("next")) {
 		next();
             } else if (cmd.equals("kill")) {
                 kill(t);
 	    } else if (cmd.equals("where")) {
-		where(t);
+		where(t, false);
+	    } else if (cmd.equals("wherei")) {
+		where(t, true);
 	    } else if (cmd.equals("up")) {
 		up(t);
 	    } else if (cmd.equals("down")) {
@@ -1211,8 +1388,9 @@ public class TTY implements DebuggerCallback {
 		memory();
             } else if (cmd.equals("gc")) {
                 gc();
-	    } else if (cmd.equals("trace") || cmd.equals("itrace")) {
-		trace(cmd, t);
+//                   This cannot reasonably work
+//	    } else if (cmd.equals("trace") || cmd.equals("itrace")) {
+//		trace(cmd, t);
 	    } else if (cmd.equals("stop")) {
 		stop(t);
 	    } else if (cmd.equals("clear")) {
@@ -1256,7 +1434,7 @@ public class TTY implements DebuggerCallback {
     public TTY(String host, String password, String javaArgs, String args, 
                PrintStream outStream, PrintStream consoleStream,
                boolean verbose) throws Exception {
-        System.out.println("Initializing jdb...");
+        System.out.println("Initializing " + progname + "...");
 	out = outStream;
 	console = consoleStream;
         if (password == null) {
@@ -1312,6 +1490,37 @@ public class TTY implements DebuggerCallback {
 	}
     }
 
+    private static void usage() {
+        System.out.println("Usage: " + progname + " <options> <classes>");
+        System.out.println();
+        System.out.println("where options include:");
+        System.out.println("    -help             print out this message and exit");
+        System.out.println("    -version          print out the build version and exit");
+        System.out.println("    -host <hostname>  host machine of interpreter to attach to");
+        System.out.println("    -password <psswd> password of interpreter to attach to (from -debug)");
+        System.out.println("options forwarded to debuggee process:");
+        System.out.println("    -v -verbose       turn on verbose mode");
+        System.out.println("    -debug            enable remote JAVA debugging");
+        System.out.println("    -noasyncgc        don't allow asynchronous garbage collection");
+        System.out.println("    -verbosegc        print a message when garbage collection occurs");
+        System.out.println("    -noclassgc        disable class garbage collection");
+        System.out.println("    -cs -checksource  check if source is newer when loading classes");
+        System.out.println("    -ss<number>       set the maximum native stack size for any thread");
+        System.out.println("    -oss<number>      set the maximum Java stack size for any thread");
+        System.out.println("    -ms<number>       set the initial Java heap size");
+        System.out.println("    -mx<number>       set the maximum Java heap size");
+        System.out.println("    -D<name>=<value>  set a system property");
+        System.out.println("    -classpath <directories separated by colons>");
+        System.out.println("                      list directories in which to look for classes");
+        System.out.println("    -prof[:<file>]    output profiling data to ./java.prof or ./<file>");
+        System.out.println("    -verify           verify all classes when read in");
+        System.out.println("    -verifyremote     verify classes read in over the network [default]");
+        System.out.println("    -noverify         do not verify any class");
+        System.out.println("    -dbgtrace         print info for debugging " + progname);
+        System.out.println();
+        System.out.println("For command help type 'help' at " + progname + " prompt");
+    }
+
     public static void main(String argv[]) {
 	// Get host attribute, if any.
 	String localhost;
@@ -1325,7 +1534,7 @@ public class TTY implements DebuggerCallback {
 	}
 	String host = null;
 	String password = null;
-	String classArgs = "";
+	String cmdLine = "";
 	String javaArgs = "";
         boolean verbose = false;
 	
@@ -1346,23 +1555,41 @@ public class TTY implements DebuggerCallback {
 	    } else if (token.equals("-classpath")) {
 		if (i == (argv.length - 1)) {
 		    System.out.println("No classpath specified.");
+		    usage();
 		    System.exit(1);
 		}
 		javaArgs += token + " " + argv[++i] + " ";
 	    } else if (token.equals("-host")) {
 		if (i == (argv.length - 1)) {
 		    System.out.println("No host specified.");
+		    usage();
 		    System.exit(1);
 		}
 		host = argv[++i];
 	    } else if (token.equals("-password")) {
 		if (i == (argv.length - 1)) {
 		    System.out.println("No password specified.");
+		    usage();
 		    System.exit(1);
 		}
 		password = argv[++i];
+	    } else if (token.equals("-help")) {
+		usage();
+		System.exit(0);
+	    } else if (token.equals("-version")) {
+		System.out.println(progname + " version " + version);
+		System.exit(0);
+	    } else if (token.startsWith("-")) {
+		System.out.println("invalid option: " + token);
+		usage();
+		System.exit(1);
 	    } else {
-		classArgs += token + " ";
+                // Everything from here is part of the command line
+                cmdLine = token + " ";
+                for (i++; i < argv.length; i++) {
+                    cmdLine += argv[i] + " ";
+                }
+                break;
 	    }
 	}
 	if (host != null && password == null) {
@@ -1384,7 +1611,7 @@ public class TTY implements DebuggerCallback {
 		    "when it is started.");
                 System.exit(1);
             }
-            new TTY(host, password, javaArgs, classArgs, 
+            new TTY(host, password, javaArgs, cmdLine, 
                     System.out, System.out, verbose);
 	} catch(SocketException se) {
 	    System.out.println("Failed accessing debugging session on " +

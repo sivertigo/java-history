@@ -1,45 +1,43 @@
 /*
- * W% 95/08/15  
+ * @(#)UTFDataFormatException.java	1.5 01/12/10
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.io;
 
 /**
- * Signals that a malformed UTF-8 string has been read in a DataInput stream.
- * @see	java.io.IOException
- * @see	java.io.DataInput
- * @version 	1.1, 08/15/95
- * @author	Frank Yellin
+ * Signals that a malformed UTF-8 string has been read in a data 
+ * input stream or by any class that implements the data input 
+ * interface. See the <code>writeUTF</code> method for the format in 
+ * which UTF-8 strings are read and written.
+ *
+ * @author  Frank Yellin
+ * @version 1.5, 12/10/01
+ * @see     java.io.DataInput
+ * @see     java.io.DataInputStream#readUTF(java.io.DataInput)
+ * @see     java.io.IOException
+ * @since   JDK1.0
  */
 public
 class UTFDataFormatException extends IOException {
     /**
-     * Constructs an UTFDataFormatException with no detail message.
-     * A detail message is a String that describes this particular exception.
+     * Constructs a <code>UTFDataFormatException</code> with no detail 
+     * message. 
+     *
+     * @since   JDK1.0
      */
     public UTFDataFormatException() {
 	super();
     }
 
     /**
-     * Constructs an UTFDataFormatException with the specified detail message.
-     * A detail message is a String that describes this particular exception.
-     * @param s the detail message
+     * Constructs a <code>UTFDataFormatException</code> with the 
+     * specified detail message. 
+     *
+     * @param   s   the detail message.
+     * @since   JDK1.0
      */
     public UTFDataFormatException(String s) {
 	super(s);

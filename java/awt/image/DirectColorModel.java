@@ -1,20 +1,8 @@
 /*
- * @(#)DirectColorModel.java	1.12 95/12/14 Jim Graham
+ * @(#)DirectColorModel.java	1.16 01/12/10
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.awt.image;
@@ -37,7 +25,7 @@ import java.awt.AWTException;
  *
  * @see ColorModel
  *
- * @version	1.12 12/14/95
+ * @version	1.16 12/10/01
  * @author 	Jim Graham
  */
 public class DirectColorModel extends ColorModel {
@@ -49,10 +37,10 @@ public class DirectColorModel extends ColorModel {
     private int green_offset;
     private int blue_offset;
     private int alpha_offset;
-    private int red_bits;
-    private int green_bits;
-    private int blue_bits;
-    private int alpha_bits;
+    private int red_scale;
+    private int green_scale;
+    private int blue_scale;
+    private int alpha_scale;
 
     /**
      * Constructs a DirectColorModel from the given masks specifying
@@ -146,8 +134,17 @@ public class DirectColorModel extends ColorModel {
 	if (off + count > pixel_bits) {
 	    throw new IllegalArgumentException(componentName + " mask overflows pixel");
 	}
+	int scale;
+	if (count < 8) {
+	    scale = (1 << count) - 1;
+	} else {
+	    scale = 0;
+	    if (count > 8) {
+		off += (count - 8);
+	    }
+	}
 	values[0] = off;
-	values[1] = count;
+	values[1] = scale;
     }
 
     /*
@@ -158,16 +155,16 @@ public class DirectColorModel extends ColorModel {
 	int values[] = new int[2];
 	DecomposeMask(red_mask, "red", values);
 	red_offset = values[0];
-	red_bits = values[1];
+	red_scale = values[1];
 	DecomposeMask(green_mask, "green", values);
 	green_offset = values[0];
-	green_bits = values[1];
+	green_scale = values[1];
 	DecomposeMask(blue_mask, "blue", values);
 	blue_offset = values[0];
-	blue_bits = values[1];
+	blue_scale = values[1];
 	DecomposeMask(alpha_mask, "alpha", values);
 	alpha_offset = values[0];
-	alpha_bits = values[1];
+	alpha_scale = values[1];
     }
 
     /**
@@ -175,9 +172,11 @@ public class DirectColorModel extends ColorModel {
      * range 0-255.
      */
     final public int getRed(int pixel) {
-	if (red_mask == 0) return 0;
 	int r = ((pixel & red_mask) >>> red_offset);
-	return (red_bits == 8) ? r : (r * 255 / ((1 << red_bits) - 1));
+	if (red_scale != 0) {
+	    r = r * 255 / red_scale;
+	}
+	return r;
     }
 
     /**
@@ -185,9 +184,11 @@ public class DirectColorModel extends ColorModel {
      * range 0-255.
      */
     final public int getGreen(int pixel) {
-	if (green_mask == 0) return 0;
 	int g = ((pixel & green_mask) >>> green_offset);
-	return (green_bits == 8) ? g : (g * 255 / ((1 << green_bits) - 1));
+	if (green_scale != 0) {
+	    g = g * 255 / green_scale;
+	}
+	return g;
     }
 
     /**
@@ -195,9 +196,11 @@ public class DirectColorModel extends ColorModel {
      * range 0-255.
      */
     final public int getBlue(int pixel) {
-	if (blue_mask == 0) return 0;
 	int b = ((pixel & blue_mask) >>> blue_offset);
-	return (blue_bits == 8) ? b : (b * 255 / ((1 << blue_bits) - 1));
+	if (blue_scale != 0) {
+	    b = b * 255 / blue_scale;
+	}
+	return b;
     }
 
     /**
@@ -207,7 +210,10 @@ public class DirectColorModel extends ColorModel {
     final public int getAlpha(int pixel) {
 	if (alpha_mask == 0) return 255;
 	int a = ((pixel & alpha_mask) >>> alpha_offset);
-	return (alpha_bits == 8) ? a : (a * 255 / ((1 << alpha_bits) - 1));
+	if (alpha_scale != 0) {
+	    a = a * 255 / alpha_scale;
+	}
+	return a;
     }
 
     /**

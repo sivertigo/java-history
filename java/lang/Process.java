@@ -1,20 +1,8 @@
 /*
- * @(#)Process.java	1.7 95/12/22 Chris Warth
+ * @(#)Process.java	1.12 01/12/10
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang;
@@ -22,57 +10,81 @@ package java.lang;
 import java.io.*;
 
 /** 
- * An instance of class Process is returned by variants of the exec ()
- * method in class System.  From the Process instance, it is
- * possible to: get the standin and/or standout of the subprocess,
- * kill the subprocess, wait for it to terminate, and to
- * retrieve the final exit value of the process.
+ * The <code>exec</code> methods return an 
+ * instance of a subclass of <code>Process</code> that can be used to 
+ * control the process and obtain information about it. 
  * <p>
- * Dropping the last reference to a Process instance does not
- * kill the subprocess.  There is no requirement that the
- * subprocess execute asynchronously with the existing Java process.
+ * The subprocess is not killed when there are no more references to 
+ * the <code>Process</code> object, but rather the subprocess 
+ * continues executing asynchronously. 
+ *
+ * @author  unascribed
+ * @version 1.12, 12/10/01
+ * @see     java.lang.Runtime#exec(java.lang.String)
+ * @see     java.lang.Runtime#exec(java.lang.String, java.lang.String[])
+ * @see     java.lang.Runtime#exec(java.lang.String[])
+ * @see     java.lang.Runtime#exec(java.lang.String[], java.lang.String[])
+ * @since   JDK1.0
  */
 public abstract class Process 
 {
     /**
-     * Returns a Stream connected to the input of the child process. 
-     * This stream is traditionally buffered.
+     * Gets the output stream of the subprocess.
+     * This stream is usually buffered.
+     *
+     * @return  the output stream connected to the normal input of the
+     *          subprocess.
+     * @since   JDK1.0
      */
     abstract public OutputStream getOutputStream();
-    
 
     /** 
-     * Returns a Stream connected to the output of the child process. 
-     * This stream is traditionally buffered. 
+     * Gets the input stream of the subprocess.
+     * This stream is usually buffered.
+     *
+     * @return  the input stream connected to the normal output of the
+     *          subprocess.
+     * @since   JDK1.0
      */
     abstract public InputStream getInputStream();
 
     /**
-     * Returns the an InputStream connected to the error stream of the child process. 
-     * This stream is traditionally unbuffered.
+     * Gets the error stream of the subprocess.
+     * This stream is usually unbuffered.
+     *
+     * @return  the input stream connected to the error stream of the
+     *          subprocess.
+     * @since   JDK1.0
      */
     abstract public InputStream getErrorStream();
 
     /**
-     * Waits for the subprocess to complete.  If the subprocess has
-     * already terminated, the exit value is simply returned.  If the
-     * subprocess has not yet terminated the calling thread will be
+     * Waits for the subprocess to complete. This method returns 
+     * immediately if the subprocess has already terminated. If the
+     * subprocess has not yet terminated, the calling thread will be
      * blocked until the subprocess exits.
      *
-     * @exception InterruptedException 
-     *            Another thread has interrupted this thread. 
+     * @return     the exit value of the process.
+     * @exception  InterruptedException  if the <code>waitFor</code> was
+     *               interrupted.
+     * @since      JDK1.0
      */
     abstract public int waitFor() throws InterruptedException;
 
-   /**
-    * Returns the exit value for the subprocess.
-    * @exception IllegalThreadStateException If the subprocess has not yet
-    * terminated.
-    */
+    /**
+     * Returns the exit value for the subprocess.
+     *
+     * @return  the exit value of the subprocess.
+     * @exception  IllegalThreadStateException  if the subprocess has not yet
+     *               terminated.
+     * @since      JDK1.0
+     */
     abstract public int exitValue();
 
-   /**
-    * Kills the subprocess.
-    */
+    /**
+     * Kills the subprocess. 
+     *
+     * @since   JDK1.0
+     */
     abstract public void destroy();
 }

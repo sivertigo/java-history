@@ -1,20 +1,8 @@
 /*
- * @(#)StringTokenizer.java	1.13 95/08/10  
+ * @(#)StringTokenizer.java	1.17 01/12/10
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.util;
@@ -22,27 +10,49 @@ package java.util;
 import java.lang.*;
 
 /**
- * StringTokenizer is a class that controls simple linear tokenization
- * of a String. The set of delimiters, which defaults to common 
- * whitespace characters, may be specified at creation time or on a 
- * per-token basis.<p>
+ * The string tokenizer class allows an application to break a 
+ * string into tokens. The tokenization method is much simpler than 
+ * the one used by the <code>StreamTokenizer</code> class. The 
+ * <code>StringTokenizer</code> methods do not distinguish among 
+ * identifiers, numbers, and quoted strings, nor do they recognize 
+ * and skip comments. 
+ * <p>
+ * The set of delimiters (the characters that separate tokens) may 
+ * be specified either at creation time or on a per-token basis. 
+ * <p>
+ * An instance of <code>StringTokenizer</code> behaves in one of two 
+ * ways, depending on whether it was created with the 
+ * <code>returnTokens</code> flag having the value <code>true</code> 
+ * or <code>false</code>: 
+ * <ul>
+ * <li>If the flag is <code>false</code>, delimiter characters serve to 
+ *     separate tokens. A token is a maximal sequence of consecutive 
+ *     characters that are not delimiters. 
+ * <li>If the flag is <code>true</code>, delimiter characters are considered to
+ *     be tokens. A token is either one delimiter character, or a maximal
+ *     sequence of consecutive characters that are not delimiters.
+ * </ul>
+ * <p>
+ * The following is one example of the use of the tokenizer. The code:
+ * <blockquote><pre>
+ *     StringTokenizer st = new StringTokenizer("this is a test");
+ *     while (st.hasMoreTokens()) {
+ *         println(st.nextToken());
+ *     }
+ * </pre></blockquote>
+ * <p>
+ * prints the following output:
+ * <blockquote><pre>
+ *     this
+ *     is
+ *     a
+ *     test
+ * </pre></blockquote>
  *
- * Example usage:
- * <pre>
- *	String s = "this is a test";
- *	StringTokenizer st = new StringTokenizer(s);
- *	while (st.hasMoreTokens()) {
- *		println(st.nextToken());
- *	}
- * </pre>
- * Prints the following on the console:
- * <pre>
- *	this
- *	is
- *	a
- *	test
- * </pre>
- * @version 	1.13, 08/10/95
+ * @author  unascribed
+ * @version 1.17, 12/10/01
+ * @see     java.io.StreamTokenizer
+ * @since   JDK1.0
  */
 public
 class StringTokenizer implements Enumeration {
@@ -53,11 +63,21 @@ class StringTokenizer implements Enumeration {
     private boolean retTokens;
 
     /**
-     * Constructs a StringTokenizer on the specified String, using the
-     * specified delimiter set.
-     * @param str	   the input String
-     * @param delim        the delimiter String
-     * @param returnTokens returns delimiters as tokens or skip them
+     * Constructs a string tokenizer for the specified string. The 
+     * characters in the <code>delim</code> argument are the delimiters 
+     * for separating tokens. 
+     * <p>
+     * If the <code>returnTokens</code> flag is <code>true</code>, then 
+     * the delimiter characters are also returned as tokens. Each 
+     * delimiter is returned as a string of length one. If the flag is 
+     * <code>false</code>, the delimiter characters are skipped and only 
+     * serve as separators between tokens. 
+     *
+     * @param   str            a string to be parsed.
+     * @param   delim          the delimiters.
+     * @param   returnTokens   flag indicating whether to return the delimiters
+     *                         as tokens.
+     * @since   JDK1.0
      */
     public StringTokenizer(String str, String delim, boolean returnTokens) {
 	currentPosition = 0;
@@ -68,19 +88,26 @@ class StringTokenizer implements Enumeration {
     }
 
     /**
-     * Constructs a StringTokenizer on the specified String, using the
-     * specified delimiter set.
-     * @param str	the input String
-     * @param delim the delimiter String
+     * Constructs a string tokenizer for the specified string. The 
+     * characters in the <code>delim</code> argument are the delimiters 
+     * for separating tokens. 
+     *
+     * @param   str     a string to be parsed.
+     * @param   delim   the delimiters.
+     * @since   JDK1.0
      */
     public StringTokenizer(String str, String delim) {
 	this(str, delim, false);
     }
 
     /**
-     * Constructs a StringTokenizer on the specified String, using the
-     * default delimiter set (which is " \t\n\r").
-     * @param str the String
+     * Constructs a string tokenizer for the specified string. The 
+     * tokenizer uses the default delimiter set, which is 
+     * <code>"&#92;t&#92;n&#92;r"</code>: the space character, the tab
+     * character, the newline character, and the carriage-return character. 
+     *
+     * @param   str   a string to be parsed.
+     * @since   JDK1.0
      */
     public StringTokenizer(String str) {
 	this(str, " \t\n\r", false);
@@ -98,7 +125,11 @@ class StringTokenizer implements Enumeration {
     }
 
     /**
-     * Returns true if more tokens exist.
+     * Tests if there are more tokens available from this tokenizer's string.
+     *
+     * @return  <code>true</code> if there are more tokens available from this
+     *          tokenizer's string; <code>false</code> otherwise.
+     * @since   JDK1.0
      */
     public boolean hasMoreTokens() {
 	skipDelimiters();
@@ -106,9 +137,12 @@ class StringTokenizer implements Enumeration {
     }
 
     /**
-     * Returns the next token of the String.
-     * @exception NoSuchElementException If there are no more 
-     * tokens in the String.
+     * Returns the next token from this string tokenizer.
+     *
+     * @return     the next token from this string tokenizer.
+     * @exception  NoSuchElementException  if there are no more tokens in this
+     *               tokenizer's string.
+     * @since      JDK1.0
      */
     public String nextToken() {
 	skipDelimiters();
@@ -130,9 +164,14 @@ class StringTokenizer implements Enumeration {
     }
 
     /**
-     * Returns the next token, after switching to the new delimiter set.
-     * The new delimiter set remains the default after this call.
-     * @param delim the new delimiters
+     * Returns the next token in this string tokenizer's string. The new 
+     * delimiter set remains the default after this call. 
+     *
+     * @param      delim   the new delimiters.
+     * @return     the next token, after switching to the new delimiter set.
+     * @exception  NoSuchElementException  if there are no more tokens in this
+     *               tokenizer's string.
+     * @since   JDK1.0
      */
     public String nextToken(String delim) {
 	delimiters = delim;
@@ -140,28 +179,46 @@ class StringTokenizer implements Enumeration {
     }
 
     /**
-     * Returns true if the Enumeration has more elements.
+     * Returns the same value as the <code>hasMoreTokens</code>
+     * method. It exists so that this class can implement the
+     * <code>Enumeration</code> interface. 
+     *
+     * @return  <code>true</code> if there are more tokens;
+     *          <code>false</code> otherwise.
+     * @see     java.util.Enumeration
+     * @see     java.util.StringTokenizer#hasMoreTokens()
+     * @since   JDK1.0
      */
     public boolean hasMoreElements() {
 	return hasMoreTokens();
     }
 
     /**
-     * Returns the next element in the Enumeration.
-     * @exception NoSuchElementException If there are no more elements 
-     * in the enumeration.
+     * Returns the same value as the <code>nextToken</code> method,
+     * except that its declared return value is <code>Object</code> rather than
+     * <code>String</code>. It exists so that this class can implement the
+     * <code>Enumeration</code> interface. 
+     *
+     * @return     the next token in the string.
+     * @exception  NoSuchElementException  if there are no more tokens in this
+     *               tokenizer's string.
+     * @see        java.util.Enumeration
+     * @see        java.util.StringTokenizer#nextToken()
+     * @since      JDK1.0
      */
     public Object nextElement() {
 	return nextToken();
     }
 
     /**
-     * Returns the next number of tokens in the String using
-     * the current deliminter set.  This is the number of times
-     * nextToken() can return before it will generate an exception.
-     * Use of this routine to count the number of tokens is faster
-     * than repeatedly calling nextToken() because the substrings
-     * are not constructed and returned for each token.
+     * Calculates the number of times that this tokenizer's 
+     * <code>nextToken</code> method can be called before it generates an 
+     * exception. 
+     *
+     * @return  the number of tokens remaining in the string using the current
+     *          delimiter set.
+     * @see     java.util.StringTokenizer#nextToken()
+     * @since   JDK1.0
      */
     public int countTokens() {
 	int count = 0;
@@ -197,5 +254,3 @@ class StringTokenizer implements Enumeration {
 	return count;
     }
 }
-
-

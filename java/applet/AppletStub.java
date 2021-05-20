@@ -1,60 +1,85 @@
 /*
- * @(#)AppletStub.java	1.8 95/12/14 Arthur van Hoff
+ * @(#)AppletStub.java	1.14 01/12/10
  *
- * Copyright (c) 1994-1995 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package java.applet;
 
 import java.net.URL;
 
 /**
- * This interface is used to implement an applet viewer. It is not
- * normally used by applet programmers.
+ * When an applet is first created, an applet stub is attached to it 
+ * using the applet's <code>setStub</code> method. This stub 
+ * serves as the interface between the applet and the browser 
+ * environment or applet viewer environment in which the application 
+ * is running. 
  *
- * @version 	1.8, 12/14/95
  * @author 	Arthur van Hoff
+ * @version     1.14, 12/10/01
+ * @see         java.applet.Applet#setStub(java.applet.AppletStub)
+ * @since       JDK1.0
  */
 public interface AppletStub {
     /**
-     * Returns true if the applet is active. 
+     * Determines if the applet is active. An applet is active just 
+     * before its <code>start</code> method is called. It becomes 
+     * inactive immediately after its <code>stop</code> method is called. 
+     *
+     * @return  <code>true</code> if the applet is active;
+     *          <code>false</code> otherwise.
+     * @since   JDK1.0
      */
     boolean isActive();
     
     /**
      * Gets the document URL.
+     *
+     * @return  the <code>URL</code> of the document containing the applet.
+     * @since   JDK1.0
      */
     URL getDocumentBase();
 
     /**
      * Gets the base URL.
+     *
+     * @return  the <code>URL</code> of the applet.
+     * @since   JDK1.0
      */
     URL getCodeBase();
 
     /**
-     * Gets a parameter of the applet.
+     * Returns the value of the named parameter in the HTML tag. For 
+     * example, if an applet is specified as 
+     * <ul><code>
+     *	&lt;applet code="Clock" width=50 height=50&gt;<br>
+     *  &lt;param name=Color value="blue"&gt;<br>
+     *  &lt;/applet&gt;
+     * </code></ul>
+     * <p>
+     * then a call to <code>getParameter("Color")</code> returns the 
+     * value <code>"blue"</code>. 
+     *
+     * @param   name   a parameter name.
+     * @return  the value of the named parameter.
+     * @since   JDK1.0
      */
     String getParameter(String name);
 
     /**
      * Gets a handler to the applet's context.
+     *
+     * @return  the applet's context.
+     * @since   JDK1.0
      */
     AppletContext getAppletContext();
 
     /**
-     * Called when the applet wants to be resized.
+     * Called when the applet wants to be resized. 
+     *
+     * @param   width    the new requested width for the applet.
+     * @param   height   the new requested height for the applet.
+     * @since   JDK1.0
      */
     void appletResize(int width, int height);
 }

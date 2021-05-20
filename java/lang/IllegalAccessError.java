@@ -1,41 +1,40 @@
 /*
- * @(#)IllegalAccessError.java	1.6 95/08/23  
+ * @(#)IllegalAccessError.java	1.10 01/12/10
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang;
 
 /**
- * Signals that an illegal access exception has occurred.
- * @version 	1.6, 08/23/95
+ * Thrown if an application attempts to access or modify a field, or 
+ * to call a method that it does not have access to. 
+ * <p>
+ * Normally, this error is caught by the compiler; this error can 
+ * only occur at run time if the definition of a class has 
+ * incompatibly changed. 
+ *
+ * @author  unascribed
+ * @version 1.10, 12/10/01
+ * @since   JDK1.0
  */
 public class IllegalAccessError extends IncompatibleClassChangeError {
     /**
-     * Constructs an IllegalAccessError with no detail message.
-     * A detail message is a String that describes this particular exception.
+     * Constructs an <code>IllegalAccessError</code> with no detail message.
+     *
+     * @since   JDK1.0
      */
     public IllegalAccessError() {
 	super();
     }
 
     /**
-     * Constructs an IllegalAccessError with the specified detail message.
-     * A detail message is a String that describes this particular exception.
-     * @param s the detail message
+     * Constructs an <code>IllegalAccessError</code> with the specified 
+     * detail message. 
+     *
+     * @param   s   the detail message.
+     * @since   JDK1.0
      */
     public IllegalAccessError(String s) {
 	super(s);

@@ -1,41 +1,46 @@
 /*
- * @(#)BitSet.java	1.12 95/12/01  
+ * @(#)BitSet.java	1.28 01/12/10
  *
- * Copyright (c) 1995 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.util;
 
 /**
- * A set of bits. The set automatically grows as more bits are
- * needed. 
+ * A set of bits. The set automatically grows as more bits are needed. 
  *
- * @version 	1.12, 12/01/95
+ * @version 	1.28, 12/10/01
  * @author Arthur van Hoff
  */
-public final class BitSet implements Cloneable {
-    final static int BITS = 6;
-    final static int MASK = (1<<BITS)-1;
-    long bits[];
+public final class BitSet implements Cloneable, java.io.Serializable {
+    private final static int BITS_PER_UNIT = 6;
+    private final static int MASK = (1<<BITS_PER_UNIT)-1;
+    private long bits[];
+
+    /**
+     * Convert bitIndex to a subscript into the bits[] array.
+     */
+    private static int subscript(int bitIndex) {
+	return bitIndex >> BITS_PER_UNIT;
+    }
+    /**
+     * Convert a subscript into the bits[] array to a (maximum) bitIndex.
+     */
+    private static int bitIndex(int subscript) {
+	return (subscript << BITS_PER_UNIT) + MASK;
+    }
+
+    private static boolean debugging = (System.getProperty("debug") != null);
+
+    /** use serialVersionUID from JDK 1.0.2 for interoperability */
+    private static final long serialVersionUID = 7997698588986878753L;
 
     /**
      * Creates an empty set.
      */
     public BitSet() {
-	this(1<<BITS);
+	this(1 << BITS_PER_UNIT);
     }
 
     /**
@@ -43,17 +48,33 @@ public final class BitSet implements Cloneable {
      * @param nbits the size of the set
      */
     public BitSet(int nbits) {
-	bits = new long[(nbits + MASK)>>BITS];
+	/* nbits can't be negative; size 0 is OK */
+	if (nbits < 0) {
+	    throw new NegativeArraySizeException(Integer.toString(nbits));
+	}
+	/* On wraparound, truncate size; almost certain to o-flo memory. */
+	if (nbits + MASK < 0) {
+	    nbits = Integer.MAX_VALUE - MASK;
+	}
+	/* subscript(nbits + MASK) is the length of the array needed to hold nbits */
+	bits = new long[subscript(nbits + MASK)];
     }
 
     /**
-     * Grows the set to a larger number of bits.
-     * @param nbits the number of bits to increase the set by
+     * Ensures that the BitSet can hold at least an nth bit.
+     * This cannot leave the bits array at length 0.
+     * @param	nth	the 0-origin number of the bit to ensure is there.
      */
-    private void grow(int nbits) {
-	long newbits[] = new long[Math.max(bits.length<<1, (nbits + MASK)>>BITS)];
-	System.arraycopy(bits, 0, newbits, 0, bits.length);
-	bits = newbits;
+    private void ensureCapacity(int nth) {
+	/* Doesn't need to be synchronized because it's an internal method. */
+	int required = subscript(nth) + 1;	/* +1 to get length, not index */
+	if (required > bits.length) {
+	    /* Ask for larger of doubled size or required size */
+	    int request = Math.max(2 * bits.length, required);
+	    long newBits[] = new long[request];
+	    System.arraycopy(bits, 0, newBits, 0, bits.length);
+	    bits = newBits;
+	}
     }
 
     /**
@@ -61,11 +82,13 @@ public final class BitSet implements Cloneable {
      * @param bit the bit to be set
      */
     public void set(int bit) {
-	int n = bit>>BITS;
-	if (n >= bits.length) {
-	    grow(bit);
+	if (bit < 0) {
+	    throw new IndexOutOfBoundsException(Integer.toString(bit));
 	}
-	bits[n] |= (1L << (bit & MASK));
+	synchronized (this) {
+	    ensureCapacity(bit);
+	    bits[subscript(bit)] |= (1L << (bit & MASK));
+	}
     }
 
     /**
@@ -73,11 +96,13 @@ public final class BitSet implements Cloneable {
      * @param bit the bit to be cleared
      */
     public void clear(int bit) {
-	int n = bit>>BITS;
-	if (n >= bits.length) {
-	    grow(bit);
+	if (bit < 0) {
+	    throw new IndexOutOfBoundsException(Integer.toString(bit));
 	}
-	bits[n] &= ~(1L << (bit & MASK));
+	synchronized (this) {
+	    ensureCapacity(bit);
+	    bits[subscript(bit)] &= ~(1L << (bit & MASK));
+	}
     }
 
     /**
@@ -85,8 +110,17 @@ public final class BitSet implements Cloneable {
      * @param bit the bit to be gotten
      */
     public boolean get(int bit) {
-	int n = bit>>BITS;
-	return (n < bits.length) ? ((bits[n] & (1L << (bit & MASK))) != 0) : false;
+	if (bit < 0) {
+	    throw new IndexOutOfBoundsException(Integer.toString(bit));
+	}
+	boolean result = false;
+	synchronized (this) {
+	    int n = subscript(bit);		/* always positive */
+	    if (n < bits.length) {
+		result = ((bits[n] & (1L << (bit & MASK))) != 0);
+	    }
+	}
+	return result;
     }
 
     /**
@@ -94,12 +128,34 @@ public final class BitSet implements Cloneable {
      * @param set the bit set to be ANDed with
      */
     public void and(BitSet set) {
-	int n = Math.min(bits.length, set.bits.length);
-	for (int i = n ; i-- > 0 ; ) {
-	    bits[i] &= set.bits[i];
+	/*
+	 * Need to synchronize  both this and set.
+	 * This might lead to deadlock if one thread grabs them in one order
+	 * while another thread grabs them the other order.
+	 * Use a trick from Doug Lea's book on concurrency,
+	 * somewhat complicated because BitSet overrides hashCode().
+	 */
+	if (this == set) {
+	    return;
 	}
-	for (; n < bits.length ; n++) {
-	    bits[n] = 0;
+	BitSet first = this;
+	BitSet second = set;
+	if (System.identityHashCode(first) > System.identityHashCode(second)) {
+	    first = set;
+	    second = this;
+	}
+	synchronized (first) {
+	    synchronized (second) {
+		int bitsLength = bits.length;
+		int setLength = set.bits.length;
+		int n = Math.min(bitsLength, setLength);
+		for (int i = n ; i-- > 0 ; ) {
+		    bits[i] &= set.bits[i];
+		}
+		for (; n < bitsLength ; n++) {
+		    bits[n] = 0;
+		}
+	    }
 	}
     }
 
@@ -108,8 +164,26 @@ public final class BitSet implements Cloneable {
      * @param set the bit set to be ORed with
      */
     public void or(BitSet set) {
-	for (int i = Math.min(bits.length, set.bits.length) ; i-- > 0 ;) {
-	    bits[i] |= set.bits[i];
+	if (this == set) {
+	    return;
+	}
+	/* See the note about synchronization in and(), above. */
+	BitSet first = this;
+	BitSet second = set;
+	if (System.identityHashCode(first) > System.identityHashCode(second)) {
+	    first = set;
+	    second = this;
+	}
+	synchronized (first) {
+	    synchronized (second) {
+		int setLength = set.bits.length;
+		if (setLength > 0) {
+		    ensureCapacity(bitIndex(setLength-1));
+		}
+		for (int i = setLength; i-- > 0 ;) {
+		    bits[i] |= set.bits[i];
+		}
+	    }
 	}
     }
 
@@ -118,8 +192,23 @@ public final class BitSet implements Cloneable {
      * @param set the bit set to be XORed with
      */
     public void xor(BitSet set) {
-	for (int i = Math.min(bits.length, set.bits.length) ; i-- > 0 ;) {
-	    bits[i] ^= set.bits[i];
+	/* See the note about synchronization in and(), above. */
+	BitSet first = this;
+	BitSet second = set;
+	if (System.identityHashCode(first) > System.identityHashCode(second)) {
+	    first = set;
+	    second = this;
+	}
+	synchronized (first) {
+	    synchronized (second) {
+		int setLength = set.bits.length;
+		if (setLength > 0) {
+		    ensureCapacity(bitIndex(setLength-1));
+		}
+		for (int i = setLength; i-- > 0 ;) {
+		    bits[i] ^= set.bits[i];
+		}
+	    }
 	}
     }
 
@@ -128,44 +217,63 @@ public final class BitSet implements Cloneable {
      */
     public int hashCode() {
 	long h = 1234;
-	for (int i = bits.length; --i >= 0; ) {
-	    h ^= bits[i] * i;
+	synchronized (this) {
+	    for (int i = bits.length; --i >= 0; ) {
+		h ^= bits[i] * (i + 1);
+	    }
 	}
 	return (int)((h >> 32) ^ h);
     }
-
+    
     /**
-     * Calculates and returns the set's size
+     * Calculates and returns the set's size in bits.
+     * The maximum element in the set is the size - 1st element.
      */
     public int size() {
-	return bits.length << BITS;
+	/* This doesn't need to be synchronized, since it just reads a field. */
+	return bits.length << BITS_PER_UNIT;
     }
 
     /**
      * Compares this object against the specified object.
-     * @param obj the object to commpare with
+     * @param obj the object to compare with
      * @return true if the objects are the same; false otherwise.
      */
     public boolean equals(Object obj) {
 	if ((obj != null) && (obj instanceof BitSet)) {
-	    BitSet set = (BitSet)obj;
-
-	    int n = Math.min(bits.length, set.bits.length);
-	    for (int i = n ; i-- > 0 ;) {
-		if (bits[i] != set.bits[i]) {
-		    return false;
-		}
+	    if (this == obj) {
+		return true;
 	    }
-	    if (bits.length > n) {
-		for (int i = bits.length ; i-- > n ;) {
-		    if (bits[i] != 0) {
-			return false;
+	    BitSet set = (BitSet) obj;
+	    /* See the note about synchronization in and(), above. */
+	    BitSet first = this;
+	    BitSet second = set;
+	    if (System.identityHashCode(first) > System.identityHashCode(second)) {
+		first = set;
+		second = this;
+	    }
+	    synchronized (first) {
+		synchronized (second) {
+		    int bitsLength = bits.length;
+		    int setLength = set.bits.length;
+		    int n = Math.min(bitsLength, setLength);
+		    for (int i = n ; i-- > 0 ;) {
+			if (bits[i] != set.bits[i]) {
+			    return false;
+			}
 		    }
-		}
-	    } else if (set.bits.length > n) {
-		for (int i = set.bits.length ; i-- > n ;) {
-		    if (set.bits[i] != 0) {
-			return false;
+		    if (bitsLength > n) {
+			for (int i = bitsLength ; i-- > n ;) {
+			    if (bits[i] != 0) {
+				return false;
+			    }
+			}
+		    } else if (setLength > n) {
+			for (int i = setLength ; i-- > n ;) {
+			    if (set.bits[i] != 0) {
+				return false;
+			    }
+			}
 		    }
 		}
 	    }
@@ -178,30 +286,42 @@ public final class BitSet implements Cloneable {
      * Clones the BitSet.
      */
     public Object clone() {
-	try { 
-	    BitSet set = (BitSet)super.clone();
-	    set.bits = new long[bits.length];
-	    System.arraycopy(bits, 0, set.bits, 0, bits.length);
-	    return set;
-	} catch (CloneNotSupportedException e) {
-	    // this shouldn't happen, since we are Cloneable
-	    throw new InternalError();
+	BitSet result = null;
+	synchronized (this) {
+	    try {
+		result = (BitSet) super.clone();
+	    } catch (CloneNotSupportedException e) {
+		// this shouldn't happen, since we are Cloneable
+		throw new InternalError();
+	    }
+	    result.bits = new long[bits.length];
+	    System.arraycopy(bits, 0, result.bits, 0, result.bits.length);
 	}
+	return result;
     }
 
     /**
      * Converts the BitSet to a String.
      */
     public String toString() {
-	String str = "";
-	for (int i = 0 ; i < (bits.length << BITS) ; i++) {
-	    if (get(i)) {
-		if (str.length() > 0) {
-		    str += ", ";
+	StringBuffer buffer = new StringBuffer();
+	boolean needSeparator = false;
+	buffer.append('{');
+	synchronized (this) {
+	    int limit = size();
+	    for (int i = 0 ; i < limit ; i++) {
+		if (get(i)) {
+		    if (needSeparator) {
+			buffer.append(", ");
+		    } else {
+			needSeparator = true;
+		    }
+		    buffer.append(i);
 		}
-		str = str + i;
 	    }
 	}
-	return "{" + str + "}";
+	buffer.append('}');
+	return buffer.toString();
     }
 }
+

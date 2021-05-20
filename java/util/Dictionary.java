@@ -1,88 +1,112 @@
 /*
- * @(#)Dictionary.java	1.1 95/08/07
- * 
- * Copyright (c) 1995 Sun Microsystems, Inc. All Rights Reserved.
- * 
- * Permission to use, copy, modify, and distribute this software and its
- * documentation for NON-COMMERCIAL purposes and without fee is hereby
- * granted provided that this copyright notice appears in all copies. Please
- * refer to the file "copyright.html" for further important copyright and
- * licensing information.
- * 
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
- * SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
- * OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
- * LICENSEE AS A RESULT OF USING, MODIFYING OR DISTRIBUTING THIS SOFTWARE OR
- * ITS DERIVATIVES.
+ * @(#)Dictionary.java	1.9 01/12/10
+ *
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.util;
 
 /**
- * The Dictionary class is the abstract parent of Hashtable, which maps
- * keys to values. Any object can be used as a key and/or value.  
+ * The <code>Dictionary</code> class is the abstract parent of any 
+ * class, such as <code>Hashtable</code>, which maps keys to values. 
+ * Any non-<code>null</code> object can be used as a key and as a value.
+ * <p>
+ * As a rule, the <code>equals</code> method should be used by 
+ * implementations of this class to decide if two keys are the same. 
  *
- * @see java.util.Hashtable
- * @see java.lang.Object#hashCode
- * @see java.lang.Object#equals
- * @version 	1.1, 07 Aug 1995
+ * @author  unascribed
+ * @version 1.9, 12/10/01
+ * @see     java.lang.Object#equals(java.lang.Object)
+ * @see     java.lang.Object#hashCode()
+ * @see     java.util.Hashtable
+ * @since   JDK1.0
  */
 public abstract
 class Dictionary {
     /**
-     * Returns the number of elements contained within the Dictionary. 
+     * Returns the number of keys in this dictionary.
+     *
+     * @return  the number of keys in this dictionary.
+     * @since   JDK1.0
      */
     abstract public int size();
 
     /**
-     * Returns true if the Dictionary contains no elements.
+     * Tests if this dictionary maps no keys to value.
+     *
+     * @return  <code>true</code> if this dictionary maps no keys to values;
+     *          <code>false</code> otherwise.
+     * @since   JDK1.0
      */
     abstract public boolean isEmpty();
 
     /**
-     * Returns an enumeration of the Dictionary's keys.
-     * @see Dictionary#elements
-     * @see Enumeration
+     * Returns an enumeration of the keys in this dictionary.
+     *
+     * @return  an enumeration of the keys in this dictionary.
+     * @see     java.util.Dictionary#elements()
+     * @see     java.util.Enumeration
+     * @since   JDK1.0
      */
     abstract public Enumeration keys();
 
     /**
-     * Returns an enumeration of the elements. Use the Enumeration methods 
-     * on the returned object to fetch the elements sequentially.
-     * @see Dictionary#keys
-     * @see Enumeration
+     * Returns an enumeration of the values in this dictionary.
+     * the Enumeration methods on the returned object to fetch the elements
+     * sequentially.
+     *
+     * @return  an enumeration of the values in this dictionary.
+     * @see     java.util.Dictionary#keys()
+     * @see     java.util.Enumeration
+     * @since   JDK1.0
      */
     abstract public Enumeration elements();
 
     /**
-     * Gets the object associated with the specified key in the Dictionary.
-     * @param key the key in the hash table
-     * @returns the element for the key, or null if the key
-     * 		is not defined in the hash table.
-     * @see Dictionary#put
+     * Returns the value to which the key is mapped in this dictionary.
+     *
+     * @return  the value to which the key is mapped in this dictionary;
+     * @param   key   a key in this dictionary.
+     *          <code>null</code> if the key is not mapped to any value in
+     *          this dictionary.
+     * @see     java.util.Dictionary#put(java.lang.Object, java.lang.Object)
+     * @since   JDK1.0
      */
     abstract public Object get(Object key);
 
     /**
-     * Puts the specified element into the Dictionary, using the specified
-     * key.  The element may be retrieved by doing a get() with the same 
-     * key.  The key and the element cannot be null.
-     * @param key the specified hashtable key
-     * @param value the specified element 
-     * @return the old value of the key, or null if it did not have one.
-     * @exception NullPointerException If the value of the specified
-     * element is null.
-     * @see Dictionary#get
+     * Maps the specified <code>key</code> to the specified 
+     * <code>value</code> in this dictionary. Neither the key nor the 
+     * value can be <code>null</code>.
+     * <p>
+     * The <code>value</code> can be retrieved by calling the 
+     * <code>get</code> method with a <code>key</code> that is equal to 
+     * the original <code>key</code>. 
+     *
+     * @param      key     the hashtable key.
+     * @param      value   the value.
+     * @return     the previous value to which the <code>key</code> was mapped
+     *             in this dictionary, or <code>null</code> if the key did not
+     *             have a previous mapping.
+     * @exception  NullPointerException  if the <code>key</code> or
+     *               <code>value</code> is <code>null</code>.
+     * @see        java.lang.Object#equals(java.lang.Object)
+     * @see        java.util.Dictionary#get(java.lang.Object)
+     * @since      JDK1.0
      */
     abstract public Object put(Object key, Object value);
 
     /**
-     * Removes the element corresponding to the key. Does nothing if the
-     * key is not present.
-     * @param key the key that needs to be removed
-     * @return the value of key, or null if the key was not found.
+     * Removes the <code>key</code> (and its corresponding 
+     * <code>value</code>) from this dictionary. This method does nothing 
+     * if the <code>key</code> is not in this dictionary. 
+     *
+     * @param   key   the key that needs to be removed.
+     * @return  the value to which the <code>key</code> had been mapped in this
+     *          dictionary, or <code>null</code> if the key did not have a
+     *          mapping.
+     * @since   JDK1.0
      */
     abstract public Object remove(Object key);
 }
-

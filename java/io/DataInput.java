@@ -1,143 +1,193 @@
 /*
- * @(#)DataInput.java	1.6 95/12/18 Arthur van Hoff
+ * @(#)DataInput.java	1.10 01/12/10
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.io;
 
 /**
- * DataInput is an interface describing streams that can read input
- * in a machine-independent format.
+ * The data input interface is implemented by streams that can read 
+ * primitive Java data types from a stream in a machine-independent 
+ * manner. 
  *
- * @see DataInputStream
- * @see DataOutput
- * @version 	1.6, 12/18/95
- * @author	Frank Yellin
+ * @author  Frank Yellin
+ * @version 1.10, 12/10/01
+ * @see     java.io.DataInputStream 
+ * @see     java.io.DataOutput  
+ * @since   JDK1.0
  */
 public
 interface DataInput {
     /**
-     * Reads bytes, blocking until all bytes are read.
-     * @param b	the buffer into which the data is read
-     * @exception EOFException If end of file is reached.
-     * @exception IOException If other I/O error has occurred.
+     * Reads <code>b.length</code> bytes into the byte array. This 
+     * method blocks until all the bytes are read. 
+     *
+     * @param     b   the buffer into which the data is read.
+     * @exception  EOFException  if this stream reaches the end before reading
+     *               all the bytes.
+     * @exception  IOException   if an I/O error occurs.
+     * @since      JDK1.0
      */
     void readFully(byte b[]) throws IOException;
 
     /**
-     * Reads bytes, blocking until all bytes are read.
-     * @param b	the buffer into which the data is read
-     * @param off the start offset of the data
-     * @param len the maximum number of bytes to read
-     * @exception EOFException If end of file is reached.
-     * @exception IOException If other I/O error has occurred.
+     * Reads <code>b.length</code> bytes into the byte array. This 
+     * method blocks until all the bytes are read. 
+     *
+     * @param     b   the buffer into which the data is read.
+     * @exception  EOFException  if this stream reaches the end before reading
+     *               all the bytes.
+     * @exception  IOException   if an I/O error occurs.
+     * @since   JDK1.0
      */
     void readFully(byte b[], int off, int len) throws IOException;
 
     /**
-     * Skips bytes, block until all bytes are skipped.
-     * @param n the number of bytes to be skipped
-     * @return	the actual number of bytes skipped.
-     * @exception EOFException If end of file is reached.
-     * @exception IOException If other I/O error has occurred.
+     * Skips exactly <code>n</code> bytes of input. 
+     *
+     * @param      n   the number of bytes to be skipped.
+     * @return     the number of bytes skipped, which is always <code>n</code>.
+     * @exception  EOFException  if this stream reaches the end before skipping
+     *               all the bytes.
+     * @exception  IOException   if an I/O error occurs.
+     * @since      JDK1.0
      */
     int skipBytes(int n) throws IOException;
 
     /**
-     * Reads in a boolean.
-     * @return the boolean read.
-     * @exception EOFException If end of file is reached.
-     * @exception IOException If other I/O error has occurred.
+     * Reads a <code>boolean</code> value from the input stream. 
+     *
+     * @return     the <code>boolean</code> value read.
+     * @exception  EOFException  if this stream reaches the end before reading
+     *               all the bytes.
+     * @exception  IOException   if an I/O error occurs.
+     * @since      JDK1.0
      */
     boolean readBoolean() throws IOException;
 
     /**
-     * Reads an 8 bit byte.
-     * @return the 8 bit byte read.
-     * @exception EOFException If end of file is reached.
-     * @exception IOException If other I/O error has occurred.
+     * Reads a signed 8-bit value from the input stream. 
+     *
+     * @return     the 8-bit value read.
+     * @exception  EOFException  if this stream reaches the end before reading
+     *               all the bytes.
+     * @exception  IOException   if an I/O error occurs.
+     * @since      JDK1.0
      */
     byte readByte() throws IOException;
 
     /**
-     * Reads an unsigned 8 bit byte.
-     * @return the 8 bit byte read.
-     * @exception EOFException If end of file is reached.
-     * @exception IOException If other I/O error has occurred.
+     * Reads an unsigned 8-bit value from the input stream. 
+     *
+     * @return     the unsigned 8-bit value read.
+     * @exception  EOFException  if this stream reaches the end before reading
+     *               all the bytes.
+     * @exception  IOException   if an I/O error occurs.
+     * @since      JDK1.0
      */
     int readUnsignedByte() throws IOException;
 
     /**
-     * Reads a 16 bit short.
-     * @return the 16 bit short read.
-     * @exception EOFException If end of file is reached.
-     * @exception IOException If other I/O error has occurred.
+     * Reads a 16-bit value from the input stream. 
+     *
+     * @return     the 16-bit value read.
+     * @exception  EOFException  if this stream reaches the end before reading
+     *               all the bytes.
+     * @exception  IOException   if an I/O error occurs.
+     * @since      JDK1.0
      */
     short readShort() throws IOException;
 
     /**
-     * Reads an unsigned 16 bit short.
-     * @return the 16 bit short read.
-     * @exception EOFException If end of file is reached.
-     * @exception IOException If other I/O error has occurred.
+     * Reads an unsigned 16-bit value from the input stream. 
+     *
+     * @return     the unsigned 16-bit value read.
+     * @exception  EOFException  if this stream reaches the end before reading
+     *               all the bytes.
+     * @exception  IOException   if an I/O error occurs.
+     * @since      JDK1.0
      */
     int readUnsignedShort() throws IOException;
 
     /**
-     * Reads a 16 bit char.
-     * @return the 16 bit char read. 
-     * @exception EOFException If end of file is reached.
-     * @exception IOException If other I/O error has occurred.
+     * Reads a Unicode <code>char</code> value from the input stream. 
+     *
+     * @return     the Unicode <code>char</code> read.
+     * @exception  EOFException  if this stream reaches the end before reading
+     *               all the bytes.
+     * @exception  IOException   if an I/O error occurs.
+     * @since      JDK1.0
      */
     char readChar() throws IOException;
 
     /**
-     * Reads a 32 bit int.
-     * @return the 32 bit integer read.
-     * @exception EOFException If end of file is reached.
-     * @exception IOException If other I/O error has occurred.
+     * Reads an <code>int</code> value from the input stream. 
+     *
+     * @return     the <code>int</code> value read.
+     * @exception  EOFException  if this stream reaches the end before reading
+     *               all the bytes.
+     * @exception  IOException   if an I/O error occurs.
+     * @since      JDK1.0
      */
     int readInt() throws IOException;
 
     /**
-     * Reads a 64 bit long.
-     * @return the read 64 bit long.
-     * @exception EOFException If end of file is reached.
-     * @exception IOException If other I/O error has occurred.
+     * Reads a <code>long</code> value from the input stream. 
+     *
+     * @return     the <code>long</code> value read.
+     * @exception  EOFException  if this stream reaches the end before reading
+     *               all the bytes.
+     * @exception  IOException   if an I/O error occurs.
+     * @since      JDK1.0
      */
     long readLong() throws IOException;
 
     /**
-     * Reads a 32 bit float.
-     * @return the 32 bit float read.
-     * @exception EOFException If end of file is reached.
-     * @exception IOException If other I/O error has occurred.
+     * Reads a <code>float</code> value from the input stream. 
+     *
+     * @return     the <code>float</code> value read.
+     * @exception  EOFException  if this stream reaches the end before reading
+     *               all the bytes.
+     * @exception  IOException   if an I/O error occurs.
+     * @since      JDK1.0
      */
     float readFloat() throws IOException;
 
     /**
-     * Reads a 64 bit double.
-     * @return the 64 bit double read.
-     * @exception EOFException If end of file is reached.
-     * @exception IOException If other I/O error has occurred.
+     * Reads a <code>double</code> value from the input stream. 
+     *
+     * @return     the <code>double</code> value read.
+     * @exception  EOFException  if this stream reaches the end before reading
+     *               all the bytes.
+     * @exception  IOException   if an I/O error occurs.
+     * @since      JDK1.0
      */
     double readDouble() throws IOException;
 
+    /**
+     * Reads the next line of text from the input stream. 
+     *
+     * @return     if this stream reaches the end before reading all the bytes.
+     * @exception  IOException  if an I/O error occurs.
+     * @since      JDK1.0
+     */
     String readLine() throws IOException;
 
+    /**
+     * Reads in a string that has been encoded using a modified UTF-8 format.
+     * <p>
+     * For an exact description of this method, see the discussion in 
+     * Gosling, Joy, and Steele, <i>The Java Language Specification</i>. 
+     *
+     * @return     a Unicode string.
+     * @exception  EOFException            if this stream reaches the end
+     *               before reading all the bytes.
+     * @exception  IOException             if an I/O error occurs.
+     * @exception  UTFDataFormatException  if the bytes do not represent a
+     *               valid UTF-8 encoding of a string.
+     * @since      JDK1.0
+     */
     String readUTF() throws IOException;
 }

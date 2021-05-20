@@ -1,51 +1,45 @@
 /*
- * @(#)URLEncoder.java	1.4 95/12/18 Herb Jellinek
+ * @(#)URLEncoder.java	1.13 01/12/10
  *
- * Copyright (c) 1994-1995 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL or COMMERCIAL purposes and
- * without fee is hereby granted.
- * Please refer to the file http://java.sun.com/copy_trademarks.html
- * for further important copyright and trademark information and to
- * http://java.sun.com/licensing.html for further important licensing
- * information for the Java (tm) Technology.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
- *
- * THIS SOFTWARE IS NOT DESIGNED OR INTENDED FOR USE OR RESALE AS ON-LINE
- * CONTROL EQUIPMENT IN HAZARDOUS ENVIRONMENTS REQUIRING FAIL-SAFE
- * PERFORMANCE, SUCH AS IN THE OPERATION OF NUCLEAR FACILITIES, AIRCRAFT
- * NAVIGATION OR COMMUNICATION SYSTEMS, AIR TRAFFIC CONTROL, DIRECT LIFE
- * SUPPORT MACHINES, OR WEAPONS SYSTEMS, IN WHICH THE FAILURE OF THE
- * SOFTWARE COULD LEAD DIRECTLY TO DEATH, PERSONAL INJURY, OR SEVERE
- * PHYSICAL OR ENVIRONMENTAL DAMAGE ("HIGH RISK ACTIVITIES").  SUN
- * SPECIFICALLY DISCLAIMS ANY EXPRESS OR IMPLIED WARRANTY OF FITNESS FOR
- * HIGH RISK ACTIVITIES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.net;
 
 import java.io.ByteArrayOutputStream;
+import java.io.OutputStreamWriter;
+import java.io.IOException;
 import java.util.BitSet;
 
-
 /**
- * Turns Strings of text into x-www-form-urlencoded format.
+ * The class contains a utility method for converting a 
+ * <code>String</code> into a MIME format called 
+ * "<code>x-www-form-urlencoded</code>" format. 
+ * <p>
+ * To convert a <code>String</code>, each character is examined in turn:
+ * <ul>
+ * <li>The ASCII characters '<code>a</code>' through '<code>z</code>', 
+ *     '<code>A</code>' through '<code>Z</code>', and '<code>0</code>' 
+ *     through '<code>9</code>' remain the same. 
+ * <li>The space character '<code>&nbsp;</code>' is converted into a 
+ *     plus sign '<code>+</code>'. 
+ * <li>All other characters are converted into the 3-character string 
+ *     "<code>%<i>xy</i></code>", where <i>xy</i> is the two-digit
+ *     hexadecimal representation of the lower 8-bits of the character.
+ * </ul>
  *
- * @version 1.4, 12/18/95
- * @author Herb Jellinek
+ * @author  Herb Jellinek
+ * @version 1.13, 12/10/01
+ * @since   JDK1.0
  */
-
 public class URLEncoder {
-
     static BitSet dontNeedEncoding;
+    static final int caseDiff = ('a' - 'A');
 
+    /* The list of characters that are not encoded have been determined by 
+       referencing O'Reilly's "HTML: The Definitive Guide" (page 164). */
+       
     static {
 	dontNeedEncoding = new BitSet(256);
 	int i;
@@ -58,8 +52,11 @@ public class URLEncoder {
 	for (i = '0'; i <= '9'; i++) {
 	    dontNeedEncoding.set(i);
 	}
+	dontNeedEncoding.set(' '); /* encoding a space to a + is done in the encode() method */
+	dontNeedEncoding.set('-');
 	dontNeedEncoding.set('_');
-	dontNeedEncoding.set(' ');
+	dontNeedEncoding.set('.');
+	dontNeedEncoding.set('*');
     }
 
     /**
@@ -68,13 +65,18 @@ public class URLEncoder {
     private URLEncoder() { }
 
     /**
-     * Translates String into x-www-form-urlencoded format.
-     * @param s String to be translated
-     * @return the translated String.
+     * Translates a string into <code>x-www-form-urlencoded</code> format.
+     *
+     * @param   s   <code>String</code> to be translated.
+     * @return  the translated <code>String</code>.
+     * @since   JDK1.0
      */
     public static String encode(String s) {
+	int maxBytesPerChar = 10;
 	ByteArrayOutputStream out = new ByteArrayOutputStream(s.length());
-	
+	ByteArrayOutputStream buf = new ByteArrayOutputStream(maxBytesPerChar);
+	OutputStreamWriter writer = new OutputStreamWriter(buf);
+
 	for (int i = 0; i < s.length(); i++) {
 	    int c = (int)s.charAt(i);
 	    if (dontNeedEncoding.get(c)) {
@@ -83,9 +85,31 @@ public class URLEncoder {
 		}
 		out.write(c);
 	    } else {
-		out.write('%');
-		out.write(Character.forDigit(c >> 4, 16));
-		out.write(Character.forDigit(c & 0xF, 16));
+		// convert to external encoding before hex conversion
+		try {
+		    writer.write(c);
+		    writer.flush();
+		} catch(IOException e) {
+		    buf.reset();
+		    continue;
+		}
+		byte[] ba = buf.toByteArray();
+		for (int j = 0; j < ba.length; j++) {
+		    out.write('%');
+		    char ch = Character.forDigit((ba[j] >> 4) & 0xF, 16);
+		    // converting to use uppercase letter as part of
+		    // the hex value if ch is a letter.
+		    if (Character.isLetter(ch)) {
+			ch -= caseDiff;
+		    }
+		    out.write(ch);
+		    ch = Character.forDigit(ba[j] & 0xF, 16);
+		    if (Character.isLetter(ch)) {
+			ch -= caseDiff;
+		    }
+		    out.write(ch);
+		}
+		buf.reset();
 	    }
 	}
 

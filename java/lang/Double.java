@@ -1,83 +1,127 @@
 /*
- * @(#)Double.java	1.31 95/11/29  
+ * @(#)Double.java	1.43 01/12/10
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang;
 
 /**
- * The Double class provides an object wrapper for Double data values and serves 
- * as a place for double-oriented operations.  A wrapper is useful because most of
- * Java's utility classes require the use of objects.  Since doubles are not 
- * objects in Java, they need to be "wrapped" in a Double instance.
- * @version 	1.31, 11/29/95
- * @author	Lee Boynton
- * @author	Arthur van Hoff
+ * The Double class wraps a value of the primitive type 
+ * <code>double</code> in an object. An object of type 
+ * <code>Double</code> contains a single field whose type is 
+ * <code>double</code>. 
+ * <p>
+ * In addition, this class provides several methods for converting a 
+ * <code>double</code> to a <code>String</code> and a 
+ * <code>String</code> to a <code>double</code>, as well as other 
+ * constants and methods useful when dealing with a 
+ * <code>double</code>. 
+ *
+ * @author  Lee Boynton
+ * @author  Arthur van Hoff
+ * @version 1.43, 12/10/01
+ * @since   JDK1.0
  */
-
 public final
 class Double extends Number {
     /**
-     * Positive infinity.
+     * The positive infinity of type <code>double</code>. 
+     *
+     * @since   JDK1.0
      */
     public static final double POSITIVE_INFINITY = 1.0 / 0.0;
 
     /**
-     * Negative infinity.
+     * The negative infinity of type <code>double</code>. 
+     *
+     * @since   JDK1.0
      */
     public static final double NEGATIVE_INFINITY = -1.0 / 0.0;
 
     /** 
-     * Not-a-Number. <em>Note: is not equal to anything, including
-     * itself</em>
+     * A NaN value of type <code>double</code>. 
+     *
+     * @since   JDK1.0
      */
     public static final double NaN = 0.0d / 0.0;
 
     /**
-     * The maximum value a double can have.  The greatest maximum value that a 
-     * double can have is 1.79769313486231570e+308d.
+     * The largest positive value of type <code>double</code>. 
+     *
+     * @since   JDK1.0
      */
     public static final double MAX_VALUE = 1.79769313486231570e+308;
 
     /**
-     * The minimum value a double can have.  The lowest minimum value that a
-     * double can have is 4.94065645841246544e-324d.
+     * The smallest positive value of type <code>double</code>. 
+     *
+     * @since   JDK1.0
      */
-    public static final double MIN_VALUE = 4.94065645841246544e-324;
-
+//  public static final double MIN_VALUE = 4.94065645841246544e-324;
+    public static final double MIN_VALUE = longBitsToDouble(1L);
 
     /**
-     * Returns a String representation for the specified double value.
-     * @param d	the double to be converted
+     * The Class object representing the primitive type double.
+     *
+     * @since   JDK1.1
      */
-    public static native String toString(double d);
+    public static final Class	TYPE = Class.getPrimitiveClass("double");
+
+    /**
+     * Creates a string representation of the <code>double</code> 
+     * argument. 
+     * <p>
+     * The values <code>NaN</code>, <code>NEGATIVE_INFINITY</code>, 
+     * <code>POSITIVE_INFINITY</code>, <code>-0.0</code>, and 
+     * <code>+0.0</code> are represented by the strings 
+     * <code>"NaN"</code>, <code>"-Infinity"</code>, 
+     * <code>"Infinity"</code>, <code>"-0.0"</code>, and 
+     * <code>"0.0"</code>, respectively. 
+     * <p>
+     * If <code>d</code> is in the range 
+     * <code>10<sup>-3</sup>&nbsp;&lt;= |d|&nbsp;&lt;=10<sup>7</sup></code>,
+     * then it is converted to a string in the style 
+     * <code>[-]ddd.ddd</code>. Otherwise, it is converted to a 
+     * string in the style <code>[-]m.ddddE&#177;xx</code>.
+     * <p>
+     * There is always a minimum of one digit after the decimal point. 
+     * The number of digits is the minimum needed to uniquely distinguish 
+     * the argument value from adjacent values of type 
+     * <code>double</code>. 
+     *
+     * @param   d   the double to be converted.
+     * @return  a string representation of the argument.
+     * @since   JDK1.0
+     */
+    public static String toString(double d){
+	return new FloatingDecimal(d).toJavaFormatString();
+    }
 
     /**
      * Returns a new Double value initialized to the value represented by the 
      * specified String.
-     * @param s		the String to be parsed
-     * @exception NumberFormatException If the String cannot be parsed.
+     *
+     * @param      s   the string to be parsed.
+     * @return     a newly constructed <code>Double</code> initialized to the
+     *             value represented by the string argument.
+     * @exception  NumberFormatException  if the string does not contain a
+     *               parsable number.
+     * @since      JDK1.0
      */
-    public static native Double valueOf(String s) throws NumberFormatException;
-
+    public static Double valueOf(String s) throws NumberFormatException { 
+	return new Double(valueOf0(s));
+    }
 
     /**
-     * Returns true if the specified number is the special Not-a-Number (NaN) value.
-     * @param v	the value to be tested
+     * Returns true if the specified number is the special Not-a-Number (NaN)
+     * value.
+     *
+     * @param   v   the value to be tested.
+     * @return  <code>true</code> if the value of the argument is NaN;
+     *          <code>false</code> otherwise.
+     * @since   JDK1.0
      */
     static public boolean isNaN(double v) {
 	return (v != v);
@@ -85,7 +129,11 @@ class Double extends Number {
 
     /**
      * Returns true if the specified number is infinitely large in magnitude.
-     * @param v	the value to be tested
+     *
+     * @param   v   the value to be tested.
+     * @return  <code>true</code> if the value of the argument is positive
+     *          infinity or negative infinity; <code>false</code> otherwise.
+     * @since   JDK1.0
      */
     static public boolean isInfinite(double v) {
 	return (v == POSITIVE_INFINITY) || (v == NEGATIVE_INFINITY);
@@ -97,18 +145,27 @@ class Double extends Number {
     private double value;
 
     /**
-     * Constructs a Double wrapper for the specified double value.
-     * @param value the initial value of the double
+     * Constructs a newly allocated <code>Double</code> object that 
+     * represents the primitive <code>double</code> argument. 
+     *
+     * @param   value   the value to be represented by the <code>Double</code>.
+     * @since   JDK1.0
      */
     public Double(double value) {
 	this.value = value;
     }
 
     /**
-     * Constructs a Double object initialized to the value specified by the
-     * String parameter. 
-     * @param s		the String to be converted to a Double
-     * @exception	NumberFormatException If the String does not contain a parsable number.
+     * Constructs a newly allocated <code>Double</code> object that 
+     * represents the floating- point value of type <code>double</code> 
+     * represented by the string. The string is converted to a 
+     * <code>double</code> value as if by the <code>valueOf</code> method. 
+     *
+     * @param      s   a string to be converted to a <code>Double</code>.
+     * @exception  NumberFormatException  if the string does not contain a
+     *               parsable number.
+     * @see        java.lang.Double#valueOf(java.lang.String)
+     * @since      JDK1.0
      */
     public Double(String s) throws NumberFormatException {
 	// REMIND: this is inefficient
@@ -116,7 +173,12 @@ class Double extends Number {
     }
 
     /**
-     * Returns true if this Double value is the special Not-a-Number (NaN) value.
+     * Returns true if this Double value is the special Not-a-Number (NaN)
+     * value.
+     *
+     * @return  <code>true</code> if the value represented by this object is
+     *          NaN; <code>false</code> otherwise.
+     * @since   JDK1.0
      */
     public boolean isNaN() {
 	return isNaN(value);
@@ -124,6 +186,11 @@ class Double extends Number {
 
     /**
      * Returns true if this Double value is infinitely large in magnitude.
+     *
+     * @return  <code>true</code> if the value represented by this object is
+     *          positive infinity or negative infinity;
+     *          <code>false</code> otherwise.
+     * @since   JDK1.0
      */
     public boolean isInfinite() {
 	return isInfinite(value);
@@ -131,13 +198,43 @@ class Double extends Number {
 
     /**
      * Returns a String representation of this Double object.
+     * The primitive <code>double</code> value represented by this 
+     * object is converted to a string exactly as if by the method 
+     * <code>toString</code> of one argument. 
+     *
+     * @return  a <code>String</code> representation of this object.
+     * @see     java.lang.Double#toString(double)
+     * @since   JDK1.0
      */
     public String toString() {
 	return String.valueOf(value);
     }
 
     /**
+     * Returns the value of this Double as a byte (by casting to a byte).
+     *
+     * @since   JDK1.1
+     */
+    public byte byteValue() {
+	return (byte)value;
+    }
+
+    /**
+     * Returns the value of this Double as a short (by casting to a short).
+     *
+     * @since   JDK1.1
+     */
+    public short shortValue() {
+	return (short)value;
+    }
+
+    /**
      * Returns the integer value of this Double (by casting to an int).
+     *
+     * @return  the <code>double</code> value represented by this object is
+     *          converted to type <code>int</code> and the result of the
+     *          conversion is returned.
+     * @since   JDK1.0
      */
     public int intValue() {
 	return (int)value;
@@ -145,6 +242,11 @@ class Double extends Number {
 
     /**
      * Returns the long value of this Double (by casting to a long).
+     *
+     * @return  the <code>double</code> value represented by this object is
+     *          converted to type <code>long</code> and the result of the
+     *          conversion is returned.
+     * @since   JDK1.0
      */
     public long longValue() {
 	return (long)value;
@@ -152,13 +254,20 @@ class Double extends Number {
 
     /**
      * Returns the float value of this Double.
-     */
+     *
+     * @return  the <code>double</code> value represented by this object is
+     *          converted to type <code>float</code> and the result of the
+     *          conversion is returned.
+     * @since   JDK1.0     */
     public float floatValue() {
 	return (float)value;
     }
 
     /**
      * Returns the double value of this Double.
+     *
+     * @return  the <code>double</code> value represented by this object.
+     * @since   JDK1.0
      */
     public double doubleValue() {
 	return (double)value;
@@ -166,20 +275,48 @@ class Double extends Number {
 
     /**
      * Returns a hashcode for this Double.
+     *
+     * @return  a <code>hash code</code> value for this object. 
+     * @since   JDK1.0
      */
     public int hashCode() {
-	return (int)value;
+	long bits = doubleToLongBits(value);
+	return (int)(bits ^ (bits >> 32));
     }
 
     /**
      * Compares this object against the specified object.
+     * The result is <code>true</code> if and only if the argument is 
+     * not <code>null</code> and is a <code>Double</code> object that 
+     * represents a double that has the identical bit pattern to the bit 
+     * pattern of the double represented by this object. 
      * <p>
-     * <em>Note: To be useful in hashtables this method
-     * considers two NaN double values to be equal. This
-     * is not according to IEEE specification</em>
+     * Note that in most cases, for two instances of class 
+     * <code>Double</code>, <code>d1</code> and <code>d2</code>, the 
+     * value of <code>d1.equals(d2)</code> is <code>true</code> if and 
+     * only if 
+     * <ul><code>
+     *   d1.doubleValue()&nbsp;== d2.doubleValue()
+     * </code></ul>
+     * <p>
+     * also has the value <code>true</code>. However, there are two 
+     * exceptions: 
+     * <ul>
+     * <li>If <code>d1</code> and <code>d2</code> both represent 
+     *     <code>Double.NaN</code>, then the <code>equals</code> method 
+     *     returns <code>true</code>, even though 
+     *     <code>Double.NaN==Double.NaN</code> has the value 
+     *     <code>false</code>.
+     * <li>If <code>d1</code> represents <code>+0.0</code> while
+     *     <code>d2</code> represents <code>-0.0</code>, or vice versa,
+     *     the <code>equal</code> test has the value <code>false</code>,
+     *     even though <code>+0.0==-0.0</code> has the value <code>true.</code>
+     * </ul>
      *
-     * @param obj		the object to compare with
-     * @return 		true if the objects are the same; false otherwise.
+     * @param   obj   the object to compare with.
+     * @return  <code>true</code> if the objects are the same;
+     *          <code>false</code> otherwise.
+     * @since   JDK1.0
      */
     public boolean equals(Object obj) {
 	return (obj != null)
@@ -189,12 +326,61 @@ class Double extends Number {
     }
 
     /**
-     * Returns the bit represention of a double-float value
+     * Returns a representation of the specified floating-point value 
+     * according to the IEEE 754 floating-point "double 
+     * format" bit layout. 
+     * <p>
+     * Bit 63 represents the sign of the floating-point number. Bits 
+     * 62-52 represent the exponent. Bits 51-0 represent 
+     * the significand (sometimes called the mantissa) of the 
+     * floating-point number. 
+     * <p>
+     * If the argument is positive infinity, the result is 
+     * <code>0x7ff0000000000000L</code>. 
+     * <p>
+     * If the argument is negative infinity, the result is 
+     * <code>0xfff0000000000000L</code>. 
+     * <p>
+     * If the argument is NaN, the result is 
+     * <code>0x7ff8000000000000L</code>. 
+     *
+     * @param   value   a double precision floating-point number.
+     * @return  the bits that represent the floating-point number.
+     * @since   JDK1.0
      */
     public static native long doubleToLongBits(double value);
 
     /**
      * Returns the double-float corresponding to a given bit represention.
+     * The argument is considered to be a representation of a 
+     * floating-point value according to the IEEE 754 floating-point 
+     * "double precision" bit layout. That floating-point 
+     * value is returned as the result. 
+     * <p>
+     * If the argument is <code>0x7f80000000000000L</code>, the result 
+     * is positive infinity. 
+     * <p>
+     * If the argument is <code>0xff80000000000000L</code>, the result 
+     * is negative infinity. 
+     * <p>
+     * If the argument is any value in the range 
+     * <code>0x7ff0000000000001L</code> through 
+     * <code>0x7fffffffffffffffL</code> or in the range 
+     * <code>0xfff0000000000001L</code> through 
+     * <code>0xffffffffffffffffL</code>, the result is NaN. All IEEE 754 
+     * NaN values are, in effect, lumped together by the Java language 
+     * into a single value. 
+     *
+     * @param   bits   any <code>long</code> integer.
+     * @return  the <code>double</code> floating-point value with the same
+     *          bit pattern.
+     * @since   JDK1.0
      */
     public static native double longBitsToDouble(long bits);
+
+    /* Converts a string to a double.  Also used by Float.valueOf */
+    static native double valueOf0(String s) throws NumberFormatException;
+
+    /** use serialVersionUID from JDK 1.0.2 for interoperability */
+    private static final long serialVersionUID = -9172774392245257468L;
 }
