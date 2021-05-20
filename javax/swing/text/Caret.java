@@ -1,8 +1,8 @@
 /*
- * @(#)Caret.java	1.30 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package javax.swing.text;
 
@@ -30,7 +30,7 @@ import javax.swing.event.ChangeListener;
  * the mark is left at whatever position it previously had.
  *
  * @author  Timothy Prinzing
- * @version 1.30 12/19/03
+ * @version %I% %G%
  */
 public interface Caret {
 
@@ -54,7 +54,7 @@ public interface Caret {
     public void deinstall(JTextComponent c);
 
     /**
-     * Renders the caret.
+     * Renders the caret. This method is called by UI classes.
      *
      * @param g the graphics context
      */
@@ -167,8 +167,11 @@ public interface Caret {
      * Sets the caret position to some position.  This
      * causes the mark to become the same as the dot,
      * effectively setting the selection range to zero.
+     * <p>
+     * If the parameter is negative or beyond the length of the document,
+     * the caret is placed at the beginning or at the end, respectively.
      *
-     * @param dot  the new position to set the caret to >= 0
+     * @param dot  the new position to set the caret to
      */
     public void setDot(int dot);
 

@@ -1,8 +1,8 @@
 /*
- * @(#)ImageOutputStream.java	1.24 04/05/13
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.imageio.stream;
@@ -636,7 +636,7 @@ public interface ImageOutputStream extends ImageInputStream, DataOutput {
      * <code>IndexOutOfBoundsException</code>.
      *
      * @param pos a <code>long</code> containing the length of the
-     * file prefix that may be flushed to the destination.
+     * stream prefix that may be flushed to the destination.
      *
      * @exception IndexOutOfBoundsException if <code>pos</code> lies
      * in the flushed portion of the stream or past the current stream

@@ -1,8 +1,8 @@
 /*
- * @(#)AncestorNotifier.java	1.19 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing;
@@ -21,7 +21,7 @@ import java.io.Serializable;
 
 
 /**
- * @version 1.19 12/19/03
+ * @version %I% %G%
  * @author Dave Moore
  */
 
@@ -48,7 +48,7 @@ class AncestorNotifier implements ComponentListener, PropertyChangeListener, Ser
 	return (AncestorListener[])listenerList.getListeners(AncestorListener.class);
     }
 
-    /*
+    /**
      * Notify all listeners that have registered interest for
      * notification on this event type.  The event instance 
      * is lazily created using the parameters passed into 
@@ -70,7 +70,7 @@ class AncestorNotifier implements ComponentListener, PropertyChangeListener, Ser
 	}
     }	
     
-    /*
+    /**
      * Notify all listeners that have registered interest for
      * notification on this event type.  The event instance 
      * is lazily created using the parameters passed into 
@@ -91,7 +91,7 @@ class AncestorNotifier implements ComponentListener, PropertyChangeListener, Ser
 	    }	       
 	}
     }	
-    /*
+    /**
      * Notify all listeners that have registered interest for
      * notification on this event type.  The event instance 
      * is lazily created using the parameters passed into 

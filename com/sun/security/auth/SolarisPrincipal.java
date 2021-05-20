@@ -1,8 +1,8 @@
 /*
- * @(#)SolarisPrincipal.java	1.17 04/05/18
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.security.auth;
@@ -23,7 +23,7 @@ import java.security.Principal;
  * @deprecated As of JDK&nbsp;1.4, replaced by 
  *             {@link UnixPrincipal}.
  *             This class is entirely deprecated.
- * @version 1.17, 05/18/04
+ * @version %I%, %G%
  * @see java.security.Principal
  * @see javax.security.auth.Subject
  */

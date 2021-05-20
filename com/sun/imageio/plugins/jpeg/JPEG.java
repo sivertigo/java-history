@@ -1,8 +1,8 @@
 /*
- * @(#)JPEG.java	1.15 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.imageio.plugins.jpeg;
@@ -190,15 +190,29 @@ public class JPEG {
 
     public static final int [] bOffsRGB = { 2, 1, 0 };
 
-    protected static final ColorSpace sRGB = 
-        ColorSpace.getInstance(ColorSpace.CS_sRGB);
-    protected static ColorSpace YCC = null;  // Can't be final
+    /* These are kept in the inner class to avoid static initialization
+     * of the CMM class until someone actually needs it.
+     * (e.g. do not init CMM on the request for jpeg mime types)
+     */
+    public static class JCS {
 
-    static {
-        try {
-            YCC = ColorSpace.getInstance(ColorSpace.CS_PYCC);
-        } catch (IllegalArgumentException e) {
-            // PYCC.pf may not always be installed
+        public static final ColorSpace sRGB = 
+            ColorSpace.getInstance(ColorSpace.CS_sRGB);
+
+        private static ColorSpace YCC = null;
+        private static boolean yccInited = false;
+
+        public static ColorSpace getYCC() {
+            if (!yccInited) {
+                try {
+                    YCC = ColorSpace.getInstance(ColorSpace.CS_PYCC);
+                } catch (IllegalArgumentException e) {
+                    // PYCC.pf may not always be installed
+                } finally {
+                    yccInited = true;
+                }
+            }
+            return YCC;
         }
     }
      

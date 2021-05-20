@@ -1,8 +1,8 @@
 /*
- * @(#)NetPermission.java	1.49 04/02/03
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.net;
@@ -129,7 +129,7 @@ that class really didn't come from that location.</td>
  * @see java.security.PermissionCollection
  * @see java.lang.SecurityManager
  *
- * @version 1.49 04/02/03
+ * @version %I% %E%
  *
  * @author Marianne Mueller
  * @author Roland Schemers
@@ -146,6 +146,9 @@ public final class NetPermission extends BasicPermission {
      * signify a wildcard match.
      *
      * @param name the name of the NetPermission.
+     *
+     * @throws NullPointerException if <code>name</code> is <code>null</code>.
+     * @throws IllegalArgumentException if <code>name</code> is empty.
      */
 
     public NetPermission(String name)
@@ -160,6 +163,9 @@ public final class NetPermission extends BasicPermission {
      *
      * @param name the name of the NetPermission.
      * @param actions should be null.
+     *
+     * @throws NullPointerException if <code>name</code> is <code>null</code>.
+     * @throws IllegalArgumentException if <code>name</code> is empty.
      */
 
     public NetPermission(String name, String actions)

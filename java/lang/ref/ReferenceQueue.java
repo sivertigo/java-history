@@ -1,8 +1,8 @@
 /*
- * @(#)ReferenceQueue.java	1.25 07/06/04
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang.ref;
@@ -11,7 +11,7 @@ package java.lang.ref;
  * Reference queues, to which registered reference objects are appended by the
  * garbage collector after the appropriate reachability changes are detected.
  *
- * @version  1.25, 06/04/07
+ * @version  %I%, %G%
  * @author   Mark Reinhold
  * @since    1.2
  */
@@ -34,9 +34,8 @@ public class ReferenceQueue<T> {
 
     static private class Lock { };
     private Lock lock = new Lock();
-    private Reference<? extends T> head = null;
+    private volatile Reference<? extends T> head = null;
     private long queueLength = 0;
-	private volatile boolean queueEmpty = true;
 
     boolean enqueue(Reference<? extends T> r) {	/* Called only by Reference class */
 	synchronized (r) {
@@ -46,7 +45,6 @@ public class ReferenceQueue<T> {
 		r.next = (head == null) ? r : head;
 		head = r;
 		queueLength++;
-		if (queueEmpty) queueEmpty = false;
                 if (r instanceof FinalReference) {
                     sun.misc.VM.addFinalRefCount(1);
                 }
@@ -63,7 +61,6 @@ public class ReferenceQueue<T> {
 	    r.queue = NULL;
 	    r.next = r;
 	    queueLength--;
-        if (queueLength <= 0) queueEmpty = true;
             if (r instanceof FinalReference) {
                 sun.misc.VM.addFinalRefCount(-1);
             }
@@ -81,7 +78,8 @@ public class ReferenceQueue<T> {
      *          otherwise <code>null</code>
      */
     public Reference<? extends T> poll() {
-	if(queueEmpty) return null;
+        if (head == null)
+            return null;
 	synchronized (lock) {
 	    return reallyPoll();
 	}
@@ -94,7 +92,7 @@ public class ReferenceQueue<T> {
      * <p> This method does not offer real-time guarantees: It schedules the
      * timeout as if by invoking the {@link Object#wait(long)} method.
      *
-     * @param  timeout  If positive, block for up <code>timeout</code>
+     * @param  timeout  If positive, block for up to <code>timeout</code>
      *                  milliseconds while waiting for a reference to be
      *                  added to this queue.  If zero, block indefinitely.
      *

@@ -1,7 +1,7 @@
 /*
- * @(#)UnmodifiableClassException.java	1.2 04/03/01
+ * %W% %E%
  *
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms. 
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms. 
  */
 
 package java.lang.instrument;
@@ -12,7 +12,7 @@ package java.lang.instrument;
  * when one of the specified classes cannot be modified.
  *
  * @see     java.lang.instrument.Instrumentation#redefineClasses
- * @since   JDK1.5
+ * @since   1.5
  */
 public class UnmodifiableClassException extends Exception {
     /**

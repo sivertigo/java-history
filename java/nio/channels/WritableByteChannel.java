@@ -1,8 +1,8 @@
 /*
- * @(#)WritableByteChannel.java	1.15 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.nio.channels;
@@ -24,7 +24,7 @@ import java.nio.ByteBuffer;
  *
  * @author Mark Reinhold
  * @author JSR-51 Expert Group
- * @version 1.15, 03/12/19
+ * @version %I%, %E%
  * @since 1.4
  */
 
@@ -37,7 +37,7 @@ public interface WritableByteChannel
      *
      * <p> An attempt is made to write up to <i>r</i> bytes to the channel,
      * where <i>r</i> is the number of bytes remaining in the buffer, that is,
-     * <tt>dst.remaining()</tt>, at the moment this method is invoked.
+     * <tt>src.remaining()</tt>, at the moment this method is invoked.
      *
      * <p> Suppose that a byte sequence of length <i>n</i> is written, where
      * <tt>0</tt>&nbsp;<tt>&lt;=</tt>&nbsp;<i>n</i>&nbsp;<tt>&lt;=</tt>&nbsp;<i>r</i>.

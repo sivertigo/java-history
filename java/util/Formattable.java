@@ -1,8 +1,8 @@
 /*
- * @(#)Formattable.java	1.3 04/04/21
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.util;
@@ -96,7 +96,7 @@ import java.io.IOException;
  * any method in this interface will cause a {@link
  * NullPointerException} to be thrown.
  *
- * @version 	1.3, 04/21/04
+ * @version 	%I%, %G%
  * @since  1.5
  */
 public interface Formattable {

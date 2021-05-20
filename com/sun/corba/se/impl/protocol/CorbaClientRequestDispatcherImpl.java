@@ -1,8 +1,8 @@
 /*
- * @(#)CorbaClientRequestDispatcherImpl.java	1.86 04/06/21
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2004, 2011, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 /*
@@ -16,6 +16,7 @@
 
 package com.sun.corba.se.impl.protocol;
 
+import java.io.*;
 import java.io.IOException;
 import java.util.Iterator;
 import java.rmi.RemoteException;
@@ -97,6 +98,9 @@ import com.sun.corba.se.impl.protocol.giopmsgheaders.ReferenceAddr;
 import com.sun.corba.se.impl.transport.CorbaContactInfoListIteratorImpl;
 import com.sun.corba.se.impl.util.JDKBridge;
 
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * ClientDelegate is the RMI client-side subcontract or representation
  * It implements RMI delegate as well as our internal ClientRequestDispatcher
@@ -106,8 +110,8 @@ public class CorbaClientRequestDispatcherImpl
     implements
 	ClientRequestDispatcher
 {
-    // Used for locking
-    private Object lock = new Object();
+    // 7016182 - synchronisation on a single monitor for equal contactInfo parameters
+    private ConcurrentMap<ContactInfo, Object> locks = new ConcurrentHashMap<ContactInfo, Object>();
 
     public OutputObject beginRequest(Object self, String opName,
 				     boolean isOneWay, ContactInfo contactInfo)
@@ -135,6 +139,21 @@ public class CorbaClientRequestDispatcherImpl
 
 	// This locking is done so that multiple connections are not created
 	// for the same endpoint
+        // 6929137 - Synchronized on contactInfo to avoid blocking across multiple endpoints
+        // 7016182 - Synchronisation on a single monitor for contactInfo parameters
+        // with identical hashCode(), so we lock on same monitor for equal parameters
+        // (which can refer to equal (in terms of equals()) but not the same objects)
+
+        Object lock = locks.get(contactInfo);
+
+        if (lock == null) {
+            Object newLock = new Object();
+            lock = locks.putIfAbsent(contactInfo, newLock);
+            if (lock == null) {
+                lock = newLock;
+            }
+        }
+
 	synchronized (lock) {
 	    if (contactInfo.isConnectionBased()) {
 		if (contactInfo.shouldCacheConnection()) {
@@ -169,6 +188,7 @@ public class CorbaClientRequestDispatcherImpl
 			    if(getContactInfoListIterator(orb).hasNext()) {
 				contactInfo = (ContactInfo)
 				   getContactInfoListIterator(orb).next();
+				unregisterWaiter(orb);
 				return beginRequest(self, opName, 
 						    isOneWay, contactInfo);
 			    } else {
@@ -276,10 +296,22 @@ public class CorbaClientRequestDispatcherImpl
 	    // ContactInfoList outside of subcontract.
 	    // Want to move that update to here.
 	    if (getContactInfoListIterator(orb).hasNext()) {
-		contactInfo = (ContactInfo)
-		    getContactInfoListIterator(orb).next();
+		contactInfo = (ContactInfo)getContactInfoListIterator(orb).next();
+                if (orb.subcontractDebugFlag) {
+                    dprint( "RemarshalException: hasNext true\ncontact info " + contactInfo );
+                }
+
+                // Fix for 6763340: Complete the first attempt before starting another.
+                orb.getPIHandler().makeCompletedClientRequest( 
+                    ReplyMessage.LOCATION_FORWARD, null ) ;
+                unregisterWaiter(orb);
+                orb.getPIHandler().cleanupClientPIRequest() ;
+
 		return beginRequest(self, opName, isOneWay, contactInfo);
 	    } else {
+	        if (orb.subcontractDebugFlag) {
+                    dprint( "RemarshalException: hasNext false" );
+                }
 		ORBUtilSystemException wrapper = 
 		    ORBUtilSystemException.get(orb, 
 					       CORBALogDomains.RPC_PROTOCOL);
@@ -296,7 +328,7 @@ public class CorbaClientRequestDispatcherImpl
 	return outputObject;
 
       } finally {
-	if (orb.subcontractDebugFlag) {
+        if (orb.subcontractDebugFlag) {
 	    dprint(".beginRequest<-: op/" + opName);
 	}
       }
@@ -358,11 +390,14 @@ public class CorbaClientRequestDispatcherImpl
 	    boolean retry  =
 		getContactInfoListIterator(orb)
 	            .reportException(messageMediator.getContactInfo(), e);
-	    if (retry) {
-		// Must run interceptor end point before retrying.
+
+            // Bug 6328377: must not lose exception in PI 
+            // Must run interceptor end point before retrying.
 		Exception newException = 
 		    orb.getPIHandler().invokeClientPIEndingPoint(
                         ReplyMessage.SYSTEM_EXCEPTION, e);
+	    if (retry) {
+		
 		if (newException == e) {
 		    continueOrThrowSystemOrRemarshal(messageMediator,
 						     new RemarshalException());
@@ -371,8 +406,14 @@ public class CorbaClientRequestDispatcherImpl
 						     newException);
 		}
 	    } else {
-		// NOTE: Interceptor ending point will run in releaseReply.
-		throw e;
+                    if (newException instanceof RuntimeException){
+			throw (RuntimeException)newException;
+                    }
+                    else if (newException instanceof RemarshalException)
+                    {
+			throw (RemarshalException)newException;
+                    }
+		    throw e;
 	    }
 	    return null; // for compiler
 	}

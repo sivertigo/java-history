@@ -1,8 +1,8 @@
 /*
- * @(#)StringWriter.java	1.24 04/07/16
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.io;
@@ -16,7 +16,7 @@ package java.io;
  * can be called after the stream has been closed without generating an
  * <tt>IOException</tt>.
  *
- * @version 	1.24, 04/07/16
+ * @version 	%I%, %E%
  * @author	Mark Reinhold
  * @since	JDK1.1
  */
@@ -26,7 +26,7 @@ public class StringWriter extends Writer {
     private StringBuffer buf;
 
     /**
-     * Create a new string writer, using the default initial string-buffer
+     * Create a new string writer using the default initial string-buffer
      * size.
      */
     public StringWriter() {
@@ -35,10 +35,15 @@ public class StringWriter extends Writer {
     }
 
     /**
-     * Create a new string writer, using the specified initial string-buffer
+     * Create a new string writer using the specified initial string-buffer
      * size.
      *
-     * @param initialSize  an int specifying the initial size of the buffer.
+     * @param initialSize
+     *        The number of <tt>char</tt> values that will fit into this buffer
+     *        before it is automatically expanded
+     *
+     * @throws IllegalArgumentException
+     *         If <tt>initialSize</tt> is negative
      */
     public StringWriter(int initialSize) {
 	if (initialSize < 0) {

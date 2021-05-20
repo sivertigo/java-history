@@ -1,8 +1,8 @@
 /*
- * @(#)Format.java	1.34 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 /*
@@ -43,7 +43,7 @@ import java.io.Serializable;
  * <h4>Subclassing</h4>
  *
  * <p>
- * The Java 2 platform provides three specialized subclasses of <code>Format</code>--
+ * The Java Platform provides three specialized subclasses of <code>Format</code>--
  * <code>DateFormat</code>, <code>MessageFormat</code>, and
  * <code>NumberFormat</code>--for formatting dates, messages, and numbers,
  * respectively.
@@ -110,12 +110,19 @@ import java.io.Serializable;
  * @see          java.text.NumberFormat
  * @see          java.text.DateFormat
  * @see          java.text.MessageFormat
- * @version      1.34, 12/19/03
+ * @version      %I%, %G%
  * @author       Mark Davis
  */
 public abstract class Format implements Serializable, Cloneable {
 
     private static final long serialVersionUID = -299282585814624189L;
+
+    /**
+     * Sole constructor.  (For invocation by subclass constructors, typically
+     * implicit.)
+     */
+    protected Format() {
+    }
 
     /**
      * Formats an object to produce a string. This is equivalent to

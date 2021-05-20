@@ -1,8 +1,8 @@
 /*
- * @(#)DragSource.java	1.45 04/05/05
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.awt.dnd;
@@ -98,7 +98,7 @@ import sun.security.action.GetIntegerAction;
  * duration of the operation with respect to the 
  * <code>DragSource</code>. 
  *
- * @version 	1.45, 05/05/04
+ * @version 	%I%, %G%
  * @since 1.2
  */
 

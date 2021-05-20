@@ -1,8 +1,8 @@
 /*
- * @(#)TreeNode.java	1.23 04/07/13
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing.tree;
@@ -12,15 +12,17 @@ import java.util.Enumeration;
 /**
  * Defines the requirements for an object that can be used as a
  * tree node in a JTree.
- *
  * <p>
+ * Implementations of <code>TreeNode</code> that override <code>equals</code>
+ * will typically need to override <code>hashCode</code> as well.  Refer
+ * to {@link javax.swing.tree.TreeModel} for more information.
  *
  * For further information and examples of using tree nodes,
  * see <a
  href="http://java.sun.com/docs/books/tutorial/uiswing/components/tree.html">How to Use Tree Nodes</a>
  * in <em>The Java Tutorial.</em>
  *
- * @version 1.23 07/13/04
+ * @version %I% %G%
  * @author Rob Davis
  * @author Scott Violet
  */

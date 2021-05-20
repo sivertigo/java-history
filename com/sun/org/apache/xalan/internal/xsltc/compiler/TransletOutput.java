@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /*
- * $Id: TransletOutput.java,v 1.1.2.1 2006/09/19 01:06:43 jeffsuttor Exp $
+ * $Id: TransletOutput.java,v 1.2.4.1 2005/09/05 09:19:44 pvedula Exp $
  */
 
 package com.sun.org.apache.xalan.internal.xsltc.compiler;
@@ -109,7 +109,7 @@ final class TransletOutput extends Instruction {
 	    return; 	
 	}
 
-        // Save the current output handler on the stack
+	// Save the current output handler on the stack
 	il.append(methodGen.loadHandler());
 	
 	final int open =  cpg.addMethodref(TRANSLET_CLASS,

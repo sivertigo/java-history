@@ -1,8 +1,6 @@
 /*
- * @(#)Util.java	1.45 04/06/21
- *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, 2012, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 /*
  * Licensed Materials - Property of IBM
@@ -86,6 +84,7 @@ import com.sun.corba.se.spi.copyobject.ReflectiveCopyException ;
 import com.sun.corba.se.spi.copyobject.CopierManager ;
 import com.sun.corba.se.spi.copyobject.ObjectCopierFactory ;
 import com.sun.corba.se.spi.copyobject.ObjectCopier ;
+import com.sun.corba.se.impl.io.SharedSecrets;
 import com.sun.corba.se.impl.io.ValueHandlerImpl;
 import com.sun.corba.se.impl.orbutil.ORBConstants;
 import com.sun.corba.se.impl.orbutil.ORBUtility;
@@ -109,15 +108,29 @@ public class Util implements javax.rmi.CORBA.UtilDelegate
     // Maps targets to ties.
     private static IdentityHashtable exportedServants = new IdentityHashtable();
 
-    private static ValueHandlerImpl valueHandlerSingleton = new ValueHandlerImpl();
+    private static final ValueHandlerImpl valueHandlerSingleton =
+                           SharedSecrets.getJavaCorbaAccess().newValueHandlerImpl();
 
     private UtilSystemException utilWrapper = UtilSystemException.get( 
                                                   CORBALogDomains.RPC_ENCODING);
       
-    public static Util instance = null;
+    private static Util instance = null;
 
     public Util() {
-        instance = this;
+        setInstance(this);
+    }
+
+    private static void setInstance( Util util ) {
+        assert instance == null : "Instance already defined";
+        instance = util;
+    } 
+
+    public static Util getInstance() {
+        return instance;
+    }
+ 
+    public static boolean isInstanceDefined() {
+        return instance != null;
     }
 
     // Used by TOAFactory.shutdown to unexport all targets for this

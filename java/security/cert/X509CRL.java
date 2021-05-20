@@ -1,8 +1,8 @@
 /*
- * @(#)X509CRL.java	1.29 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
  
 package java.security.cert;
@@ -85,7 +85,7 @@ import sun.security.x509.X509CRLImpl;
  *
  * @author Hemma Prafullchandra
  *
- * @version 1.29, 12/19/03
+ * @version %I%, %G%
  *
  * @see CRL
  * @see CertificateFactory

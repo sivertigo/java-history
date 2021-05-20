@@ -1,8 +1,8 @@
 /*
- * @(#)InputMethodHighlight.java	1.21 04/05/05
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.awt.im;
@@ -44,7 +44,7 @@ import java.util.Map;
 * attribute. They may be wrapped into {@link java.text.Annotation Annotation}
 * instances to indicate separate text segments.
 *
-* @version 	1.21, 05/05/04
+* @version 	%I%, %G%
 * @see java.text.AttributedCharacterIterator
 * @since 1.2
 */

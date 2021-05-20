@@ -1,8 +1,8 @@
 /*
- * @(#)MetalBorders.java	1.40 09/08/10
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing.plaf.metal;
@@ -25,7 +25,7 @@ import java.awt.Window;
 /**
  * Factory object that can vend Borders appropriate for the metal L & F.
  * @author Steve Wilson
- * @version 1.40 08/10/09
+ * @version %I% %G%
  */
 
 public class MetalBorders {
@@ -47,14 +47,14 @@ public class MetalBorders {
                 MetalUtils.drawDisabledBorder(g, x, y, w, h);
             }
         }
-        public Insets getBorderInsets(Component c) {
+        public Insets getBorderInsets(Component c)       {
             return new Insets(2, 2, 2, 2);
         }
         public Insets getBorderInsets(Component c, Insets newInsets) {
-            newInsets.top = 2;
-            newInsets.left = 2;
-            newInsets.bottom = 2;
-            newInsets.right = 2;
+	    newInsets.top = 2;
+	    newInsets.left = 2;
+	    newInsets.bottom = 2;
+	    newInsets.right = 2;
 	    return newInsets;
 	}	    
     }
@@ -168,10 +168,10 @@ public class MetalBorders {
             return new Insets(3, 3, 3, 3);
         }
         public Insets getBorderInsets(Component c, Insets newInsets) {
-            newInsets.top = 3;
-            newInsets.left = 3;
-            newInsets.bottom = 3;
-            newInsets.right = 3;
+	    newInsets.top = 3;
+	    newInsets.left = 3;
+	    newInsets.bottom = 3;
+	    newInsets.right = 3;
 	    return newInsets;
 	}
     }
@@ -228,14 +228,14 @@ public class MetalBorders {
 
           }
 
-          public Insets getBorderInsets(Component c) {
+          public Insets getBorderInsets(Component c)       {
               return new Insets(5, 5, 5, 5);
           }
           public Insets getBorderInsets(Component c, Insets newInsets) {
-              newInsets.top = 5;
-              newInsets.left = 5;
-              newInsets.bottom = 5;
-              newInsets.right = 5;
+	      newInsets.top = 5;
+	      newInsets.left = 5;
+	      newInsets.bottom = 5;
+	      newInsets.right = 5;
 	      return newInsets;
 	  }
     }
@@ -296,7 +296,7 @@ public class MetalBorders {
 
         }
 
-        public Insets getBorderInsets(Component c) {
+        public Insets getBorderInsets(Component c)       {
             return new Insets(5, 5, 5, 5);
         }
     	  
@@ -396,7 +396,7 @@ public class MetalBorders {
             
         }
 
-        public Insets getBorderInsets(Component c) {
+        public Insets getBorderInsets(Component c)       {
             return new Insets(5, 5, 5, 5);
         }
 
@@ -467,15 +467,15 @@ public class MetalBorders {
       
 	}
 
-        public Insets getBorderInsets(Component c) {
+        public Insets getBorderInsets(Component c)       {
             return new Insets(1, 1, 1, 1);
         }
 
         public Insets getBorderInsets(Component c, Insets newInsets) {
-            newInsets.top = 1;
-            newInsets.left = 1;
-            newInsets.bottom = 1;
-            newInsets.right = 1;
+	    newInsets.top = 1;
+	    newInsets.left = 1;
+	    newInsets.bottom = 1;
+	    newInsets.right = 1;
 	    return newInsets;
 	}
     }
@@ -535,15 +535,15 @@ public class MetalBorders {
       
 	}
 
-        public Insets getBorderInsets(Component c) {
+        public Insets getBorderInsets(Component c)       {
             return new Insets(3, 3, 3, 3);
         }
 
         public Insets getBorderInsets(Component c, Insets newInsets) {
-            newInsets.top = 3;
-            newInsets.left = 3;
-            newInsets.bottom = 3;
-            newInsets.right = 3;
+	    newInsets.top = 3;
+	    newInsets.left = 3;
+	    newInsets.bottom = 3;
+	    newInsets.right = 3;
 	    return newInsets;
 	}
     }
@@ -635,10 +635,10 @@ public class MetalBorders {
         }
 
         public Insets getBorderInsets(Component c, Insets newInsets) {
-            newInsets.top = 2;
-            newInsets.left = 2;
-            newInsets.bottom = 2;
-            newInsets.right = 2;
+	    newInsets.top = 2;
+	    newInsets.left = 2;
+	    newInsets.bottom = 2;
+	    newInsets.right = 2;
 	    return newInsets;
 	}
     }
@@ -666,10 +666,10 @@ public class MetalBorders {
         }
 
         public Insets getBorderInsets(Component c, Insets newInsets) {
-            newInsets.top = 3;
-            newInsets.left = 1;
-            newInsets.bottom = 2;
-            newInsets.right = 1;
+	    newInsets.top = 3;
+	    newInsets.left = 1;
+	    newInsets.bottom = 2;
+	    newInsets.right = 1;
 	    return newInsets;
 	}
     }
@@ -744,17 +744,17 @@ public class MetalBorders {
 	        if ( ((JToolBar) c).getOrientation() == HORIZONTAL )
 		{
                     int shift = MetalLookAndFeel.usingOcean() ? -1 : 0;
-		    bumps.setBumpArea( 10, c.getSize().height - 4 );
+		    bumps.setBumpArea( 10, h - 4 );
                     if( MetalUtils.isLeftToRight(c) ) {
                         bumps.paintIcon( c, g, 2, 2 + shift );
                     } else {
-                        bumps.paintIcon( c, g, c.getBounds().width-12,
+                        bumps.paintIcon( c, g, w-12,
                                          2 + shift );
                     }
 	        }
 		else // vertical
 		{
-		    bumps.setBumpArea( c.getSize().width - 4, 10 );
+		    bumps.setBumpArea( w - 4, 10 );
 		    bumps.paintIcon( c, g, 2, 2 );
 	        }
 
@@ -911,7 +911,7 @@ public class MetalBorders {
 
         }
 
-        public Insets getBorderInsets(Component c) {
+        public Insets getBorderInsets(Component c)       {
             return new Insets(1, 1, 2, 2);
         }
     }
@@ -939,14 +939,15 @@ public class MetalBorders {
 	    AbstractButton button = (AbstractButton)c;
 	    ButtonModel model = button.getModel();
             if (MetalLookAndFeel.usingOcean()) {
-                if(model.isArmed()) {
+                if(model.isArmed() || !button.isEnabled()) {
                     super.paintBorder(c, g, x, y, w, h);
                 }
                 else {
-                    MetalUtils.drawPressed3DBorder( g, x, y, w + 1, h + 1 );
-                }
-                return;
+                 g.setColor(MetalLookAndFeel.getControlDarkShadow()); 
+                 g.drawRect(0, 0, w - 1, h - 1);                 
             }
+            return;
+        }
 	    if (! c.isEnabled() ) {
 	        MetalUtils.drawDisabledBorder( g, x, y, w-1, h-1 );
 	    } else {

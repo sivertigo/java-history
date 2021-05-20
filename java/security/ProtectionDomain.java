@@ -1,15 +1,21 @@
 /*
- * @(#)ProtectionDomain.java	1.45 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2009, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
  
 package java.security;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.ArrayList;
+import java.util.Map;
+import java.util.WeakHashMap;
+import sun.misc.JavaSecurityProtectionDomainAccess;
+import static sun.misc.JavaSecurityProtectionDomainAccess.ProtectionDomainCache;
+import sun.misc.SharedSecrets;
 import sun.security.util.Debug;
 import sun.security.util.SecurityConstants;
 
@@ -28,7 +34,7 @@ import sun.security.util.SecurityConstants;
  * is checked.
  * <p>
  * 
- * @version 	1.45, 12/19/03
+ * @version 	%I%, %G%
  * @author Li Gong 
  * @author Roland Schemers
  * @author Gary Ellison
@@ -48,9 +54,17 @@ public class ProtectionDomain {
     /* the rights this protection domain is granted */
     private PermissionCollection permissions;
 
+    /* if the permissions object has AllPermission */
+    private boolean hasAllPerm = false;
+
     /* the PermissionCollection is static (pre 1.4 constructor)
        or dynamic (via a policy refresh) */
     private boolean staticPermissions;
+
+    /* 
+     * An object used as a key when the ProtectionDomain is stored in a Map.
+     */
+    final Key key = new Key();
 
     private static final Debug debug = Debug.getInstance("domain");
 
@@ -70,6 +84,10 @@ public class ProtectionDomain {
 	if (permissions != null) {
 	    this.permissions = permissions;
 	    this.permissions.setReadOnly();
+	    if (permissions instanceof Permissions &&
+		((Permissions)permissions).allPermission != null) {
+		hasAllPerm = true;
+	    }
 	}
 	this.classloader = null;
 	this.principals = new Principal[0];
@@ -113,6 +131,10 @@ public class ProtectionDomain {
 	if (permissions != null) {
 	    this.permissions = permissions;
 	    this.permissions.setReadOnly();
+	    if (permissions instanceof Permissions &&
+		((Permissions)permissions).allPermission != null) {
+		hasAllPerm = true;
+	    }
 	}
 	this.classloader = classloader;
 	this.principals = (principals != null ?
@@ -192,6 +214,13 @@ public class ProtectionDomain {
      * @return true if "permission" is implicit to this ProtectionDomain.
      */
     public boolean implies(Permission permission) {
+
+	if (hasAllPerm) {
+	    // internal permission collection already has AllPermission -
+	    // no need to go to policy
+	    return true;
+	}
+
 	if (!staticPermissions && 
 	    Policy.getPolicyNoCheck().implies(this, permission))
 	    return true;
@@ -204,7 +233,7 @@ public class ProtectionDomain {
     /**
      * Convert a ProtectionDomain to a String.
      */
-    public String toString() {
+    @Override public String toString() {
 	String pals = "<no principals>";
 	if (principals != null && principals.length > 0) {
 	    StringBuilder palBuf = new StringBuilder("(principals ");
@@ -362,5 +391,30 @@ public class ProtectionDomain {
 	}
 
 	return mergedPerms;
+    }
+
+    /**
+     * Used for storing ProtectionDomains as keys in a Map.
+     */
+    final class Key {}
+
+    static {
+        SharedSecrets.setJavaSecurityProtectionDomainAccess(
+            new JavaSecurityProtectionDomainAccess() {
+                public ProtectionDomainCache getProtectionDomainCache() {
+                    return new ProtectionDomainCache() {
+                        private final Map<Key, PermissionCollection> map = 
+                            Collections.synchronizedMap
+                                (new WeakHashMap<Key, PermissionCollection>());
+                        public void put(ProtectionDomain pd, 
+                            PermissionCollection pc) {
+                            map.put((pd == null ? null : pd.key), pc);
+                        }
+                        public PermissionCollection get(ProtectionDomain pd) {
+                            return pd == null ? map.get(null) : map.get(pd.key);
+                        }
+                    };
+                }
+            });
     }
 }

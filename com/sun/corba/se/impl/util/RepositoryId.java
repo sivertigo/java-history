@@ -1,8 +1,8 @@
 /*
- * @(#)RepositoryId.java	1.36 05/01/04
+ * %W% %E%
  *
- * Copyright 2005 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, 2012, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 /*
  * Licensed Materials - Property of IBM
@@ -31,8 +31,6 @@ import org.omg.CORBA.portable.IDLEntity;
 import com.sun.corba.se.impl.io.ObjectStreamClass;
 
 import javax.rmi.CORBA.Util;
-import sun.misc.SoftCache;
-import java.util.WeakHashMap;
 
 public class RepositoryId {
 	
@@ -43,7 +41,7 @@ public class RepositoryId {
     // uniformly, and is safe because that is the only
     // legal use of '.' in a Java name.
 
-    public static final byte[] IDL_IDENTIFIER_CHARS = {
+    private static final byte[] IDL_IDENTIFIER_CHARS = {
 	    
 	// 0 1 2 3  4 5 6 7  8 9 a b  c d e f
 	0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, // 00-0f
@@ -77,12 +75,12 @@ public class RepositoryId {
 
     }
 
-    private static WeakHashMap classToRepStr = new WeakHashMap();
+    private static IdentityHashtable classToRepStr = new IdentityHashtable();
     private static IdentityHashtable classIDLToRepStr = new IdentityHashtable();
     private static IdentityHashtable classSeqToRepStr = new IdentityHashtable();
 
-    private static IdentityHashtable repStrToByteArray = new IdentityHashtable();
-    private static SoftCache repStrToClass = new SoftCache();
+    private static final IdentityHashtable repStrToByteArray = new IdentityHashtable();
+    private static Hashtable repStrToClass = new Hashtable();
 
     private String repId = null;
     private boolean isSupportedFormat = true;
@@ -178,7 +176,7 @@ public class RepositoryId {
     public static final String kRemoteTypeStr = "";
     public static final String kRemoteValueRepID = "";
 
-    public static final Hashtable kSpecialArrayTypeStrings = new Hashtable();
+    private static final Hashtable kSpecialArrayTypeStrings = new Hashtable();
 
     static {
 	kSpecialArrayTypeStrings.put("CORBA.WStringValue", new StringBuffer(java.lang.String.class.getName()));
@@ -187,7 +185,7 @@ public class RepositoryId {
 		
     }
 
-    public static final Hashtable kSpecialCasesRepIDs = new Hashtable();
+    private static final Hashtable kSpecialCasesRepIDs = new Hashtable();
 
     static {
 	kSpecialCasesRepIDs.put(java.lang.String.class, kWStringValueRepID);
@@ -195,7 +193,7 @@ public class RepositoryId {
 	kSpecialCasesRepIDs.put(java.rmi.Remote.class, kRemoteValueRepID);
     }
 
-    public static final Hashtable kSpecialCasesStubValues = new Hashtable();
+    private static final Hashtable kSpecialCasesStubValues = new Hashtable();
 
     static {
 	kSpecialCasesStubValues.put(java.lang.String.class, kWStringStubValue);
@@ -207,7 +205,7 @@ public class RepositoryId {
     }
 
 
-    public static final Hashtable kSpecialCasesVersions = new Hashtable();
+    private static final Hashtable kSpecialCasesVersions = new Hashtable();
 
     static {
 	kSpecialCasesVersions.put(java.lang.String.class, kWStringValueHash);
@@ -218,7 +216,7 @@ public class RepositoryId {
 	kSpecialCasesVersions.put(java.rmi.Remote.class, kRemoteValueHash);
     }
 
-    public static final Hashtable kSpecialCasesClasses = new Hashtable();
+    private static final Hashtable kSpecialCasesClasses = new Hashtable();
 
     static {
 	kSpecialCasesClasses.put(kWStringTypeStr, java.lang.String.class);
@@ -230,7 +228,7 @@ public class RepositoryId {
 	//kSpecialCasesClasses.put(kRemoteTypeStr, java.rmi.Remote.class);
     }
 
-    public static final Hashtable kSpecialCasesArrayPrefix = new Hashtable();
+    private static final Hashtable kSpecialCasesArrayPrefix = new Hashtable();
 
     static {
 	kSpecialCasesArrayPrefix.put(java.lang.String.class, kValuePrefix + kSequencePrefix + kCORBAPrefix);
@@ -241,7 +239,7 @@ public class RepositoryId {
 	kSpecialCasesArrayPrefix.put(java.rmi.Remote.class, kValuePrefix + kSequencePrefix + kCORBAPrefix);
     }
 
-    public static final Hashtable kSpecialPrimitives = new Hashtable();
+    private static final Hashtable kSpecialPrimitives = new Hashtable();
 
     static {
 	kSpecialPrimitives.put("int","long");

@@ -1,8 +1,8 @@
 /*
- * @(#)BufferManagerReadStream.java	1.14 07/12/06
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package com.sun.corba.se.impl.encoding;
 
@@ -88,28 +88,27 @@ public class BufferManagerReadStream
                 throw new RequestCanceledException(cancelReqId);
             }
 
-	    while (fragmentQueue.size() == 0) {
+            while (fragmentQueue.size() == 0) {
 
                 if (endOfStream) {
 		    throw wrapper.endOfStream() ;
                 }
 
-	        boolean interrupted = false;
+                boolean interrupted = false;
                 try {
                     fragmentQueue.wait(FRAGMENT_TIMEOUT);
                 } catch (InterruptedException e) {
-		    interrupted = true;
-		}
+                    interrupted = true;
+                }
 
-		if (!interrupted && fragmentQueue.size() == 0) {
-		    throw wrapper.bufferReadManagerTimeout();
-		}
+                if (!interrupted && fragmentQueue.size() == 0) {
+                    throw wrapper.bufferReadManagerTimeout();
+                }
 
                 if (receivedCancel) {
                     throw new RequestCanceledException(cancelReqId);
                 }
-
-            } 
+            }
 
             result = fragmentQueue.dequeue();
             result.fragmented = true;

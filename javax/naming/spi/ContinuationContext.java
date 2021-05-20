@@ -1,8 +1,8 @@
 /*
- * @(#)ContinuationContext.java	1.9 04/05/05
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.naming.spi;
@@ -15,7 +15,7 @@ import javax.naming.*;
   *
   * @author Rosanna Lee
   * @author Scott Seligman
-  * @version 1.9 04/05/05
+  * @version %I% %E%
   * @since 1.3
   */
 

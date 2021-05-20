@@ -1,5 +1,5 @@
 /**
- * @(#)RequestPartitioningComponentImpl.java	1.2 04/06/04
+ * %W% %E%
  */
 package com.sun.corba.se.impl.ior.iiop;
 

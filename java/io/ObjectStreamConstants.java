@@ -1,8 +1,8 @@
 /*
- * @(#)ObjectStreamConstants.java	1.34 04/01/12
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.io;
@@ -11,7 +11,7 @@ package java.io;
  * Constants written into the Object Serialization Stream. 
  *
  * @author  unascribed
- * @version 1.34, 01/12/04
+ * @version %I%, %G%
  * @since JDK 1.1
  */
 public interface ObjectStreamConstants {
@@ -108,6 +108,7 @@ public interface ObjectStreamConstants {
 
     /**
      * new Enum constant.
+     * @since 1.5
      */
     final static byte TC_ENUM =		(byte)0x7E;
 
@@ -153,6 +154,7 @@ public interface ObjectStreamConstants {
 
     /**
      * Bit mask for ObjectStreamClass flag. Indicates class is an enum type.
+     * @since 1.5
      */
     final static byte SC_ENUM = 0x10;
 

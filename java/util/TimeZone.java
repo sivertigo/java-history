@@ -1,8 +1,6 @@
 /*
- * @(#)TimeZone.java	1.70 06/01/24
- *
- * Copyright 2006 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, 2012, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 /*
@@ -24,9 +22,11 @@ import java.io.Serializable;
 import java.lang.ref.SoftReference;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.text.DateFormatSymbols;
 import java.util.concurrent.ConcurrentHashMap;
+import sun.misc.SharedSecrets;
+import sun.misc.JavaAWTAccess;
 import sun.security.action.GetPropertyAction;
+import sun.util.TimeZoneNameUtility;
 import sun.util.calendar.ZoneInfo;
 import sun.util.calendar.ZoneInfoFile;
 
@@ -110,7 +110,7 @@ import sun.util.calendar.ZoneInfoFile;
  * @see          Calendar
  * @see          GregorianCalendar
  * @see          SimpleTimeZone
- * @version      1.70 01/24/06
+ * @version      %I% %G%
  * @author       Mark Davis, David Goldsmith, Chen-Lieh Huang, Alan Liu
  * @since        JDK1.1
  */
@@ -142,11 +142,6 @@ abstract public class TimeZone implements Serializable, Cloneable {
     private static final int ONE_MINUTE = 60*1000;
     private static final int ONE_HOUR   = 60*ONE_MINUTE;
     private static final int ONE_DAY    = 24*ONE_HOUR;
-
-    /**
-     * Cache to hold the SimpleDateFormat objects for a Locale.
-     */
-    private static Hashtable cachedLocaleData = new Hashtable(3);
 
     // Proclaim serialization compatibility with JDK 1.1
     static final long serialVersionUID = 3581463369166924961L;
@@ -306,8 +301,7 @@ abstract public class TimeZone implements Serializable, Cloneable {
      * then this method returns a string in the 
      * <a href="#NormalizedCustomID">normalized custom ID format</a>.
      * @param locale the locale in which to supply the display name.
-     * @return the human-readable name of this time zone in the given locale
-     * or in the default locale if the given locale is not recognized.
+     * @return the human-readable name of this time zone in the given locale.
      * @since 1.2
      */
     public final String getDisplayName(Locale locale) {
@@ -338,8 +332,7 @@ abstract public class TimeZone implements Serializable, Cloneable {
      * @param daylight if true, return the daylight savings name.
      * @param style either <code>LONG</code> or <code>SHORT</code>
      * @param locale the locale in which to supply the display name.
-     * @return the human-readable name of this time zone in the given locale
-     * or in the default locale if the given locale is not recognized.
+     * @return the human-readable name of this time zone in the given locale.
      * @exception IllegalArgumentException style is invalid.
      * @since 1.2
      */
@@ -364,7 +357,7 @@ abstract public class TimeZone implements Serializable, Cloneable {
 	    return ZoneInfoFile.toCustomID(offset);
 	}
 
-	int index = daylight && useDaylightTime() ? 3 : 1;
+	int index = daylight ? 3 : 1;
 	if (style == SHORT) {
 	    index++;
 	}
@@ -390,7 +383,7 @@ abstract public class TimeZone implements Serializable, Cloneable {
 		if (names != null) {
 		    return names;
 		}
-		names = retrieveDisplayNames(id, locale);
+		names = TimeZoneNameUtility.retrieveDisplayNames(id, locale);
 		if (names != null) {
 		    perLocale.put(locale, names);
 		}
@@ -398,7 +391,7 @@ abstract public class TimeZone implements Serializable, Cloneable {
 	    }
 	}
 
-	String[] names = retrieveDisplayNames(id, locale);
+	String[] names = TimeZoneNameUtility.retrieveDisplayNames(id, locale);
 	if (names != null) {
 	    Map<Locale, String[]> perLocale = new ConcurrentHashMap<Locale, String[]>();
 	    perLocale.put(locale, names);
@@ -406,17 +399,6 @@ abstract public class TimeZone implements Serializable, Cloneable {
 	    displayNames.put(id, ref);
 	}
 	return names;
-    }
-
-    private static final String[] retrieveDisplayNames(String id, Locale locale) {
-	String[][] tznames = new DateFormatSymbols(locale).getZoneStrings();
-	for (int i = 0; i < tznames.length; i++) {
-	    String[] names = tznames[i];
-	    if (id.equals(names[0])) {
-		return names;
-	    }
-	}
-	return null;
     }
 
     /**
@@ -490,11 +472,13 @@ abstract public class TimeZone implements Serializable, Cloneable {
     }
 
     /**
-     * Gets the available IDs according to the given time zone offset.
-     * @param rawOffset the given time zone GMT offset.
+     * Gets the available IDs according to the given time zone offset in milliseconds.
+     *
+     * @param rawOffset the given time zone GMT offset in milliseconds.
      * @return an array of IDs, where the time zone for that ID has
      * the specified GMT offset. For example, "America/Phoenix" and "America/Denver"
      * both have GMT-07:00, but differ in daylight savings behavior.
+     * @see #getRawOffset()
      */
     public static synchronized String[] getAvailableIDs(int rawOffset) {
 	return ZoneInfo.getAvailableIDs(rawOffset);
@@ -536,7 +520,7 @@ abstract public class TimeZone implements Serializable, Cloneable {
      * method doesn't create a clone.
      */
     static TimeZone getDefaultRef() {
-	TimeZone defaultZone = defaultZoneTL.get();
+	TimeZone defaultZone = getDefaultInAppContext();
 	if (defaultZone == null) {
 	    defaultZone = defaultTimeZone;
 	    if (defaultZone == null) {
@@ -552,15 +536,15 @@ abstract public class TimeZone implements Serializable, Cloneable {
     private static synchronized TimeZone setDefaultZone() {
 	TimeZone tz = null;
 	// get the time zone ID from the system properties
-	String zoneID = (String) AccessController.doPrivileged(
+	String zoneID = AccessController.doPrivileged(
 		new GetPropertyAction("user.timezone"));
 
 	// if the time zone ID is not set (yet), perform the
 	// platform to Java time zone ID mapping.
 	if (zoneID == null || zoneID.equals("")) { 
-	    String country = (String) AccessController.doPrivileged(
+	    String country = AccessController.doPrivileged(
 		    new GetPropertyAction("user.country"));
-	    String javaHome = (String) AccessController.doPrivileged(
+	    String javaHome = AccessController.doPrivileged(
 		    new GetPropertyAction("java.home"));
 	    try {
 		zoneID = getSystemTimeZoneID(javaHome, country);
@@ -596,18 +580,14 @@ abstract public class TimeZone implements Serializable, Cloneable {
 		}
 	    });
 
-	if (hasPermission()) {
-	    defaultTimeZone = tz;
-	} else {
-	    defaultZoneTL.set(tz);
-	}
+	defaultTimeZone = tz;
 	return tz;
     }
 
     private static boolean hasPermission() {
 	boolean hasPermission = true;
-	SecurityManager sm = System.getSecurityManager();
-	if (sm != null) {
+        SecurityManager sm = System.getSecurityManager();
+        if (sm != null) {
 	    try {
 		sm.checkPermission(new PropertyPermission
 				   ("user.timezone", "write"));
@@ -626,14 +606,69 @@ abstract public class TimeZone implements Serializable, Cloneable {
      * @param zone the new default time zone
      * @see #getDefault
      */
-    public static void setDefault(TimeZone zone) {
+    public static void setDefault(TimeZone zone)
+    {
 	if (hasPermission()) {
 	    synchronized (TimeZone.class) {
 		defaultTimeZone = zone;
+		setDefaultInAppContext(null);
 	    }
 	} else {
-	    defaultZoneTL.set(zone);
+	    setDefaultInAppContext(zone);
 	}
+    }
+
+    /**
+     * Returns the default TimeZone in an AppContext if any AppContext
+     * has ever used. null is returned if any AppContext hasn't been
+     * used or if the AppContext doesn't have the default TimeZone.
+     *
+     * Note that javaAWTAccess may be null if sun.awt.AppContext class hasn't
+     * been loaded. If so, it implies that AWTSecurityManager is not our
+     * SecurityManager and we can use a local static variable.
+     * This works around a build time issue.
+     */
+    private static TimeZone getDefaultInAppContext() {
+        JavaAWTAccess javaAWTAccess = SharedSecrets.getJavaAWTAccess();
+        if (javaAWTAccess == null) { 
+            return mainAppContextDefault;
+        } else {
+            if (!javaAWTAccess.isDisposed()) {
+                TimeZone tz = (TimeZone)
+                    javaAWTAccess.get(TimeZone.class);
+                if (tz == null && javaAWTAccess.isMainAppContext()) { 
+                    return mainAppContextDefault;
+                } else {
+                    return tz;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Sets the default TimeZone in the AppContext to the given
+     * tz. null is handled special: do nothing if any AppContext
+     * hasn't been used, remove the default TimeZone in the
+     * AppContext otherwise.
+     *
+     * Note that javaAWTAccess may be null if sun.awt.AppContext class hasn't
+     * been loaded. If so, it implies that AWTSecurityManager is not our
+     * SecurityManager and we can use a local static variable.
+     * This works around a build time issue.
+     */
+    private static void setDefaultInAppContext(TimeZone tz) {
+        JavaAWTAccess javaAWTAccess = SharedSecrets.getJavaAWTAccess();
+        if (javaAWTAccess == null) {
+            mainAppContextDefault = tz;
+        } else {
+            if (!javaAWTAccess.isDisposed()) {
+                javaAWTAccess.put(TimeZone.class, tz);
+                if (javaAWTAccess.isMainAppContext()) {
+                    mainAppContextDefault = null;
+                }
+            }
+        }
     }
 
     /**
@@ -683,11 +718,12 @@ abstract public class TimeZone implements Serializable, Cloneable {
      */
     private String           ID;
     private static volatile TimeZone defaultTimeZone;
-    private static final InheritableThreadLocal<TimeZone> defaultZoneTL
-					= new InheritableThreadLocal<TimeZone>();
 
     static final String         GMT_ID        = "GMT";
     private static final int    GMT_ID_LENGTH = 3;
+
+    // a static TimeZone we can reference if no AppContext is in place
+    private static volatile TimeZone mainAppContextDefault; 
 
     /**
      * Parses a custom time zone identifier and returns a corresponding zone.

@@ -1,8 +1,8 @@
 /*
- * @(#)ServicePermission.java	1.12 04/03/29
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.security.auth.kerberos;
@@ -76,7 +76,7 @@ import java.io.IOException;
  *     ServicePermission("host/foo.example.com@EXAMPLE.COM", "accept");
  * </pre>
  * 
- * @since JDK1.4
+ * @since 1.4
  */
 
 public final class ServicePermission extends Permission
@@ -296,10 +296,6 @@ public final class ServicePermission extends Permission
 
 	int mask = NONE;
 
-	if (action == null) {
-	    return mask;
-	}
-
 	char[] a = action.toCharArray();
 
 	int i = a.length - 1;
@@ -379,7 +375,7 @@ public final class ServicePermission extends Permission
      * to a stream. The actions are serialized, and the superclass
      * takes care of the name.
      */
-    private synchronized void writeObject(java.io.ObjectOutputStream s)
+    private void writeObject(java.io.ObjectOutputStream s)
         throws IOException
     {
 	// Write out the actions. The superclass takes care of the name
@@ -393,7 +389,7 @@ public final class ServicePermission extends Permission
      * readObject is called to restore the state of the
      * ServicePermission from a stream.
      */
-    private synchronized void readObject(java.io.ObjectInputStream s)
+    private void readObject(java.io.ObjectInputStream s)
          throws IOException, ClassNotFoundException
     {
 	// Read in the action, then initialize the rest

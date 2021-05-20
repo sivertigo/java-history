@@ -1,8 +1,8 @@
 /*
- * @(#)PropertyChangeEvent.java	1.33 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.beans;
@@ -55,7 +55,7 @@ public class PropertyChangeEvent extends java.util.EventObject {
     }
     
     /**
-     * Sets the new value for the property, expressed as an Object.
+     * Gets the new value for the property, expressed as an Object.
      *
      * @return  The new value for the property, expressed as an Object.
      *		May be null if multiple properties have changed.

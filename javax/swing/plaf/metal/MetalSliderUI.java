@@ -1,8 +1,8 @@
 /*
- * @(#)MetalSliderUI.java	1.37 09/08/10
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing.plaf.metal;
@@ -29,7 +29,7 @@ import javax.swing.plaf.*;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
- * @version 1.37 08/10/09
+ * @version %I% %G%
  * @author Tom Santos
  */
 public class MetalSliderUI extends BasicSliderUI {
@@ -44,8 +44,18 @@ public class MetalSliderUI extends BasicSliderUI {
     protected static int tickLength;
     private int safeLength;
     
+   /**
+    * A default horizontal thumb <code>Icon</code>. This field might not be
+    * used. To change the <code>Icon</code> used by this delgate directly set it
+    * using the <code>Slider.horizontalThumbIcon</code> UIManager property.
+    */
     protected static Icon horizThumbIcon;
     
+   /**
+    * A default vertical thumb <code>Icon</code>. This field might not be
+    * used. To change the <code>Icon</code> used by this delgate directly set it
+    * using the <code>Slider.verticalThumbIcon</code> UIManager property.
+    */
     protected static Icon vertThumbIcon;
 
     private static Icon SAFE_HORIZ_THUMB_ICON;
@@ -486,10 +496,10 @@ public class MetalSliderUI extends BasicSliderUI {
         g.setColor( slider.isEnabled() ? slider.getForeground() : MetalLookAndFeel.getControlShadow() );
 
 	if (MetalUtils.isLeftToRight(slider)) {
-            g.drawLine( TICK_BUFFER, y, TICK_BUFFER + (safeLength / 2), y );
+	    g.drawLine( TICK_BUFFER, y, TICK_BUFFER + (safeLength / 2), y );
 	}
 	else {
-            g.drawLine( 0, y, safeLength/2, y );
+	    g.drawLine( 0, y, safeLength/2, y );
 	}
     }
 
@@ -497,10 +507,10 @@ public class MetalSliderUI extends BasicSliderUI {
         g.setColor( slider.isEnabled() ? slider.getForeground() : MetalLookAndFeel.getControlShadow() );
 
 	if (MetalUtils.isLeftToRight(slider)) {
-            g.drawLine( TICK_BUFFER, y, TICK_BUFFER + safeLength, y );
+	    g.drawLine( TICK_BUFFER, y, TICK_BUFFER + safeLength, y );
 	}
 	else {
-            g.drawLine( 0, y, safeLength, y );
+	    g.drawLine( 0, y, safeLength, y );
 	}
     }
 }

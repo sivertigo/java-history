@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /*
- * $Id: DOM2SAX.java,v 1.21 2004/02/16 22:57:21 minchau Exp $
+ * $Id: DOM2SAX.java,v 1.2.4.1 2005/09/06 11:52:46 pvedula Exp $
  */
 
 
@@ -41,6 +41,7 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.ext.LexicalHandler;
 import org.xml.sax.helpers.AttributesImpl;
 import com.sun.org.apache.xalan.internal.xsltc.dom.SAXImpl;
+import com.sun.org.apache.xalan.internal.xsltc.runtime.BasisLibrary;
 
 /**
  * @author G. Todd Miller 
@@ -239,7 +240,7 @@ public class DOM2SAX implements XMLReader, Locator {
 	    // Process all other attributes
 	    for (int i = 0; i < length; i++) {
 		final Node attr = map.item(i);
-		final String qnameAttr = attr.getNodeName();
+		String qnameAttr = attr.getNodeName();
 
 		// Ignore NS declarations here
 		if (!qnameAttr.startsWith(XMLNS_PREFIX)) {
@@ -249,7 +250,15 @@ public class DOM2SAX implements XMLReader, Locator {
 		    // Uri may be implicitly declared
 		    if (uriAttr != null) {	
 			final int colon = qnameAttr.lastIndexOf(':');
-			prefix = (colon > 0) ? qnameAttr.substring(0, colon) : EMPTYSTRING;
+                        if (colon > 0) {
+                            prefix = qnameAttr.substring(0, colon);
+                        }
+                        else {
+                            // If no prefix for this attr, we need to create 
+                            // one because we cannot use the default ns
+                            prefix = BasisLibrary.generatePrefix();
+                            qnameAttr = prefix + ':' + qnameAttr;
+                        }
 			if (startPrefixMapping(prefix, uriAttr)) {
 			    pushedPrefixes.addElement(prefix);
 			}

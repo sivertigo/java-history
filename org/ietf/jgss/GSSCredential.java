@@ -1,8 +1,8 @@
 /*
- * @(#)GSSCredential.java	1.8 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
  
 package org.ietf.jgss;
@@ -24,7 +24,7 @@ package org.ietf.jgss;
  * merely acquiring a handle to existing credentials. The
  * <a href=package-summary.html#useSubjectCredsOnly>section on credential
  * acquisition</a> in the package level description describes
- * how existing credentials are acquired in the Java 2 platform. GSS-API 
+ * how existing credentials are acquired in the Java platform. GSS-API 
  * implementations must impose a local access-control policy on callers to
  * prevent unauthorized callers from acquiring credentials to which they
  * are not entitled. <p>
@@ -71,7 +71,7 @@ package org.ietf.jgss;
  * @see #dispose()
  *
  * @author Mayank Upadhyay
- * @version 1.8, 12/19/03
+ * @version %I%, %G%
  * @since 1.4
  */
 public interface GSSCredential extends Cloneable{

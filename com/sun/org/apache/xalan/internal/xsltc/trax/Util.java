@@ -14,25 +14,31 @@
  * limitations under the License.
  */
 /*
- * $Id: Util.java,v 1.1.2.2 2007/03/12 18:46:04 joehw Exp $
+ * $Id: Util.java,v 1.2.4.1 2005/09/14 09:37:34 pvedula Exp $
  */
 
 package com.sun.org.apache.xalan.internal.xsltc.trax;
 
 import java.io.InputStream;
 import java.io.Reader;
-import javax.xml.XMLConstants;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.XMLStreamReader;
 
 import javax.xml.transform.Source;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.sax.SAXSource;
+import javax.xml.transform.stax.StAXResult;
+import javax.xml.transform.stax.StAXSource;
 import javax.xml.transform.stream.StreamSource;
 
+import com.sun.org.apache.xalan.internal.utils.FactoryImpl;
 import com.sun.org.apache.xalan.internal.xsltc.compiler.XSLTC;
 import com.sun.org.apache.xalan.internal.xsltc.compiler.util.ErrorMsg;
 
@@ -100,8 +106,7 @@ public final class Util {
 
                                //Incase there is an exception thrown 
                                // resort to JAXP 
-                               SAXParserFactory parserFactory = 
-                                      SAXParserFactory.newInstance();
+                               SAXParserFactory parserFactory = FactoryImpl.getSAXFactory(xsltc.useServicesMechnism());
                                parserFactory.setNamespaceAware(true);
                                
                                if (xsltc.isSecureProcessing()) {
@@ -153,6 +158,29 @@ public final class Util {
 		    input = new InputSource(domsrc.getSystemId());
 		}
 	    }
+             
+            // handle StAXSource
+            else if (source instanceof StAXSource) {
+                final StAXSource staxSource = (StAXSource)source;
+                StAXEvent2SAX staxevent2sax = null;
+                StAXStream2SAX staxStream2SAX = null; 
+                if (staxSource.getXMLEventReader() != null) {
+                    final XMLEventReader xmlEventReader = staxSource.getXMLEventReader();
+                    staxevent2sax = new StAXEvent2SAX(xmlEventReader);
+                    xsltc.setXMLReader(staxevent2sax);
+                } else if (staxSource.getXMLStreamReader() != null) {
+                    final XMLStreamReader xmlStreamReader = staxSource.getXMLStreamReader();
+                    staxStream2SAX = new StAXStream2SAX(xmlStreamReader);
+                    xsltc.setXMLReader(staxStream2SAX);
+                }
+                
+                // get sax InputSource from StAXSource
+		input = SAXSource.sourceToInputSource(source);
+		if (input == null){
+		    input = new InputSource(staxSource.getSystemId());
+		}
+            }
+            
 	    // Try to get InputStream or Reader from StreamSource
 	    else if (source instanceof StreamSource) {
 		final StreamSource stream = (StreamSource)source;

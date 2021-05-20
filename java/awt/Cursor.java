@@ -1,19 +1,14 @@
 /*
- * @(#)Cursor.java	1.45 09/06/08
+ * %W% %E%
  *
- * Copyright 2009 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package java.awt;
-
-import java.awt.AWTException;
-import java.awt.Point;
-import java.awt.Toolkit;
 
 import java.io.File;
 import java.io.FileInputStream;
 
-import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Properties;
 import java.util.StringTokenizer;
@@ -21,12 +16,13 @@ import java.util.StringTokenizer;
 import java.security.AccessController;
 
 import sun.awt.DebugHelper;
+import sun.awt.AWTAccessor;
 
 /**
  * A class to encapsulate the bitmap representation of the mouse cursor.
  *
  * @see Component#setCursor
- * @version 	1.45, 06/08/09
+ * @version 	%I%, %G%
  * @author 	Amy Fowler
  */
 public class Cursor implements java.io.Serializable {
@@ -177,6 +173,21 @@ public class Cursor implements java.io.Serializable {
         if (!GraphicsEnvironment.isHeadless()) {
             initIDs();
         }
+
+        AWTAccessor.setCursorAccessor(
+            new AWTAccessor.CursorAccessor() {
+                public long getPData(Cursor cursor) {
+                    return cursor.pData;
+                }
+
+                public void setPData(Cursor cursor, long pData) {
+                    cursor.pData = pData;
+                }
+
+                public int getType(Cursor cursor) {
+                    return cursor.type;
+                }
+            });
     }
 
     /**
@@ -192,25 +203,32 @@ public class Cursor implements java.io.Serializable {
 
     private transient Object anchor = new Object();
 
-    static class CursorDisposer extends sun.java2d.DisposerRecord {
-        long pData;
+    static class CursorDisposer implements sun.java2d.DisposerRecord {
+        volatile long pData;
+        public CursorDisposer(long pData) {
+            this.pData = pData;
+        }
         public void dispose() {
-            finalizeImpl(pData);
+            if (pData != 0) {
+                finalizeImpl(pData);
+            }
         }
     }
     transient CursorDisposer disposer;
     private void setPData(long pData) {
         this.pData = pData;
-        if (!GraphicsEnvironment.isHeadless() && pData != 0) {
-            if (disposer == null) {
-                // anchor is null after deserialization
-                if (anchor == null) {
-                    anchor = new Object();
-                }
-                disposer = new CursorDisposer();
-                sun.java2d.Disposer.addRecord(anchor, disposer);
+        if (GraphicsEnvironment.isHeadless()) {
+            return;
+        }
+        if (disposer == null) {
+            disposer = new CursorDisposer(pData);
+            // anchor is null after deserialization
+            if (anchor == null) {
+                anchor = new Object();
             }
-            disposer.pData = pData;                
+            sun.java2d.Disposer.addRecord(anchor, disposer);
+        } else {
+            disposer.pData = pData;
         }
     }
 
@@ -231,18 +249,18 @@ public class Cursor implements java.io.Serializable {
      *         invalid
      */
     static public Cursor getPredefinedCursor(int type) {
-	if (type < Cursor.DEFAULT_CURSOR || type > Cursor.MOVE_CURSOR) {
-	    throw new IllegalArgumentException("illegal cursor type");
-	}
-	Cursor c = predefinedPrivate[type];
-	if (c == null) {
-	    predefinedPrivate[type] = c = new Cursor(type);
-	}
-	// fill 'predefined' array for backwards compatibility.
-	if (predefined[type] == null) {
-	    predefined[type] = c;
-	}
-	return c;
+        if (type < Cursor.DEFAULT_CURSOR || type > Cursor.MOVE_CURSOR) {
+            throw new IllegalArgumentException("illegal cursor type");
+        }
+        Cursor c = predefinedPrivate[type];
+        if (c == null) {
+            predefinedPrivate[type] = c = new Cursor(type);
+        }
+        // fill 'predefined' array for backwards compatibility.
+        if (predefined[type] == null) {
+            predefined[type] = c;
+        }
+        return c;
     }
 
     /**

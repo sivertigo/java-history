@@ -1,8 +1,8 @@
 /*
- * @(#)AffineTransformOp.java	1.62 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.awt.image;
@@ -381,8 +381,6 @@ public class AffineTransformOp implements BufferedImageOp, RasterOp {
         float fmaxY = pts[1];
         float fminX = pts[0];
         float fminY = pts[1];
-        int maxX;
-        int maxY;
         for (int i=2; i < 8; i+=2) {
             if (pts[i] > fmaxX) {
                 fmaxX = pts[i];

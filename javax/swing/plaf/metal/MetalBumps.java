@@ -1,8 +1,8 @@
 /*
- * @(#)MetalBumps.java	1.26 09/08/10
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing.plaf.metal;
@@ -27,7 +27,7 @@ import javax.swing.Icon;
 /**
  * Implements the bumps used throughout the Metal Look and Feel.
  * 
- * @version 1.26 08/10/09
+ * @version %I% %G%
  * @author Tom Santos
  * @author Steve Wilson
  */
@@ -45,7 +45,7 @@ class MetalBumps implements Icon {
 
     private static final Object METAL_BUMPS = new Object();
     protected BumpBuffer buffer;
-    
+
     /**
      * Creates MetalBumps of the specified size with the specified colors.
      * If <code>newBackColor</code> is null, the background will be
@@ -68,8 +68,8 @@ class MetalBumps implements Icon {
         for (BumpBuffer buffer : buffers) {
             if (buffer.hasSameConfiguration(gc, topColor, shadowColor, backColor)) {
                 return buffer;
-	    }
-	}
+            }
+        }
         BumpBuffer buffer = new BumpBuffer(gc, topColor, shadowColor, backColor);
         buffers.add(buffer);
         return buffer;
@@ -105,7 +105,7 @@ class MetalBumps implements Icon {
         }
 
         int bufferWidth = BumpBuffer.IMAGE_SIZE;
-        int bufferHeight = BumpBuffer.IMAGE_SIZE;
+	int bufferHeight = BumpBuffer.IMAGE_SIZE;
 	int iconWidth = getIconWidth();
 	int iconHeight = getIconHeight();
 	int x2 = x + iconWidth;

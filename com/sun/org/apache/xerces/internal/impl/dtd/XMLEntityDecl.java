@@ -58,7 +58,7 @@
 package com.sun.org.apache.xerces.internal.impl.dtd;
 
 /**
- * @version $Id: XMLEntityDecl.java,v 1.3 2002/01/29 01:15:10 lehors Exp $
+ * @version $Id: XMLEntityDecl.java,v 1.3 2007/07/19 04:38:25 ofung Exp $
  */
 public class XMLEntityDecl {
 

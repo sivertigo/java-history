@@ -1,8 +1,8 @@
 /*
- * @(#)ExceptionInInitializerError.java	1.17 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang;
@@ -21,7 +21,7 @@ package java.lang;
  * as the aforementioned "legacy method."
  *
  * @author  Frank Yellin
- * @version 1.17, 12/19/03
+ * @version %I%, %G%
  * @since   JDK1.1
  */
 public class ExceptionInInitializerError extends LinkageError {

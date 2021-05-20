@@ -1,8 +1,8 @@
 /*
- * @(#)SynthMenuUI.java	1.11 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package javax.swing.plaf.synth;
 
@@ -17,12 +17,12 @@ import javax.swing.border.*;
 import java.util.Arrays;
 import java.util.ArrayList;
 import sun.swing.plaf.synth.SynthUI;
-
+import sun.swing.MenuItemLayoutHelper;
 
 /**
  * Synth's MenuUI.
  *
- * @version 1.11, 12/19/03
+ * @version %I%, %G%
  * @author Georges Saab
  * @author David Karlton
  * @author Arnaud Weber
@@ -69,10 +69,14 @@ class SynthMenuUI extends BasicMenuUI implements PropertyChangeListener,
             acceleratorDelimiter = style.getString(context, prefix +
                                             ".acceleratorDelimiter", "+");
 
-            arrowIcon = style.getIcon(context, prefix + ".arrowIcon");
-
-            checkIcon = style.getIcon(context, prefix + ".checkIcon");
-
+            if (MenuItemLayoutHelper.useCheckAndArrow(menuItem)) {
+                checkIcon = style.getIcon(context, prefix + ".checkIcon");
+                arrowIcon = style.getIcon(context, prefix + ".arrowIcon");
+            } else {
+                // Not needed in this case
+                checkIcon = null;
+                arrowIcon = null;
+            }
             
             ((JMenu)menuItem).setDelay(style.getInt(context, prefix +
                                                     ".delay", 200));
@@ -88,6 +92,16 @@ class SynthMenuUI extends BasicMenuUI implements PropertyChangeListener,
 
         accStyle = SynthLookAndFeel.updateStyle(accContext, this);
         accContext.dispose();
+    }
+
+    public void uninstallUI(JComponent c) {
+        super.uninstallUI(c);
+        // Remove values from the parent's Client Properties.
+        JComponent p = MenuItemLayoutHelper.getMenuItemParent((JMenuItem) c);
+        if (p != null) {
+            p.putClientProperty(
+                    SynthMenuItemLayoutHelper.MAX_ACC_OR_ARROW_WIDTH, null);
+        }
     }
 
     protected void uninstallDefaults() {
@@ -161,9 +175,11 @@ class SynthMenuUI extends BasicMenuUI implements PropertyChangeListener,
                                                      int defaultTextIconGap) {
         SynthContext context = getContext(c);
         SynthContext accContext = getContext(c, Region.MENU_ITEM_ACCELERATOR);
-        Dimension value = SynthMenuItemUI.getPreferredMenuItemSize(
-                  context, accContext, useCheckAndArrow(), c, checkIcon,
-                  arrowIcon, defaultTextIconGap, acceleratorDelimiter);
+        Dimension value = SynthGraphicsUtils.getPreferredMenuItemSize(
+                context, accContext, c, checkIcon, arrowIcon,
+                defaultTextIconGap, acceleratorDelimiter,
+                MenuItemLayoutHelper.useCheckAndArrow(menuItem),
+                getPropertyPrefix());
         context.dispose();
         accContext.dispose();
         return value;
@@ -190,9 +206,12 @@ class SynthMenuUI extends BasicMenuUI implements PropertyChangeListener,
     protected void paint(SynthContext context, Graphics g) {
         SynthContext accContext = getContext(menuItem,
                                              Region.MENU_ITEM_ACCELERATOR);
-        SynthMenuItemUI.paint(context, accContext, g, checkIcon, arrowIcon,
-                        useCheckAndArrow(), acceleratorDelimiter,
-                        defaultTextIconGap);
+        // Refetch the appropriate check indicator for the current state
+        String prefix = getPropertyPrefix();
+        Icon checkIcon = style.getIcon(context, prefix + ".checkIcon");
+        Icon arrowIcon = style.getIcon(context, prefix + ".arrowIcon");
+        SynthGraphicsUtils.paint(context, accContext, g, checkIcon, arrowIcon,
+              acceleratorDelimiter, defaultTextIconGap, getPropertyPrefix());
         accContext.dispose();
     }
 
@@ -205,9 +224,5 @@ class SynthMenuUI extends BasicMenuUI implements PropertyChangeListener,
         if (SynthLookAndFeel.shouldUpdateStyle(e)) {
             updateStyle((JMenu)e.getSource());
         }
-    }
-
-    private boolean useCheckAndArrow() {
-        return !((JMenu)menuItem).isTopLevelMenu();
     }
 }

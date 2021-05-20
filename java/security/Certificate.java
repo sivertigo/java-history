@@ -1,8 +1,8 @@
 /*
- * @(#)Certificate.java	1.37 04/05/18
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
  
 package java.security;
@@ -37,9 +37,9 @@ import java.util.Date;
  * the duty of the application implementing this interface to verify
  * the certificate and satisfy itself of its validity.
  *
- * @version 	1.37, 05/18/04
+ * @version 	%I%, %G%
  * @author Benjamin Renaud 
- * @deprecated A new certificate handling package is created in the Java 2 platform.
+ * @deprecated A new certificate handling package is created in the Java platform.
  *             This Certificate interface is entirely deprecated and
  *             is here to allow for a smooth transition to the new
  *             package.

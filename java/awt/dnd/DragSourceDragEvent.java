@@ -1,8 +1,8 @@
 /*
- * @(#)DragSourceDragEvent.java	1.29 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.awt.dnd;
@@ -47,7 +47,7 @@ import java.awt.event.InputEvent;
  * first constant found. If no constant is found the <i>user drop action</i>
  * is <code>DnDConstants.ACTION_NONE</code>.
  *
- * @version 	1.29, 12/19/03
+ * @version 	%I%, %G%
  * @since 1.2
  *
  */
@@ -215,15 +215,15 @@ public class DragSourceDragEvent extends DragSourceEvent {
     public int getUserAction() { return dropAction; }
 
     /**
-     * This method returns the logical intersection of the user drop action, 
+     * This method returns the logical intersection of 
      * the target drop action and the set of drop actions supported by 
      * the drag source.
      *
-     * @return the logical intersection of the user drop action, the target drop
-     *         action and the set of drop actions supported by the drag source.
+     * @return the logical intersection of the target drop action and
+     *         the set of drop actions supported by the drag source.
      */
     public int getDropAction() {
-	return dropAction & targetActions & getDragSourceContext().getSourceActions();
+	return targetActions & getDragSourceContext().getSourceActions();
     }
 
     /*

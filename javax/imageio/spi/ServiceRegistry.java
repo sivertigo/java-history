@@ -1,8 +1,8 @@
 /*
- * @(#)ServiceRegistry.java	1.22 04/05/05
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.imageio.spi;
@@ -72,7 +72,7 @@ import sun.misc.Service;
  *
  * <p> For more details on declaring service providers, and the JAR
  * format in general, see the <a
- * href="http://java.sun.com/products/jdk/1.3/docs/guide/jar/jar.html">
+ * href="../../../../technotes/guides/jar/jar.html">
  * JAR File Specification</a>.
  *
  * @see RegisterableService

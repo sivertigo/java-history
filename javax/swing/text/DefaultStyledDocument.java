@@ -1,8 +1,8 @@
 /*
- * @(#)DefaultStyledDocument.java	1.124 04/05/05
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package javax.swing.text;
 
@@ -11,8 +11,13 @@ import java.awt.Component;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.font.TextAttribute;
+import java.lang.ref.ReferenceQueue;
+import java.lang.ref.WeakReference;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 import java.util.Vector;
 import java.util.ArrayList;
@@ -27,6 +32,8 @@ import javax.swing.undo.CannotRedoException;
 import javax.swing.undo.CannotUndoException;
 import javax.swing.undo.UndoableEdit;
 import javax.swing.SwingUtilities;
+import sun.swing.SwingUtilities2;
+import static sun.swing.SwingUtilities2.IMPLIED_CR;
 
 /**
  * A document that can be marked up with character and paragraph 
@@ -47,7 +54,7 @@ import javax.swing.SwingUtilities;
  * Please see {@link java.beans.XMLEncoder}.
  *
  * @author  Timothy Prinzing
- * @version 1.124 05/05/04
+ * @version %I% %G%
  * @see     Document
  * @see     AbstractDocument
  */
@@ -155,8 +162,8 @@ public class DefaultStyledDocument extends AbstractDocument implements StyledDoc
      * <p>
      * This method is thread safe, although most Swing methods
      * are not. Please see 
-     * <A HREF="http://java.sun.com/products/jfc/swingdoc-archive/threads.html">Threads
-     * and Swing</A> for more information.     
+     * <A HREF="http://java.sun.com/docs/books/tutorial/uiswing/misc/threads.html">How
+     * to Use Threads</A> for more information.     
      *
      * @param offset the starting offset >= 0
      * @param data the element data
@@ -267,8 +274,8 @@ public class DefaultStyledDocument extends AbstractDocument implements StyledDoc
      * <p>
      * This method is thread safe, although most Swing methods
      * are not. Please see 
-     * <A HREF="http://java.sun.com/products/jfc/swingdoc-archive/threads.html">Threads
-     * and Swing</A> for more information.     
+     * <A HREF="http://java.sun.com/docs/books/tutorial/uiswing/misc/threads.html">How
+     * to Use Threads</A> for more information.     
      *
      * @param pos the offset from the start of the document >= 0
      * @param s  the logical style to assign to the paragraph, null if none
@@ -324,8 +331,8 @@ public class DefaultStyledDocument extends AbstractDocument implements StyledDoc
      * <p>
      * This method is thread safe, although most Swing methods
      * are not. Please see 
-     * <A HREF="http://java.sun.com/products/jfc/swingdoc-archive/threads.html">Threads
-     * and Swing</A> for more information.     
+     * <A HREF="http://java.sun.com/docs/books/tutorial/uiswing/misc/threads.html">How
+     * to Use Threads</A> for more information.     
      *
      * @param offset the offset in the document >= 0
      * @param length the length >= 0
@@ -377,8 +384,8 @@ public class DefaultStyledDocument extends AbstractDocument implements StyledDoc
      * <p>
      * This method is thread safe, although most Swing methods
      * are not. Please see 
-     * <A HREF="http://java.sun.com/products/jfc/swingdoc-archive/threads.html">Threads
-     * and Swing</A> for more information.     
+     * <A HREF="http://java.sun.com/docs/books/tutorial/uiswing/misc/threads.html">How
+     * to Use Threads</A> for more information.     
      *
      * @param offset the offset into the paragraph >= 0
      * @param length the number of characters affected >= 0
@@ -620,9 +627,18 @@ public class DefaultStyledDocument extends AbstractDocument implements StyledDoc
 	    // Check for the composed text element. If it is, merge the character attributes
 	    // into this element as well.
 	    if (Utilities.isComposedTextAttributeDefined(attr)) {
-	        ((MutableAttributeSet)attr).addAttributes(cattr);
-	        ((MutableAttributeSet)attr).addAttribute(AbstractDocument.ElementNameAttribute, 
-		                                         AbstractDocument.ContentElementName);
+                MutableAttributeSet mattr = (MutableAttributeSet) attr;
+	        mattr.addAttributes(cattr);
+	       mattr.addAttribute(AbstractDocument.ElementNameAttribute, 
+                                  AbstractDocument.ContentElementName);
+
+                // Assure that the composed text element is named properly
+                // and doesn't have the CR attribute defined.
+	        mattr.addAttribute(StyleConstants.NameAttribute, 
+                                   AbstractDocument.ContentElementName);
+                if (mattr.isDefined(IMPLIED_CR)) {
+                    mattr.removeAttribute(IMPLIED_CR);
+                }
 	    }
 
 	    ElementSpec[] spec = new ElementSpec[parseBuffer.size()];
@@ -820,7 +836,12 @@ public class DefaultStyledDocument extends AbstractDocument implements StyledDoc
 		}
 		if (styleContextChangeListener != null) {
 		    StyleContext styles = (StyleContext)getAttributeContext();
-		    styles.addChangeListener(styleContextChangeListener);
+                    List<ChangeListener> staleListeners =
+                        AbstractChangeHandler.getStaleListeners(styleContextChangeListener);
+                    for (ChangeListener l: staleListeners) {
+                        styles.removeChangeListener(l);
+                    }
+                    styles.addChangeListener(styleContextChangeListener);
 		}
 		updateStylesListeningTo();
 	    }
@@ -855,14 +876,14 @@ public class DefaultStyledDocument extends AbstractDocument implements StyledDoc
      * Returns a new instance of StyleChangeHandler.
      */
     ChangeListener createStyleChangeListener() {
-	return new StyleChangeHandler();
+        return new StyleChangeHandler(this);
     }
 
     /**
      * Returns a new instance of StyleContextChangeHandler.
      */
     ChangeListener createStyleContextChangeListener() {
-	return new StyleContextChangeHandler();
+        return new StyleContextChangeHandler(this);
     }
 
     /**
@@ -879,12 +900,17 @@ public class DefaultStyledDocument extends AbstractDocument implements StyledDoc
 		Enumeration styleNames = styles.getStyleNames();
 		Vector v = (Vector)listeningStyles.clone();
 		listeningStyles.removeAllElements();
+                List<ChangeListener> staleListeners = 
+                    AbstractChangeHandler.getStaleListeners(styleChangeListener);
 		while (styleNames.hasMoreElements()) {
 		    String name = (String)styleNames.nextElement();
 		    Style aStyle = styles.getStyle(name);
 		    int index = v.indexOf(aStyle);
 		    listeningStyles.addElement(aStyle);
 		    if (index == -1) {
+                        for (ChangeListener l: staleListeners) {
+                            aStyle.removeChangeListener(l);
+                        }
 			aStyle.addChangeListener(styleChangeListener);
 		    }
 		    else {
@@ -1224,6 +1250,7 @@ public class DefaultStyledDocument extends AbstractDocument implements StyledDoc
          * Creates a new ElementBuffer.
          *
          * @param root the root element
+	 * @since 1.4
          */
 	public ElementBuffer(Element root) {
 	    this.root = root;
@@ -2429,22 +2456,99 @@ public class DefaultStyledDocument extends AbstractDocument implements StyledDoc
 	protected AttributeSet oldStyle;
     }
 
+    /**
+     * Base class for style change handlers with support for stale objects detection.
+     */ 
+    abstract static class AbstractChangeHandler implements ChangeListener {
+        
+        /* This has an implicit reference to the handler object.  */
+        private class DocReference extends WeakReference<DefaultStyledDocument> {
+            
+            DocReference(DefaultStyledDocument d, ReferenceQueue q) {
+                super(d, q);
+            }
+            
+            /**
+             * Return a reference to the style change handler object.
+             */
+            ChangeListener getListener() {
+                return AbstractChangeHandler.this;
+            }
+        }
+        
+        /** Class-specific reference queues.  */
+        private final static Map<Class, ReferenceQueue> queueMap
+                = new HashMap<Class, ReferenceQueue>();
+        
+        /** A weak reference to the document object.  */
+        private DocReference doc;
+        
+        AbstractChangeHandler(DefaultStyledDocument d) {
+            Class c = getClass();
+            ReferenceQueue q;
+            synchronized (queueMap) {
+                q = queueMap.get(c);
+                if (q == null) {
+                    q = new ReferenceQueue();
+                    queueMap.put(c, q);
+                }
+            }
+            doc = new DocReference(d, q);
+        }
+        
+        /**
+         * Return a list of stale change listeners.
+         *
+         * A change listener becomes "stale" when its document is cleaned by GC.
+         */
+        static List<ChangeListener> getStaleListeners(ChangeListener l) {
+            List<ChangeListener> staleListeners = new ArrayList<ChangeListener>();
+            ReferenceQueue q = queueMap.get(l.getClass());
+            
+            if (q != null) {
+                DocReference r;            
+                synchronized (q) {
+                    while ((r = (DocReference) q.poll()) != null) {
+                        staleListeners.add(r.getListener());
+                    }
+                }
+            }
+            
+            return staleListeners;
+        }
+        
+        /**
+         * The ChangeListener wrapper which guards against dead documents.
+         */
+        public void stateChanged(ChangeEvent e) {
+            DefaultStyledDocument d = doc.get();
+            if (d != null) {
+                fireStateChanged(d, e);
+            }
+        }
+        
+        /** Run the actual class-specific stateChanged() method.  */
+        abstract void fireStateChanged(DefaultStyledDocument d, ChangeEvent e);
+    }
 
     /**
      * Added to all the Styles. When instances of this receive a
      * stateChanged method, styleChanged is invoked.
      */
-    class StyleChangeHandler implements ChangeListener {
-        public void stateChanged(ChangeEvent e) {
-	    Object source = e.getSource();
+    static class StyleChangeHandler extends AbstractChangeHandler {
 
-	    if (source instanceof Style) {
-		styleChanged((Style)source);
-	    }
-	    else {
-		styleChanged(null);
-	    }
-	}
+        StyleChangeHandler(DefaultStyledDocument d) {
+            super(d);
+        }
+
+        void fireStateChanged(DefaultStyledDocument d, ChangeEvent e) {
+            Object source = e.getSource();
+            if (source instanceof Style) {
+                d.styleChanged((Style) source);
+            } else {
+                d.styleChanged(null);
+            }
+        }        
     }
 
 
@@ -2452,9 +2556,14 @@ public class DefaultStyledDocument extends AbstractDocument implements StyledDoc
      * Added to the StyleContext. When the StyleContext changes, this invokes
      * <code>updateStylesListeningTo</code>.
      */
-    class StyleContextChangeHandler implements ChangeListener {
-        public void stateChanged(ChangeEvent e) {
-	    updateStylesListeningTo();
+    static class StyleContextChangeHandler extends AbstractChangeHandler {
+
+        StyleContextChangeHandler(DefaultStyledDocument d) {
+            super(d);
+        }
+
+        void fireStateChanged(DefaultStyledDocument d, ChangeEvent e) {
+            d.updateStylesListeningTo();
 	}
     }
 

@@ -1,8 +1,8 @@
 /*
- * @(#)MetalRootPaneUI.java	1.20 04/04/27
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing.plaf.metal;
@@ -42,7 +42,7 @@ import java.security.*;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
- * @version 1.20 04/27/04
+ * @version %I% %G%
  * @author Terry Kellerman
  * @since 1.4
  */
@@ -689,15 +689,6 @@ public class MetalRootPaneUI extends BasicRootPaneUI
          */
         private int dragHeight;
 
-        /*
-         * PrivilegedExceptionAction needed by mouseDragged method to
-         * obtain new location of window on screen during the drag.
-         */
-        private final PrivilegedExceptionAction getLocationAction = new PrivilegedExceptionAction(){
-                public Object run() throws HeadlessException{
-                    return MouseInfo.getPointerInfo().getLocation();
-                }};
-
         public void mousePressed(MouseEvent ev) {
             JRootPane rootPane = getRootPane();
 
@@ -819,15 +810,10 @@ public class MetalRootPaneUI extends BasicRootPaneUI
             Point pt = ev.getPoint();
 
             if (isMovingWindow) {
-                Point windowPt;
-                try {
-                    windowPt = (Point) AccessController.doPrivileged(getLocationAction);
-                    windowPt.x = windowPt.x - dragOffsetX;
-                    windowPt.y = windowPt.y - dragOffsetY;
-                    w.setLocation(windowPt);
-                }catch (PrivilegedActionException e) {
-                }
-            }                
+                Point eventLocationOnScreen = ev.getLocationOnScreen();
+                w.setLocation(eventLocationOnScreen.x - dragOffsetX,
+                              eventLocationOnScreen.y - dragOffsetY); 
+            }
             else if (dragCursor != 0) {
                 Rectangle r = w.getBounds();
                 Rectangle startBounds = new Rectangle(r);

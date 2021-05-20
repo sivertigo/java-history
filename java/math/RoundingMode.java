@@ -1,17 +1,17 @@
 /*
- * @(#)RoundingMode.java	1.3 04/06/18
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 /*
  * @(#)RoundingMode.java  1.x 01/xx/xx
  *
- * Copyright 2001 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright (c) 2001, Oracle and/or its affiliates. All rights reserved.
  * Portions Copyright IBM Corporation, 2001. All Rights Reserved.
  *
- * This software is the proprietary information of Sun Microsystems, Inc.
+ * This software is the proprietary information of Oracle.
  * Use is subject to license terms.
  *
  */
@@ -79,6 +79,7 @@ package java.math;
  * @author  Josh Bloch
  * @author  Mike Cowlishaw
  * @author  Joseph D. Darcy
+ * @since 1.5
  */
 public enum RoundingMode {
 

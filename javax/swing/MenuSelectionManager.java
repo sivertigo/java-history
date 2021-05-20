@@ -1,8 +1,8 @@
 /*
- * @(#)MenuSelectionManager.java	1.38 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package javax.swing;
 
@@ -11,16 +11,15 @@ import java.util.*;
 import java.awt.event.*;
 import javax.swing.event.*;
 
+import sun.awt.AppContext;
+
 /**
  * A MenuSelectionManager owns the selection in menu hierarchy.
- * 
- * @version 1.38 12/19/03
+ *
+ * @version %I% %G%
  * @author Arnaud Weber
  */
 public class MenuSelectionManager {
-    private static final MenuSelectionManager instance = 
-        new MenuSelectionManager();
-
     private Vector selection = new Vector();
 
     /* diagnostic aids -- should be false for production builds. */
@@ -28,13 +27,25 @@ public class MenuSelectionManager {
     private static final boolean VERBOSE = false; // show reuse hits/misses
     private static final boolean DEBUG =   false;  // show bad params, misc.
 
+    private static final Object MENU_SELECTION_MANAGER_KEY = new Object(); // javax.swing.MenuSelectionManager
+
     /**
      * Returns the default menu selection manager.
      *
      * @return a MenuSelectionManager object
      */
-    public static MenuSelectionManager defaultManager() {	
-        return instance;
+    public static MenuSelectionManager defaultManager() {
+        synchronized (MENU_SELECTION_MANAGER_KEY) {
+            AppContext context = AppContext.getAppContext();
+            MenuSelectionManager msm = (MenuSelectionManager)context.get( 
+                                                 MENU_SELECTION_MANAGER_KEY);
+            if (msm == null) {    
+                msm = new MenuSelectionManager();   
+                context.put(MENU_SELECTION_MANAGER_KEY, msm);   
+            } 
+
+            return msm; 
+        }
     }
     
     /**
@@ -189,9 +200,9 @@ public class MenuSelectionManager {
         int selectionSize;
         p = event.getPoint();
 	
-	Component source = (Component)event.getSource();
+        Component source = event.getComponent();
 
-	if (!source.isShowing()) {
+	if ((source != null) && !source.isShowing()) {
 	    // This can happen if a mouseReleased removes the
 	    // containing component -- bug 4146684
 	    return;
@@ -207,7 +218,9 @@ public class MenuSelectionManager {
 	    return;
 	}
 
-        SwingUtilities.convertPointToScreen(p,source);
+        if (source != null) {
+            SwingUtilities.convertPointToScreen(p, source);
+        }
 
         screenX = p.x;
         screenY = p.y;
@@ -263,8 +276,11 @@ public class MenuSelectionManager {
 			MouseEvent exitEvent = new MouseEvent(oldMC, MouseEvent.MOUSE_EXITED,
 							      event.getWhen(),
 							      event.getModifiers(), p.x, p.y,
+                                                              event.getXOnScreen(),
+                                                              event.getYOnScreen(),
 							      event.getClickCount(),
-							      event.isPopupTrigger());
+							      event.isPopupTrigger(),
+                                                              MouseEvent.NOBUTTON);
 			currentSelection[currentSelection.length-1].
 			    processMouseEvent(exitEvent, path, this);
 
@@ -272,14 +288,20 @@ public class MenuSelectionManager {
 							       MouseEvent.MOUSE_ENTERED,
 							       event.getWhen(),
 							       event.getModifiers(), p.x, p.y,
+                                                               event.getXOnScreen(),
+                                                               event.getYOnScreen(),
 							       event.getClickCount(),
-							       event.isPopupTrigger());
+							       event.isPopupTrigger(),
+                                                               MouseEvent.NOBUTTON);
 			subElements[j].processMouseEvent(enterEvent, path, this);
 		    } 
 		    MouseEvent mouseEvent = new MouseEvent(mc, event.getID(),event. getWhen(),
 							   event.getModifiers(), p.x, p.y,
+                                                           event.getXOnScreen(),
+                                                           event.getYOnScreen(),
 							   event.getClickCount(),
-							   event.isPopupTrigger());
+							   event.isPopupTrigger(),
+                                                           MouseEvent.NOBUTTON);
 		    subElements[j].processMouseEvent(mouseEvent, path, this);
 		    success = true;
 		    event.consume();

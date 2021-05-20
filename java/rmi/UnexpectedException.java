@@ -1,8 +1,8 @@
 /*
- * @(#)UnexpectedException.java	1.12 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.rmi;
@@ -13,7 +13,7 @@ package java.rmi;
  * exception that is not among the checked exception types declared in the
  * <code>throws</code> clause of the method in the remote interface.
  * 
- * @version 1.12, 12/19/03
+ * @version %I%, %G%
  * @author  Roger Riggs
  * @since   JDK1.1
  */

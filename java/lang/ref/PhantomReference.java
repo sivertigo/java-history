@@ -1,8 +1,8 @@
 /*
- * @(#)PhantomReference.java	1.19 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang.ref;
@@ -28,7 +28,7 @@ package java.lang.ref;
  * object that is reachable via phantom references will remain so until all
  * such references are cleared or themselves become unreachable.
  *
- * @version  1.19, 12/19/03
+ * @version  %I%, %G%
  * @author   Mark Reinhold
  * @since    1.2
  */

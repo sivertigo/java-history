@@ -1,8 +1,8 @@
 /*
- * @(#)Popup.java	1.17 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing;
@@ -33,7 +33,7 @@ import sun.awt.ModalExclude;
  *
  * @see PopupFactory
  *
- * @version 1.17 12/19/03
+ * @version %I% %G%
  * @since 1.4
  */
 public class Popup {
@@ -110,10 +110,15 @@ public class Popup {
      */
     void dispose() {
         Component component = getComponent();
+        Window window = SwingUtilities.getWindowAncestor(component);
 
         if (component instanceof JWindow) {
             ((Window)component).dispose();
             component = null;
+        }
+        // If our parent is a DefaultFrame, we need to dispose it, too.
+        if (window instanceof DefaultFrame) {
+            window.dispose();
         }
     }
 
@@ -157,9 +162,7 @@ public class Popup {
     /**
      * Returns the <code>Window</code> to use as the parent of the
      * <code>Window</code> created for the <code>Popup</code>. This creates
-     * a new <code>Frame</code> each time it is invoked. Subclasses that wish
-     * to support a different <code>Window</code> parent should override
-     * this.
+     * a new <code>DefaultFrame</code>, if necessary.
      */
     private Window getParentWindow(Component owner) {
         Window window = null;
@@ -206,6 +209,18 @@ public class Popup {
             super(parent);
             setFocusableWindowState(false);
             setName("###overrideRedirect###");
+            // Popups are typically transient and most likely won't benefit
+            // from true double buffering.  Turn it off here.
+            getRootPane().setUseTrueDoubleBuffering(false);
+            // Try to set "always-on-top" for the popup window.
+            // Applets usually don't have sufficient permissions to do it.
+            // In this case simply ignore the exception.
+            try {
+                setAlwaysOnTop(true);
+            } catch (SecurityException se) {
+                // setAlwaysOnTop is restricted,
+                // the exception is ignored
+            }
         }
 
         public void update(Graphics g) {

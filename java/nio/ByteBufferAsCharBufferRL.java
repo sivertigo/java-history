@@ -1,8 +1,8 @@
 /*
- * @(#)ByteBufferAs-X-Buffer.java	1.17 04/05/03
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2009, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 // -- This file was mechanically generated: Do not edit! -- //
@@ -177,10 +177,12 @@ class ByteBufferAsCharBufferRL			// package-private
 
 	if ((start < 0) || (end > len) || (start > end))
 	    throw new IndexOutOfBoundsException();
-	int sublen = end - start;
- 	int off = offset + ((pos + start) << 1);
-        assert (off >= 0);
-	return new ByteBufferAsCharBufferRL(bb, -1, 0, sublen, sublen, off);
+        return new ByteBufferAsCharBufferRL(bb,
+                                                  -1,
+                                                  pos + start,
+                                                  pos + end,
+                                                  capacity(),
+                                                  offset); 
     }
 
 

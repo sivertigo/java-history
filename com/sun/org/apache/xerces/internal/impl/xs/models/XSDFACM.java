@@ -1,58 +1,17 @@
 /*
- * The Apache Software License, Version 1.1
- *
- *
- * Copyright (c) 1999-2003 The Apache Software Foundation.  All rights
- * reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in
- *    the documentation and/or other materials provided with the
- *    distribution.
- *
- * 3. The end-user documentation included with the redistribution,
- *    if any, must include the following acknowledgment:
- *       "This product includes software developed by the
- *        Apache Software Foundation (http://www.apache.org/)."
- *    Alternately, this acknowledgment may appear in the software itself,
- *    if and wherever such third-party acknowledgments normally appear.
- *
- * 4. The names "Xerces" and "Apache Software Foundation" must
- *    not be used to endorse or promote products derived from this
- *    software without prior written permission. For written
- *    permission, please contact apache@apache.org.
- *
- * 5. Products derived from this software may not be called "Apache",
- *    nor may "Apache" appear in their name, without prior written
- *    permission of the Apache Software Foundation.
- *
- * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED.  IN NO EVENT SHALL THE APACHE SOFTWARE FOUNDATION OR
- * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
- * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
- * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- * ====================================================================
- *
- * This software consists of voluntary contributions made by many
- * individuals on behalf of the Apache Software Foundation and was
- * originally based on software copyright (c) 1999, International
- * Business Machines, Inc., http://www.apache.org.  For more
- * information on the Apache Software Foundation, please see
- * <http://www.apache.org/>.
+ * Copyright 1999-2004 The Apache Software Foundation.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.sun.org.apache.xerces.internal.impl.xs.models;
@@ -69,6 +28,7 @@ import com.sun.org.apache.xerces.internal.impl.xs.XMLSchemaException;
 import com.sun.org.apache.xerces.internal.impl.xs.XSConstraints;
 
 import java.util.Vector;
+import java.util.ArrayList;
 
 /**
  * DFAContentModel is the implementation of XSCMValidator that does
@@ -76,8 +36,10 @@ import java.util.Vector;
  * the conversion from the regular expression to the DFA that
  * it then uses in its validation algorithm.
  *
+ * @xerces.internal 
+ *
  * @author Neil Graham, IBM
- * @version $Id: XSDFACM.java,v 1.10 2003/04/30 20:24:49 sandygao Exp $
+ * @version $Id: XSDFACM.java,v 1.7 2009/07/28 15:18:12 spericas Exp $
  */
 public class XSDFACM
     implements XSCMValidator {
@@ -177,6 +139,32 @@ public class XSDFACM
      * related tables such as fFinalStateFlags.
      */
     private int fTransTableSize = 0;
+    
+    /**
+     * Array of counters for all the for elements (or wildcards)
+     * of the form a{n,m} where n > 1 and m <= unbounded. Used
+     * to count the a's to later check against n and m. Counter
+     * set to -1 if element (or wildcard) not optimized by
+     * constant space algorithm.
+     */
+    private int fElemMapCounter[];
+
+    /**
+     * Array of lower bounds for all the for elements (or wildcards)
+     * of the form a{n,m} where n > 1 and m <= unbounded. This array
+     * stores the n's for those elements (or wildcards) for which
+     * the constant space algorithm applies (or -1 otherwise).
+     */
+    private int fElemMapCounterLowerBound[];
+
+    /**
+     * Array of upper bounds for all the for elements (or wildcards)
+     * of the form a{n,m} where n > 1 and m <= unbounded. This array
+     * stores the n's for those elements (or wildcards) for which
+     * the constant space algorithm applies, or -1 if algorithm does
+     * not apply or m = unbounded.
+     */
+    private int fElemMapCounterUpperBound[];   // -1 if no upper bound
 
     // temp variables
 
@@ -187,7 +175,6 @@ public class XSDFACM
     /**
      * Constructs a DFA content model.
      *
-     * @param symbolTable    The symbol table.
      * @param syntaxTree    The syntax tree of the content model.
      * @param leafCount     The number of leaves.
      *
@@ -232,7 +219,7 @@ public class XSDFACM
     //
     // XSCMValidator methods
     //
-
+    
     /**
      * check whether the given state is one of the final states
      *
@@ -248,9 +235,9 @@ public class XSDFACM
     /**
      * one transition only
      *
-     * @param curElem     The current element's QName
-     * @param stateStack  stack to store the previous state
-     * @param curPos      the current position of the stack
+     * @param curElem The current element's QName
+     * @param state stack to store the previous state
+     * @param subGroupHandler the substitution group handler
      *
      * @return  null if transition is invalid; otherwise the Object corresponding to the
      *      XSElementDecl or XSWildcardDecl identified.  Also, the
@@ -283,12 +270,20 @@ public class XSDFACM
             if (type == XSParticleDecl.PARTICLE_ELEMENT) {
                 matchingDecl = subGroupHandler.getMatchingElemDecl(curElem, (XSElementDecl)fElemMap[elemIndex]);
                 if (matchingDecl != null) {
+                    // Increment counter if constant space algorithm applies
+                    if (fElemMapCounter[elemIndex] >= 0) {
+                        fElemMapCounter[elemIndex]++;
+                    }
                     break;
                 }
             }
             else if (type == XSParticleDecl.PARTICLE_WILDCARD) {
                 if(((XSWildcardDecl)fElemMap[elemIndex]).allowNamespace(curElem.uri)) {
                     matchingDecl = fElemMap[elemIndex];
+                    // Increment counter if constant space algorithm applies
+                    if (fElemMapCounter[elemIndex] >= 0) {
+                        fElemMapCounter[elemIndex]++;
+                    }
                     break;
                 }
             }
@@ -330,6 +325,12 @@ public class XSDFACM
     public int[] startContentModel() {
         int[] val = new int[2];
         val[0] = 0;
+        // Clear all constant space algorithm counters in use
+        for (int elemIndex = 0; elemIndex < fElemMapSize; elemIndex++) {
+            if (fElemMapCounter[elemIndex] != -1) {
+                fElemMapCounter[elemIndex] = 0;
+            }
+        }
         return val;
     } // startContentModel():int[]
 
@@ -450,7 +451,13 @@ public class XSDFACM
         fElemMap = new Object[fLeafCount];
         fElemMapType = new int[fLeafCount];
         fElemMapId = new int[fLeafCount];
+
+        fElemMapCounter = new int[fLeafCount];
+        fElemMapCounterLowerBound = new int[fLeafCount];
+        fElemMapCounterUpperBound = new int[fLeafCount];
+
         fElemMapSize = 0;
+        
         for (int outIndex = 0; outIndex < fLeafCount; outIndex++) {
             // optimization from Henry Zongaro:
             //fElemMap[outIndex] = new Object ();
@@ -468,6 +475,20 @@ public class XSDFACM
                 fElemMap[fElemMapSize] = fLeafList[outIndex].getLeaf();
                 fElemMapType[fElemMapSize] = fLeafListType[outIndex];
                 fElemMapId[fElemMapSize] = id;
+
+                // Init counters and bounds for a{n,m} algorithm
+                XSCMLeaf leaf = fLeafList[outIndex];
+                int[] bounds = (int[]) leaf.getUserData();
+                if (bounds != null) {
+                    fElemMapCounter[fElemMapSize] = 0;
+                    fElemMapCounterLowerBound[fElemMapSize] = bounds[0];
+                    fElemMapCounterUpperBound[fElemMapSize] = bounds[1];
+                } else {
+                    fElemMapCounter[fElemMapSize] = -1;
+                    fElemMapCounterLowerBound[fElemMapSize] = -1;
+                    fElemMapCounterUpperBound[fElemMapSize] = -1;
+                }
+                
                 fElemMapSize++;
             }
         }
@@ -903,7 +924,7 @@ public class XSDFACM
     /**
      * check whether this content violates UPA constraint.
      *
-     * @param errors to hold the UPA errors
+     * @param subGroupHandler the substitution group handler
      * @return true if this content model contains other or list wildcard
      */
     public boolean checkUniqueParticleAttribution(SubstitutionGroupHandler subGroupHandler) throws XMLSchemaException {
@@ -979,5 +1000,41 @@ public class XSDFACM
         }
         return ret;
     }
-        
+
+    /**
+     * Used by constant space algorithm for a{n,m} for n > 1 and
+     * m <= unbounded. Called by a validator if validation of
+     * countent model succeeds after subsuming a{n,m} to a*
+     * (or a+) to check the n and m bounds.
+     * Returns <code>null</code> if validation of bounds is
+     * successful. Returns a list of strings with error info
+     * if not. Even entries in list returned are error codes
+     * (used to look up properties) and odd entries are parameters
+     * to be passed when formatting error message. Each parameter
+     * is associated with the error code that preceeds it in
+     * the list.
+     */
+    public ArrayList checkMinMaxBounds() {
+        ArrayList result = null;
+        for (int elemIndex = 0; elemIndex < fElemMapSize; elemIndex++) {
+            int count = fElemMapCounter[elemIndex];
+            if (count == -1) {
+                continue;
+            }
+            final int minOccurs = fElemMapCounterLowerBound[elemIndex];
+            final int maxOccurs = fElemMapCounterUpperBound[elemIndex];
+            if (count < minOccurs) {
+                if (result == null) result = new ArrayList();
+                result.add("cvc-complex-type.2.4.b");
+                result.add("{" + fElemMap[elemIndex] + "}");
+            }
+            if (maxOccurs != -1 && count > maxOccurs) {
+                if (result == null) result = new ArrayList();
+                result.add("cvc-complex-type.2.4.e");
+                result.add("{" + fElemMap[elemIndex] + "}");
+            }
+        }
+        return result;
+    }
+
 } // class DFAContentModel

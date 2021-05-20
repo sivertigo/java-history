@@ -1,8 +1,8 @@
 /*
- * @(#)AnnotationProcessor.java	1.2 04/02/10
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc.  All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL.  Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL.  Use is subject to license terms.
  */
 
 package com.sun.mirror.apt;
@@ -34,7 +34,7 @@ import java.util.Collection;
  *
  * @author Joseph D. Darcy
  * @author Scott Seligman
- * @version 1.2 04/02/10
+ * @version %I% %E%
  * @since 1.5
  */
 

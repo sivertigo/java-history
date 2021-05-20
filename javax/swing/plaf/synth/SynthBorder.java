@@ -1,13 +1,14 @@
 /*
- * @(#)SynthBorder.java	1.12 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package javax.swing.plaf.synth;
 
 import java.awt.*;
 import javax.swing.*;
+import javax.swing.text.JTextComponent;
 import javax.swing.border.*;
 import javax.swing.plaf.UIResource;
 import sun.swing.plaf.synth.SynthUI;
@@ -16,7 +17,7 @@ import sun.swing.plaf.synth.SynthUI;
  * SynthBorder is a border that delegates to a Painter. The Insets
  * are determined at construction time.
  *
- * @version 1.12, 12/19/03
+ * @version %I%, %G%
  * @author Scott Violet
  */
 class SynthBorder extends AbstractBorder implements UIResource {
@@ -71,10 +72,10 @@ class SynthBorder extends AbstractBorder implements UIResource {
                                   this.insets.bottom, this.insets.right);
             }
             else {
-                insets.top = this.insets.top;
+                insets.top    = this.insets.top;
                 insets.bottom = this.insets.bottom;
-                insets.left = this.insets.left;
-                insets.right = this.insets.left;
+                insets.left   = this.insets.left;
+                insets.right  = this.insets.right;
             }
         }
         else if (insets == null) {
@@ -95,6 +96,15 @@ class SynthBorder extends AbstractBorder implements UIResource {
                  region == Region.TOGGLE_BUTTON) &&
                        (c instanceof AbstractButton)) {
                 margin = ((AbstractButton)c).getMargin();
+            }
+            else if ((region == Region.EDITOR_PANE ||
+                      region == Region.FORMATTED_TEXT_FIELD ||
+                      region == Region.PASSWORD_FIELD ||
+                      region == Region.TEXT_AREA ||
+                      region == Region.TEXT_FIELD ||
+                      region == Region.TEXT_PANE) &&
+                        (c instanceof JTextComponent)) {
+                margin = ((JTextComponent)c).getMargin();
             }
             else if (region == Region.TOOL_BAR && (c instanceof JToolBar)) {
                 margin = ((JToolBar)c).getMargin();

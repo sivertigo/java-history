@@ -1,8 +1,8 @@
 /*
- * @(#)SubjectCodeSource.java	1.21 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.security.auth;
@@ -20,11 +20,11 @@ import javax.security.auth.Subject;
  * <p> This <code>SubjectCodeSource</code> class contains
  * a <code>URL</code>, signer certificates, and either a <code>Subject</code>
  * (that represents the <code>Subject</code> in the current
- * <code>AccessControlContext</code)>,
+ * <code>AccessControlContext</code>),
  * or a linked list of Principals/PrincipalComparators
  * (that represent a "subject" in a <code>Policy</code>).
  *
- * @version 1.21, 12/19/03
+ * @version %I%, %G%
  */
 class SubjectCodeSource extends CodeSource implements java.io.Serializable {
 

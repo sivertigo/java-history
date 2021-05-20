@@ -1,8 +1,8 @@
 /*
- * @(#)TextLayoutStrategy.java	1.22 04/05/05
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package javax.swing.text;
 
@@ -23,7 +23,7 @@ import sun.font.BidiUtils;
  * that uses TextLayout is plugged into the GlyphView.
  *
  * @author  Timothy Prinzing
- * @version 1.22 05/05/04
+ * @version %I% %G%
  */
 class TextLayoutStrategy extends FlowView.FlowStrategy {
 
@@ -161,7 +161,7 @@ class TextLayoutStrategy extends FlowView.FlowStrategy {
 	// Get the child view that contains the given starting position
 	View lv = getLogicalView(fv);
 	View row = fv.getView(rowIndex);
-	boolean requireNextWord = (row.getViewCount() == 0) ? false : true;
+	boolean requireNextWord = (viewBuffer.size() == 0) ? false : true;
 	int childIndex = lv.getViewIndex(startOffset, Position.Bias.Forward);
 	View v = lv.getView(childIndex);
 
@@ -274,7 +274,7 @@ class TextLayoutStrategy extends FlowView.FlowStrategy {
         text.setView(lv);
 
         Container container = fv.getContainer();
-        FontRenderContext frc = com.sun.java.swing.SwingUtilities2.
+        FontRenderContext frc = sun.swing.SwingUtilities2.
                                     getFontRenderContext(container);
         BreakIterator iter;
         Container c = fv.getContainer();

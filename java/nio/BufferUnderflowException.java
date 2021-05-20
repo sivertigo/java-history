@@ -1,9 +1,9 @@
 /*
- * @(#)BufferUnderflowException.java	1.14 01/05/02
+ * @(#)BufferUnderflowException.java	%I% %E%
  *
- * Copyright 2000 by Sun Microsystems, Inc.  All Rights Reserved.
+ * Copyright (c) 2000, Oracle and/or its affiliates. All rights reserved.
  * 
- * This software is the proprietary information of Sun Microsystems, Inc.  
+ * This software is the proprietary information of Oracle.
  * Use is subject to license terms.
  */
 
@@ -16,7 +16,7 @@ package java.nio;
  * Unchecked exception thrown when a relative <i>get</i> operation reaches
  * the source buffer's limit.
  *
- * @version 1.14, 01/05/02
+ * @version %I%, %E%
  * @since 1.4
  */
 

@@ -1,7 +1,6 @@
-/* @(#)ORBImpl.java	1.70 09/02/04
- *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+/*
+ * Copyright (c) 2002, 2012, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.corba.se.impl.orb ;
@@ -14,9 +13,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field ;
 import java.lang.reflect.Modifier ;
 import java.lang.reflect.InvocationTargetException ;
-
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock ;
 
 import java.util.Set ;
 import java.util.HashSet ;
@@ -232,7 +228,14 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     // All access to resolver, localResolver, and urlOperation must be protected using
     // resolverLock.  Do not hold the ORBImpl lock while accessing
     // resolver, or deadlocks may occur.
-    private Object resolverLock ;
+    // Note that we now have separate locks for each resolver type.  This is due
+    // to bug 6980681 and 6238477, which was caused by a deadlock while resolving a
+    // corbaname: URL that contained a reference to the same ORB as the
+    // ORB making the call to string_to_object.  This caused a deadlock between the
+    // client thread holding the single lock for access to the urlOperation,
+    // and the server thread handling the client is_a request waiting on the
+    // same lock to access the localResolver.
+
 
     // Used for resolver_initial_references and list_initial_services
     private Resolver resolver ;
@@ -242,8 +245,15 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
 
     // Converts strings to object references for resolvers and string_to_object
     private Operation urlOperation ;
+    private final Object urlOperationLock = new java.lang.Object() ;
 
     private CorbaServerRequestDispatcher insNamingDelegate ;
+
+    // resolverLock must be used for all access to either resolver or
+    // localResolver, since it is possible for the resolver to indirectly
+    // refer to the localResolver.  Also used to protect access to
+    // insNamingDelegate.
+    private final Object resolverLock = new Object() ; 
 
     private TaggedComponentFactoryFinder taggedComponentFactoryFinder ;
 
@@ -298,13 +308,16 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
 
     public ORBVersion getORBVersion()
     {
+	synchronized (this) {
+		checkShutdownState();
+	}
         return (ORBVersion)(orbVersionThreadLocal.get()) ;
     }
 
     public void setORBVersion(ORBVersion verObj)
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
         orbVersionThreadLocal.set(verObj);
     }
@@ -348,7 +361,6 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
 	    }
 	};
 
-	resolverLock = new java.lang.Object() ;
 
 	requestDispatcherRegistry = new RequestDispatcherRegistryImpl( 
 	    this, ORBConstants.DEFAULT_SCID);
@@ -488,7 +500,7 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     public void set_parameters( Properties props )
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
 	preInit( null, props ) ;
 	DataCollector dataCollector = 
@@ -732,7 +744,7 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     public void notifyORB() 
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
 	synchronized (this.svResponseReceived) {
 	    this.svResponseReceived.set();
@@ -790,7 +802,7 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
 	if (str == null)
 	    throw wrapper.nullParam() ;
 
-	synchronized (resolverLock) {
+	synchronized (urlOperationLock) {
 	    org.omg.CORBA.Object obj = (org.omg.CORBA.Object)op.operate( str ) ;
 	    return obj ;
 	}
@@ -808,7 +820,7 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
         // backward compatability 4365188
         CodeBase cb;
 
-        ValueHandler vh = ORBUtility.createValueHandler(this);
+        ValueHandler vh = ORBUtility.createValueHandler();
 
         cb = (CodeBase)vh.getRunTimeCodeBase();
 	return ORBUtility.connectAndGetIOR( this, cb ) ;
@@ -1165,6 +1177,7 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
 	synchronized (this) {
 	    checkShutdownState();
 	}
+
         if ((id == null) || (id.length() == 0))
             throw new InvalidName() ;
 
@@ -1289,6 +1302,7 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
 
         for (ObjectAdapterFactory oaf : oaset) 
             oaf.shutdown( wait_for_completion ) ;
+
     }
 
     // Note that the caller must hold the ORBImpl lock.
@@ -1306,7 +1320,7 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     public boolean isDuringDispatch() 
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
 	Boolean value = (Boolean)(isProcessingInvocation.get()) ;
 	return value.booleanValue() ;
@@ -1315,29 +1329,29 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     public void startingDispatch() 
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
         synchronized (invocationObj) {
             isProcessingInvocation.set(Boolean.TRUE);
-            numInvocations++;
+	    numInvocations++;
         }
     }
 
     public void finishedDispatch() 
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
         synchronized (invocationObj) {
             numInvocations--;
-            isProcessingInvocation.set(Boolean.FALSE);
+            isProcessingInvocation.set(false);
             if (numInvocations == 0) {
                 synchronized (waitForCompletionObj) {
                     waitForCompletionObj.notifyAll();
                 }
             } else if (numInvocations < 0) {
-		throw wrapper.numInvocationsAlreadyZero(
-		    CompletionStatus.COMPLETED_YES ) ;
+                throw wrapper.numInvocationsAlreadyZero(
+                    CompletionStatus.COMPLETED_YES ) ;
             }
         }
     }
@@ -1349,21 +1363,21 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
      */
     public void destroy() 
     {
-	boolean shutdownFirst = false;
+	boolean shutdownFirst = false ;
 
 	synchronized (this) {
-	    shutdownFirst = (status == STATUS_OPERATING);
+	    shutdownFirst = (status == STATUS_OPERATING) ;
 	}
 
 	if (shutdownFirst) {
             shutdown(true);
         }
 
-	synchronized (this) {
+        synchronized (this) {
 	    if (status < STATUS_DESTROYED) {
 		getCorbaTransportManager().close();
 		getPIHandler().destroyInterceptors() ;
-	        status = STATUS_DESTROYED;
+		status = STATUS_DESTROYED;
 	    }
 	}
         synchronized (threadPoolManagerAccessLock) {
@@ -1375,6 +1389,13 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
                     wrapper.ioExceptionOnClose( exc ) ;
                 }
             }
+        }
+
+        try {
+            monitoringManager.close() ;
+            monitoringManager = null ;
+        } catch (IOException exc) {
+            wrapper.ioExceptionOnClose( exc ) ;
         }
 
         CachedCodeBase.cleanCache( this ) ;
@@ -1389,6 +1410,7 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
         badServerIdHandlerAccessLock = null ;
         clientDelegateFactoryAccessorLock = null ;
         corbaContactInfoListFactoryAccessLock = null ; 
+
         objectKeyFactoryAccessLock = null ;
         legacyServerSocketManagerAccessLock = null ;
         threadPoolManagerAccessLock = null ;
@@ -1419,13 +1441,11 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
         resolver = null ;
         localResolver = null ;
         insNamingDelegate = null ;
-        resolverLock = null ;
         urlOperation = null ;
         taggedComponentFactoryFinder = null ;
         taggedProfileFactoryFinder = null ;
         taggedProfileTemplateFactoryFinder = null ;
         objectKeyFactory = null ;
-
     }
 
     /**
@@ -1491,7 +1511,7 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     public OAInvocationInfo peekInvocationInfo() 
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
 	StackImpl stack = (StackImpl)(OAInvocationInfoStack.get()) ;
 	return (OAInvocationInfo)(stack.peek()) ;
@@ -1500,7 +1520,7 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     public void pushInvocationInfo( OAInvocationInfo info ) 
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
 	StackImpl stack = (StackImpl)(OAInvocationInfoStack.get()) ;
 	stack.push( info ) ;
@@ -1509,7 +1529,7 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     public OAInvocationInfo popInvocationInfo() 
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
 	StackImpl stack = (StackImpl)(OAInvocationInfoStack.get()) ;
 	return (OAInvocationInfo)(stack.pop()) ;
@@ -1525,7 +1545,7 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     public void initBadServerIdHandler() 
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
 	synchronized (badServerIdHandlerAccessLock) {
 	    Class cls = configData.getBadServerIdHandler() ;
@@ -1546,7 +1566,7 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     public void setBadServerIdHandler( BadServerIdHandler handler ) 
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
 	synchronized (badServerIdHandlerAccessLock) {
 	    badServerIdHandler = handler;
@@ -1556,7 +1576,7 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     public void handleBadServerId( ObjectKey okey ) 
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
 	synchronized (badServerIdHandlerAccessLock) {
 	    if (badServerIdHandler == null)
@@ -1607,7 +1627,7 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     public int getTransientServerId()
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
         if( configData.getORBServerIdPropertySpecified( ) ) {
             // ORBServerId is specified then use that value
@@ -1619,7 +1639,7 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     public RequestDispatcherRegistry getRequestDispatcherRegistry()
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
         return requestDispatcherRegistry;
     }
@@ -1627,7 +1647,7 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     public ServiceContextRegistry getServiceContextRegistry()
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
 	return serviceContextRegistry ;
     } 
@@ -1647,7 +1667,7 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     public boolean isLocalHost( String hostName ) 
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
 	return hostName.equals( configData.getORBServerHost() ) ||
 	    hostName.equals( getLocalHostName() ) ;
@@ -1656,7 +1676,7 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     public boolean isLocalServerId( int subcontractId, int serverId )
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
 	if ((subcontractId < ORBConstants.FIRST_POA_SCID) || 
 	    (subcontractId > ORBConstants.MAX_POA_SCID))
@@ -1749,7 +1769,7 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     public ClientInvocationInfo createOrIncrementInvocationInfo() 
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
 	StackImpl invocationInfoStack =
 	    (StackImpl) clientInvocationInfoStack.get();
@@ -1775,11 +1795,12 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     public void releaseOrDecrementInvocationInfo() 
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
+	int entryCount = -1;
+        ClientInvocationInfo clientInvocationInfo = null;
 	StackImpl invocationInfoStack =
 	    (StackImpl)clientInvocationInfoStack.get();
-	ClientInvocationInfo clientInvocationInfo = null;
 	if (!invocationInfoStack.empty()) {
 	    clientInvocationInfo =
 		(ClientInvocationInfo)invocationInfoStack.peek();
@@ -1787,16 +1808,20 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
 	    throw wrapper.invocationInfoStackEmpty() ;
 	}
 	clientInvocationInfo.decrementEntryCount();
-	if (clientInvocationInfo.getEntryCount() == 0) {
-	    invocationInfoStack.pop();
-	    finishedDispatch();
+	entryCount = clientInvocationInfo.getEntryCount();
+        if (clientInvocationInfo.getEntryCount() == 0) {
+            // 6763340: don't pop if this is a retry!
+            if (!clientInvocationInfo.isRetryInvocation()) {
+	        invocationInfoStack.pop();
+            }
+            finishedDispatch();
 	}
     }
     
     public ClientInvocationInfo getInvocationInfo() 
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
 	StackImpl invocationInfoStack =
 	    (StackImpl) clientInvocationInfoStack.get();
@@ -1813,7 +1838,7 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     public void setClientDelegateFactory( ClientDelegateFactory factory ) 
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
 	synchronized (clientDelegateFactoryAccessorLock) {
 	    clientDelegateFactory = factory ;
@@ -1823,20 +1848,19 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     public ClientDelegateFactory getClientDelegateFactory() 
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
 	synchronized (clientDelegateFactoryAccessorLock) {
 	    return clientDelegateFactory ;
 	}
     }
 
-    private ReentrantReadWriteLock 
-          corbaContactInfoListFactoryAccessLock = new ReentrantReadWriteLock();
+    private Object corbaContactInfoListFactoryAccessLock = new Object();
 
     public void setCorbaContactInfoListFactory( CorbaContactInfoListFactory factory ) 
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
 	synchronized (corbaContactInfoListFactoryAccessLock) {
 	    corbaContactInfoListFactory = factory ;
@@ -1855,9 +1879,9 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     public void setResolver( Resolver resolver ) 
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
-	 synchronized (resolverLock) {
+	synchronized (resolverLock) {
 	    this.resolver = resolver ;
 	}
     }
@@ -1868,7 +1892,7 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     public Resolver getResolver() 
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
 	synchronized (resolverLock) {
 	    return resolver ;
@@ -1881,7 +1905,7 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     public void setLocalResolver( LocalResolver resolver ) 
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
 	synchronized (resolverLock) {
 	    this.localResolver = resolver ;
@@ -1894,7 +1918,7 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     public LocalResolver getLocalResolver() 
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
 	synchronized (resolverLock) {
 	    return localResolver ;
@@ -1907,9 +1931,9 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     public void setURLOperation( Operation stringToObject ) 
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
-	synchronized (resolverLock) {
+	synchronized (urlOperationLock) {
 	    urlOperation = stringToObject ;
 	}
     }
@@ -1920,9 +1944,9 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     public Operation getURLOperation() 
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
-	synchronized (resolverLock) {
+	synchronized (urlOperationLock) {
 	    return urlOperation ;
 	}
     }
@@ -1930,7 +1954,7 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     public void setINSDelegate( CorbaServerRequestDispatcher sdel )
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
 	synchronized (resolverLock) {
 	    insNamingDelegate = sdel ;
@@ -1940,7 +1964,7 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     public TaggedComponentFactoryFinder getTaggedComponentFactoryFinder() 
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
 	return taggedComponentFactoryFinder ;
     }
@@ -1948,7 +1972,7 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     public IdentifiableFactoryFinder getTaggedProfileFactoryFinder() 
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
 	return taggedProfileFactoryFinder ;
     }
@@ -1956,7 +1980,7 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     public IdentifiableFactoryFinder getTaggedProfileTemplateFactoryFinder() 
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
 	return taggedProfileTemplateFactoryFinder ;
     }
@@ -1966,7 +1990,7 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     public ObjectKeyFactory getObjectKeyFactory() 
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
 	synchronized (objectKeyFactoryAccessLock) {
 	    return objectKeyFactory ;
@@ -1976,7 +2000,7 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     public void setObjectKeyFactory( ObjectKeyFactory factory ) 
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
 	synchronized (objectKeyFactoryAccessLock) {
 	    objectKeyFactory = factory ;
@@ -2005,7 +2029,7 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     public LegacyServerSocketManager getLegacyServerSocketManager()
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
 	synchronized (legacyServerSocketManagerAccessLock) {
 	    if (legacyServerSocketManager == null) {
@@ -2020,7 +2044,7 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     public void setThreadPoolManager(ThreadPoolManager mgr) 
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
 	synchronized (threadPoolManagerAccessLock) {
 	    threadpoolMgr = mgr;
@@ -2030,12 +2054,12 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     public ThreadPoolManager getThreadPoolManager() 
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
 	synchronized (threadPoolManagerAccessLock) {
 	    if (threadpoolMgr == null) {
 		threadpoolMgr = new ThreadPoolManagerImpl();
-		orbOwnsThreadPoolManager = true;
+	        orbOwnsThreadPoolManager = true;
 	    }
 	    return threadpoolMgr;
 	}
@@ -2044,7 +2068,7 @@ public class ORBImpl extends com.sun.corba.se.spi.orb.ORB
     public CopierManager getCopierManager()
     {
 	synchronized (this) {
-	    checkShutdownState();
+		checkShutdownState();
 	}
 	return copierManager ;
     }

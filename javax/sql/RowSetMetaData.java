@@ -1,8 +1,8 @@
 /*
- * @(#)RowSetMetaData.java	1.8 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.sql;
@@ -39,7 +39,7 @@ public interface RowSetMetaData extends ResultSetMetaData {
 
   /**
    * Sets whether the designated column is automatically numbered, 
-   * and thus read-only. The default is for a <code>RowSet</code> object's
+   * The default is for a <code>RowSet</code> object's
    * columns not to be automatically numbered.
    *
    * @param columnIndex the first column is 1, the second is 2, ...

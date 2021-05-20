@@ -1,8 +1,8 @@
 /*
- * @(#)FileSystem.java	1.13 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.io;
@@ -99,15 +99,23 @@ abstract class FileSystem {
      */
     public abstract int getBooleanAttributes(File f);
 
+    public static final int ACCESS_READ    = 0x04;
+    public static final int ACCESS_WRITE   = 0x02;
+    public static final int ACCESS_EXECUTE = 0x01;
+
     /**
      * Check whether the file or directory denoted by the given abstract
-     * pathname may be accessed by this process.  If the second argument is
-     * <code>false</code>, then a check for read access is made; if the second
-     * argument is <code>true</code>, then a check for write (not read-write)
-     * access is made.  Return false if access is denied or an I/O error
-     * occurs.
+     * pathname may be accessed by this process.  The second argument specifies
+     * which access, ACCESS_READ, ACCESS_WRITE or ACCESS_EXECUTE, to check.
+     * Return false if access is denied or an I/O error occurs
      */
-    public abstract boolean checkAccess(File f, boolean write);
+    public abstract boolean checkAccess(File f, int access);
+    /**
+     * Set on or off the access permission (to owner only or to all) to the file 
+     * or directory denoted by the given abstract pathname, based on the parameters
+     * enable, access and oweronly.
+     */
+    public abstract boolean setPermission(File f, int access, boolean enable, boolean owneronly);
 
     /**
      * Return the time at which the file or directory denoted by the given
@@ -131,8 +139,12 @@ abstract class FileSystem {
      * <code>true</code> if the file was created and <code>false</code> if a
      * file or directory with the given pathname already exists.  Throw an
      * IOException if an I/O error occurs.
+     * <p>
+     * The resulting file may have more restrictive access permission
+     * on some platforms, if restrictive is true.
      */
-    public abstract boolean createFileExclusively(String pathname)
+    public abstract boolean createFileExclusively(String pathname,
+                                                  boolean restrictive)
 	throws IOException;
 
     /**
@@ -140,13 +152,6 @@ abstract class FileSystem {
      * returning <code>true</code> if and only if the operation succeeds.
      */
     public abstract boolean delete(File f);
-
-    /**
-     * Arrange for the file or directory denoted by the given abstract
-     * pathname to be deleted when the VM exits, returning <code>true</code> if
-     * and only if the operation succeeds.
-     */
-    public abstract boolean deleteOnExit(File f);
 
     /**
      * List the elements of the directory denoted by the given abstract
@@ -190,7 +195,13 @@ abstract class FileSystem {
      */
     public abstract File[] listRoots();
 
+    /* -- Disk usage -- */
+    public static final int SPACE_TOTAL  = 0;
+    public static final int SPACE_FREE   = 1;
+    public static final int SPACE_USABLE = 2;
 
+    public abstract long getSpace(File f, int t);
+    
     /* -- Basic infrastructure -- */
 
     /**

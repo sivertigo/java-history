@@ -1,8 +1,8 @@
 /*
- * @(#)WindowsMenuItemUI.java	1.22 07/01/18
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.java.swing.plaf.windows;
@@ -12,7 +12,7 @@ import javax.swing.*;
 import javax.swing.plaf.*;
 import javax.swing.plaf.basic.*;
 
-import com.sun.java.swing.SwingUtilities2;
+import sun.swing.SwingUtilities2;
 
 import com.sun.java.swing.plaf.windows.TMSchema.*;
 import com.sun.java.swing.plaf.windows.XPStyle.*;
@@ -27,7 +27,7 @@ import com.sun.java.swing.plaf.windows.XPStyle.*;
  * version of Swing.  A future release of Swing will provide support for
  * long term persistence.
  * 
- * @version 1.22 01/18/07
+ * @version %I% %G%
  * @author Igor Kushnirskiy
  */
 
@@ -118,22 +118,18 @@ public class WindowsMenuItemUI extends BasicMenuItemUI {
         if (isVistaPainting()) {
             State state = menuItemUI.getState(menuItem);
        
-            /* part of it copied from 1.6 WindowsGraphicsUtils.java */
+            /* part of it copied from WindowsGraphicsUtils.java */
             FontMetrics fm = SwingUtilities2.getFontMetrics(menuItem, g);
             int mnemIndex = menuItem.getDisplayedMnemonicIndex();
             // W2K Feature: Check to see if the Underscore should be rendered.
             if (WindowsLookAndFeel.isMnemonicHidden() == true) {
                 mnemIndex = -1;
             }
-            XPStyle xp = XPStyle.getXP();
-            Color textColor = menuItem.getForeground();
-            if (textColor instanceof UIResource) {
-                Part part = menuItemUI.getPart(menuItem);
-                textColor = xp.getColor(menuItem, part, state, Prop.TEXTCOLOR, textColor);
-            }
-            g.setColor(textColor);
-            SwingUtilities2.drawStringUnderlineCharAt(menuItem, 
-                g, text, mnemIndex, textRect.x, textRect.y + fm.getAscent());
+            WindowsGraphicsUtils.paintXPText(menuItem, 
+                menuItemUI.getPart(menuItem), state,
+                g, textRect.x, 
+                textRect.y + fm.getAscent(),
+                text, mnemIndex);
         }
     }
     

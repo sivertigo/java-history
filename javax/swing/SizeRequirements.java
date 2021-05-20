@@ -1,8 +1,8 @@
 /*
- * @(#)SizeRequirements.java	1.32 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package javax.swing;
 
@@ -73,7 +73,7 @@ import java.io.Serializable;
  * @see Component#getAlignmentX
  * @see Component#getAlignmentY
  *
- * @version 1.32 12/19/03
+ * @version %I% %G%
  * @author Timothy Prinzing
  */
 public class SizeRequirements implements Serializable {
@@ -276,6 +276,7 @@ public class SizeRequirements implements Serializable {
      * @param forward   tile with offsets increasing from 0 if true 
      *   and with offsets decreasing from the end of the allocated space
      *   if false.
+     * @since 1.4
      */
     public static void calculateTiledPositions(int allocated,
 					       SizeRequirements total,
@@ -432,6 +433,7 @@ public class SizeRequirements implements Serializable {
      *   total target span.
      * @param normal    when true, the alignment value 0.0f means 
      *   left/top; when false, it means right/bottom.
+     * @since 1.4
      */
     public static void calculateAlignedPositions(int allocated,
                                                  SizeRequirements total,

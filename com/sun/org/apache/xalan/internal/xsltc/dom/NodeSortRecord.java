@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /*
- * $Id: NodeSortRecord.java,v 1.19 2004/02/27 01:58:29 zongaro Exp $
+ * $Id: NodeSortRecord.java,v 1.5 2005/09/28 13:48:36 pvedula Exp $
  */
 
 package com.sun.org.apache.xalan.internal.xsltc.dom;
@@ -28,6 +28,8 @@ import com.sun.org.apache.xalan.internal.xsltc.DOM;
 import com.sun.org.apache.xalan.internal.xsltc.TransletException;
 import com.sun.org.apache.xalan.internal.xsltc.runtime.AbstractTranslet;
 import com.sun.org.apache.xml.internal.utils.StringComparable;
+import com.sun.org.apache.xalan.internal.utils.ObjectFactory;
+import com.sun.org.apache.xalan.internal.utils.SecuritySupport;
 
 /**
  * Base class for sort records containing application specific sort keys 
@@ -103,14 +105,19 @@ public abstract class NodeSortRecord {
         int levels = settings.getSortOrders().length;
 	_values = new Object[levels];
   
-	// -- W. Eliot Kimber (eliot@isogen.com)
-        String colFactClassname = 
-	    System.getProperty("com.sun.org.apache.xalan.internal.xsltc.COLLATOR_FACTORY");
+        String colFactClassname = null;
+        try {
+            // -- W. Eliot Kimber (eliot@isogen.com)
+            colFactClassname = 
+                SecuritySupport.getSystemProperty("com.sun.org.apache.xalan.internal.xsltc.COLLATOR_FACTORY");
+        }
+        catch (SecurityException e) {
+            // If we can't read the propery, just use default collator
+        }
 
         if (colFactClassname != null) {
             try {
-                Object candObj = ObjectFactory.findProviderClass(
-                    colFactClassname, ObjectFactory.findClassLoader(), true);
+                Object candObj = ObjectFactory.findProviderClass(colFactClassname, true);
                 _collatorFactory = (CollatorFactory)candObj;
             } catch (ClassNotFoundException e) {
                 throw new TransletException(e);

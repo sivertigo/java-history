@@ -1,8 +1,8 @@
 /*
- * @(#)CertificateParsingException.java	1.12 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.security.cert;
@@ -13,7 +13,7 @@ package java.security.cert;
  * are found in the Certificate.
  *
  * @author Hemma Prafullchandra
- * 1.12
+ * %I%
  */
 public class CertificateParsingException extends CertificateException {
 

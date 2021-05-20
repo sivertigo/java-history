@@ -1,8 +1,8 @@
 /*
- * @(#)SourceOrderDeclScanner.java	1.5 04/09/16
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc.  All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL.  Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL.  Use is subject to license terms.
  */
 
 package com.sun.mirror.util;
@@ -26,7 +26,7 @@ import java.util.TreeSet;
  *
  * @author Joseph D. Darcy
  * @author Scott Seligman
- * @version 1.5 04/09/16
+ * @version %I% %E%
  * @since 1.5
  */
 class SourceOrderDeclScanner extends DeclarationScanner {
@@ -75,7 +75,7 @@ class SourceOrderDeclScanner extends DeclarationScanner {
 	    @Override
 	    public void visitMethodDeclaration(MethodDeclaration d) {value = 14 + staticAdjust(d);} 
 	}
-	
+	@SuppressWarnings("cast")
 	private int compareEqualPosition(Declaration d1, Declaration d2) {
 	    assert d1.getPosition() == d2.getPosition();
 

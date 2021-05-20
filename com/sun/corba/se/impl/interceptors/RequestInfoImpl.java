@@ -1,8 +1,8 @@
 /*
- * @(#)RequestInfoImpl.java	1.46 04/06/21
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package com.sun.corba.se.impl.interceptors;
 
@@ -169,7 +169,8 @@ public abstract class RequestInfoImpl
         startingPointCall = 0;
         intermediatePointCall = 0;
         endingPointCall = 0;
-        replyStatus = UNINITIALIZED;
+        // 6763340
+        setReplyStatus( UNINITIALIZED ) ;
         currentExecutionPoint = EXECUTION_POINT_STARTING;
         alreadyExecuted = false;
 	connection = null;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /*
- * $Id: FunctionCall.java,v 1.1.2.1 2006/09/19 01:06:17 jeffsuttor Exp $
+ * $Id: FunctionCall.java,v 1.2.4.1 2005/09/12 10:31:32 pvedula Exp $
  */
 
 package com.sun.org.apache.xalan.internal.xsltc.compiler;
@@ -35,6 +35,7 @@ import com.sun.org.apache.bcel.internal.generic.INVOKEVIRTUAL;
 import com.sun.org.apache.bcel.internal.generic.InstructionConstants;
 import com.sun.org.apache.bcel.internal.generic.InstructionList;
 import com.sun.org.apache.bcel.internal.generic.InvokeInstruction;
+import com.sun.org.apache.bcel.internal.generic.LocalVariableGen;
 import com.sun.org.apache.bcel.internal.generic.NEW;
 import com.sun.org.apache.bcel.internal.generic.PUSH;
 import com.sun.org.apache.xalan.internal.xsltc.compiler.util.BooleanType;
@@ -48,6 +49,7 @@ import com.sun.org.apache.xalan.internal.xsltc.compiler.util.ObjectType;
 import com.sun.org.apache.xalan.internal.xsltc.compiler.util.ReferenceType;
 import com.sun.org.apache.xalan.internal.xsltc.compiler.util.Type;
 import com.sun.org.apache.xalan.internal.xsltc.compiler.util.TypeCheckError;
+import com.sun.org.apache.xalan.internal.utils.ObjectFactory;
 
 /**
  * @author Jacek Ambroziak
@@ -350,8 +352,7 @@ class FunctionCall extends Expression {
 		else {
 		    if (_className != null && _className.length() > 0) {
 		    	try {
-                            _clazz = ObjectFactory.findProviderClass(
-                                _className, ObjectFactory.findClassLoader(), true);
+                            _clazz = ObjectFactory.findProviderClass(_className, true);
 		            _namespace_format = NAMESPACE_FORMAT_CLASS;
 		    	}
 		    	catch (ClassNotFoundException e) {
@@ -743,23 +744,44 @@ class FunctionCall extends Expression {
 	    il.append(new INVOKESTATIC(index));
 	}
 	else if (_isExtConstructor) {
-            if (isSecureProcessing)
+	    if (isSecureProcessing)
 	        translateUnallowedExtension(cpg, il);
-	            
+	    
 	    final String clazz = 
 		_chosenConstructor.getDeclaringClass().getName();
 	    Class[] paramTypes = _chosenConstructor.getParameterTypes();
-	    
-	    il.append(new NEW(cpg.addClass(_className)));
-	    il.append(InstructionConstants.DUP);
+            LocalVariableGen[] paramTemp = new LocalVariableGen[n];
+
+            // Backwards branches are prohibited if an uninitialized object is
+            // on the stack by section 4.9.4 of the JVM Specification, 2nd Ed.
+            // We don't know whether this code might contain backwards branches
+            // so we mustn't create the new object until after we've created
+            // the suspect arguments to its constructor.  Instead we calculate
+            // the values of the arguments to the constructor first, store them
+            // in temporary variables, create the object and reload the
+            // arguments from the temporaries to avoid the problem.
 
 	    for (int i = 0; i < n; i++) {
 		final Expression exp = argument(i);
+                Type expType = exp.getType();
 		exp.translate(classGen, methodGen);
 		// Convert the argument to its Java type
 		exp.startIterator(classGen, methodGen);
-		exp.getType().translateTo(classGen, methodGen, paramTypes[i]);
+		expType.translateTo(classGen, methodGen, paramTypes[i]);
+                paramTemp[i] =
+                    methodGen.addLocalVariable("function_call_tmp"+i,
+                                               expType.toJCType(),
+                                               il.getEnd(), null);
+                il.append(expType.STORE(paramTemp[i].getIndex()));
 	    }
+
+	    il.append(new NEW(cpg.addClass(_className)));
+	    il.append(InstructionConstants.DUP);
+
+            for (int i = 0; i < n; i++) {
+                final Expression arg = argument(i);
+                il.append(arg.getType().LOAD(paramTemp[i].getIndex()));
+            }
 
 	    final StringBuffer buffer = new StringBuffer();
 	    buffer.append('(');
@@ -781,9 +803,9 @@ class FunctionCall extends Expression {
 	}
 	// Invoke function calls that are handled in separate classes
 	else {
-            if (isSecureProcessing)
+	    if (isSecureProcessing)
 	        translateUnallowedExtension(cpg, il);
-
+	    
 	    final String clazz = _chosenMethod.getDeclaringClass().getName();
 	    Class[] paramTypes = _chosenMethod.getParameterTypes();
 
@@ -856,8 +878,7 @@ class FunctionCall extends Expression {
 	    final int nArgs = _arguments.size();
 	    try {
 	      if (_clazz == null) {
-                _clazz = ObjectFactory.findProviderClass(
-                  _className, ObjectFactory.findClassLoader(), true);
+                _clazz = ObjectFactory.findProviderClass(_className, true);
 
 		if (_clazz == null) {
 		  final ErrorMsg msg =
@@ -903,8 +924,7 @@ class FunctionCall extends Expression {
         final int nArgs = _arguments.size();
         try {
           if (_clazz == null) {
-            _clazz = ObjectFactory.findProviderClass(
-              _className, ObjectFactory.findClassLoader(), true);
+            _clazz = ObjectFactory.findProviderClass(_className, true);
 
             if (_clazz == null) {
               final ErrorMsg msg = new ErrorMsg(ErrorMsg.CLASS_NOT_FOUND_ERR, _className);

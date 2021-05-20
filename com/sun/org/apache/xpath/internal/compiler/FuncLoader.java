@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 /*
- * $Id: FuncLoader.java,v 1.10 2004/02/23 10:29:37 aruny Exp $
+ * $Id: FuncLoader.java,v 1.1.2.1 2005/08/01 01:30:35 jeffsuttor Exp $
  */
 package com.sun.org.apache.xpath.internal.compiler;
 
 import javax.xml.transform.TransformerException;
 
 import com.sun.org.apache.xpath.internal.functions.Function;
+import com.sun.org.apache.xalan.internal.utils.ObjectFactory;
+import com.sun.org.apache.xalan.internal.utils.ConfigurationError;
 
 /**
  * Lazy load of functions into the function table as needed, so we don't 
@@ -86,15 +88,16 @@ public class FuncLoader
         className = "com.sun.org.apache.xpath.internal.functions." + className;
       }
       //hack for loading only built-in function classes.
-      Function func = (Function) ObjectFactory.newInstance(
-          className, ObjectFactory.findClassLoader(), true);
-      //Sun's implementation use null to represent the bootstrap class loader.
-      if(func.getClass().getClassLoader() == null)
-          return func;
-      else
-          throw new TransformerException("Application can't install his own xpath function.");
+      String subString = className.substring(0,className.lastIndexOf('.'));
+      if(!(subString.equals ("com.sun.org.apache.xalan.internal.templates") ||
+           subString.equals ("com.sun.org.apache.xpath.internal.functions"))) {
+            throw new TransformerException("Application can't install his own xpath function.");
+      }
+
+      return (Function) ObjectFactory.newInstance(className, true);
+      
     }
-    catch (ObjectFactory.ConfigurationError e)
+    catch (ConfigurationError e)
     {
       throw new TransformerException(e.getException());
     }

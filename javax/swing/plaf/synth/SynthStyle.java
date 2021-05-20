@@ -1,8 +1,8 @@
 /*
- * @(#)SynthStyle.java	1.23 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package javax.swing.plaf.synth;
 
@@ -10,9 +10,11 @@ import java.awt.*;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.plaf.UIResource;
+import javax.swing.plaf.basic.BasicLookAndFeel;
 import javax.swing.text.DefaultEditorKit;
 import java.util.HashMap;
 import java.util.Map;
+import javax.swing.text.JTextComponent;
 import sun.swing.plaf.synth.SynthUI;
 
 /**
@@ -27,7 +29,7 @@ import sun.swing.plaf.synth.SynthUI;
  * @see SynthLookAndFeel
  * @see SynthStyleFactory
  *
- * @version 1.23, 12/19/03
+ * @version %I%, %G%
  * @since 1.5
  * @author Scott Violet
  */
@@ -49,13 +51,17 @@ public abstract class SynthStyle {
     private static void populateDefaultValues() {
         Object buttonMap = new UIDefaults.LazyInputMap(new Object[] {
                           "SPACE", "pressed",
-                 "released SPACE", "released"
+                 "released SPACE", "released"  
         });
         DEFAULT_VALUES.put("Button.focusInputMap", buttonMap);
-        DEFAULT_VALUES.put("JCheckBox.focusInputMap", buttonMap);
-        DEFAULT_VALUES.put("JRadioButton.focusInputMap", buttonMap);
-        DEFAULT_VALUES.put("JToggleButton.focusInputMap", buttonMap);
+        DEFAULT_VALUES.put("CheckBox.focusInputMap", buttonMap);
+        DEFAULT_VALUES.put("RadioButton.focusInputMap", buttonMap);
+        DEFAULT_VALUES.put("ToggleButton.focusInputMap", buttonMap);
         DEFAULT_VALUES.put("SynthArrowButton.focusInputMap", buttonMap);
+        DEFAULT_VALUES.put("List.dropLineColor", Color.BLACK);
+        DEFAULT_VALUES.put("Tree.dropLineColor", Color.BLACK);
+        DEFAULT_VALUES.put("Table.dropLineColor", Color.BLACK);
+        DEFAULT_VALUES.put("Table.dropLineShortColor", Color.RED);
 
 	Object multilineInputMap = new UIDefaults.LazyInputMap(new Object[] {
 			   "ctrl C", DefaultEditorKit.copyAction,
@@ -64,6 +70,9 @@ public abstract class SynthStyle {
 			     "COPY", DefaultEditorKit.copyAction,
 			    "PASTE", DefaultEditorKit.pasteAction,
 			      "CUT", DefaultEditorKit.cutAction,
+                   "control INSERT", DefaultEditorKit.copyAction,
+                     "shift INSERT", DefaultEditorKit.pasteAction,
+                     "shift DELETE", DefaultEditorKit.cutAction,
 		       "shift LEFT", DefaultEditorKit.selectionBackwardAction,
                     "shift KP_LEFT", DefaultEditorKit.selectionBackwardAction,
 		      "shift RIGHT", DefaultEditorKit.selectionForwardAction,
@@ -98,8 +107,11 @@ public abstract class SynthStyle {
 		    "shift KP_DOWN", DefaultEditorKit.selectionDownAction,
 			    "ENTER", DefaultEditorKit.insertBreakAction,
                        "BACK_SPACE", DefaultEditorKit.deletePrevCharAction,
+                 "shift BACK_SPACE", DefaultEditorKit.deletePrevCharAction,
                            "ctrl H", DefaultEditorKit.deletePrevCharAction,
                            "DELETE", DefaultEditorKit.deleteNextCharAction,
+                      "ctrl DELETE", DefaultEditorKit.deleteNextWordAction,
+                  "ctrl BACK_SPACE", DefaultEditorKit.deletePrevWordAction,
                             "RIGHT", DefaultEditorKit.forwardAction,
                              "LEFT", DefaultEditorKit.backwardAction, 
                          "KP_RIGHT", DefaultEditorKit.forwardAction,
@@ -126,6 +138,9 @@ public abstract class SynthStyle {
 			     "COPY", DefaultEditorKit.copyAction,
 			    "PASTE", DefaultEditorKit.pasteAction,
 			      "CUT", DefaultEditorKit.cutAction,
+                   "control INSERT", DefaultEditorKit.copyAction,
+                     "shift INSERT", DefaultEditorKit.pasteAction,
+                     "shift DELETE", DefaultEditorKit.cutAction,
 		       "shift LEFT", DefaultEditorKit.selectionBackwardAction,
                     "shift KP_LEFT", DefaultEditorKit.selectionBackwardAction,
 		      "shift RIGHT", DefaultEditorKit.selectionForwardAction,
@@ -144,8 +159,11 @@ public abstract class SynthStyle {
 		       "shift HOME", DefaultEditorKit.selectionBeginLineAction,
 		        "shift END", DefaultEditorKit.selectionEndLineAction,
                        "BACK_SPACE", DefaultEditorKit.deletePrevCharAction,
+                 "shift BACK_SPACE", DefaultEditorKit.deletePrevCharAction,
                            "ctrl H", DefaultEditorKit.deletePrevCharAction,
                            "DELETE", DefaultEditorKit.deleteNextCharAction,
+                      "ctrl DELETE", DefaultEditorKit.deleteNextWordAction,
+                  "ctrl BACK_SPACE", DefaultEditorKit.deletePrevWordAction,
                             "RIGHT", DefaultEditorKit.forwardAction,
                              "LEFT", DefaultEditorKit.backwardAction,
                          "KP_RIGHT", DefaultEditorKit.forwardAction,
@@ -216,7 +234,8 @@ public abstract class SynthStyle {
 		     "F2", "editFileName",
 		     "F5", "refresh",
 		     "BACK_SPACE", "Go Up",
-		     "ENTER", "approveSelection"
+		     "ENTER", "approveSelection",
+		"ctrl ENTER", "approveSelection"
                }));
 
         DEFAULT_VALUES.put("FormattedTextField.focusInputMap",
@@ -227,6 +246,9 @@ public abstract class SynthStyle {
 			     "COPY", DefaultEditorKit.copyAction,
 			    "PASTE", DefaultEditorKit.pasteAction,
 			      "CUT", DefaultEditorKit.cutAction,
+                   "control INSERT", DefaultEditorKit.copyAction,
+                     "shift INSERT", DefaultEditorKit.pasteAction,
+                     "shift DELETE", DefaultEditorKit.cutAction,
 		       "shift LEFT", DefaultEditorKit.selectionBackwardAction,
                     "shift KP_LEFT", DefaultEditorKit.selectionBackwardAction,
 		      "shift RIGHT", DefaultEditorKit.selectionForwardAction,
@@ -245,8 +267,11 @@ public abstract class SynthStyle {
 		       "shift HOME", DefaultEditorKit.selectionBeginLineAction,
 		        "shift END", DefaultEditorKit.selectionEndLineAction,
                        "BACK_SPACE", DefaultEditorKit.deletePrevCharAction,
+                 "shift BACK_SPACE", DefaultEditorKit.deletePrevCharAction,
                            "ctrl H", DefaultEditorKit.deletePrevCharAction,
                            "DELETE", DefaultEditorKit.deleteNextCharAction,
+                      "ctrl DELETE", DefaultEditorKit.deleteNextWordAction,
+                  "ctrl BACK_SPACE", DefaultEditorKit.deletePrevWordAction,
                             "RIGHT", DefaultEditorKit.forwardAction,
                              "LEFT", DefaultEditorKit.backwardAction,
                          "KP_RIGHT", DefaultEditorKit.forwardAction,
@@ -260,6 +285,10 @@ public abstract class SynthStyle {
                              "DOWN", "decrement",
                           "KP_DOWN", "decrement",
               }));
+
+        DEFAULT_VALUES.put("InternalFrame.icon",  
+                           LookAndFeel.makeIcon(BasicLookAndFeel.class,
+                                                    "icons/JavaCup16.png"));
 
         DEFAULT_VALUES.put("InternalFrame.windowBindings",
             new Object[] {
@@ -275,6 +304,9 @@ public abstract class SynthStyle {
                              "COPY", "copy",
                             "PASTE", "paste",
                               "CUT", "cut",
+                   "control INSERT", "copy",
+                     "shift INSERT", "paste",
+                     "shift DELETE", "cut",
 		               "UP", "selectPreviousRow",
 		            "KP_UP", "selectPreviousRow",
 		         "shift UP", "selectPreviousRowExtendSelection",
@@ -366,6 +398,11 @@ public abstract class SynthStyle {
 	       "ctrl released ENTER", "release"
                  });
 
+        DEFAULT_VALUES.put("RootPane.ancestorInputMap",
+               new UIDefaults.LazyInputMap(new Object[] {
+                    "shift F10", "postPopup"
+               }));
+
         DEFAULT_VALUES.put("ScrollBar.anecstorInputMap",
 	       new UIDefaults.LazyInputMap(new Object[] {
 		       "RIGHT", "positiveUnitIncrement",
@@ -431,6 +468,14 @@ public abstract class SynthStyle {
  	    "ctrl shift TAB", "focusOutBackward"
                }));
 
+        DEFAULT_VALUES.put("Spinner.ancestorInputMap",
+               new UIDefaults.LazyInputMap(new Object[] {
+                          "UP", "increment",
+                       "KP_UP", "increment",
+                        "DOWN", "decrement",
+                     "KP_DOWN", "decrement"
+               }));
+
         DEFAULT_VALUES.put("Slider.focusInputMap",
 	       new UIDefaults.LazyInputMap(new Object[] {
 		       "RIGHT", "positiveUnitIncrement",
@@ -487,6 +532,9 @@ public abstract class SynthStyle {
                                  "COPY", "copy",
                                 "PASTE", "paste",
                                   "CUT", "cut",
+                       "control INSERT", "copy",
+                         "shift INSERT", "paste",
+                         "shift DELETE", "cut",
 		                "RIGHT", "selectNextColumn",
 		             "KP_RIGHT", "selectNextColumn",
                           "shift RIGHT", "selectNextColumnExtendSelection",
@@ -547,9 +595,28 @@ public abstract class SynthStyle {
                                 "SPACE", "addToSelection",
                            "ctrl SPACE", "toggleAndAnchor",
                           "shift SPACE", "extendTo",
-                     "ctrl shift SPACE", "moveSelectionTo"
+                     "ctrl shift SPACE", "moveSelectionTo",
+                                   "F8", "focusHeader"
                }));
-
+               
+       DEFAULT_VALUES.put("TableHeader.ancestorInputMap",
+               new UIDefaults.LazyInputMap(new Object[] {
+                                "SPACE", "toggleSortOrder",
+                                 "LEFT", "selectColumnToLeft",
+                              "KP_LEFT", "selectColumnToLeft",
+                                "RIGHT", "selectColumnToRight",
+                             "KP_RIGHT", "selectColumnToRight",
+                             "alt LEFT", "moveColumnLeft",
+                          "alt KP_LEFT", "moveColumnLeft",
+                            "alt RIGHT", "moveColumnRight",
+                         "alt KP_RIGHT", "moveColumnRight",
+                       "alt shift LEFT", "resizeLeft",
+                    "alt shift KP_LEFT", "resizeLeft",
+                      "alt shift RIGHT", "resizeRight",
+                   "alt shift KP_RIGHT", "resizeRight",
+                               "ESCAPE", "focusTable",
+               }));
+               
         DEFAULT_VALUES.put("Tree.ancestorInputMap",
 	       new UIDefaults.LazyInputMap(new Object[] {
 		     "ESCAPE", "cancel"
@@ -564,6 +631,9 @@ public abstract class SynthStyle {
                                    "COPY", "copy",
                                   "PASTE", "paste",
                                     "CUT", "cut",
+                         "control INSERT", "copy",
+                           "shift INSERT", "paste",
+                           "shift DELETE", "cut",
 		                     "UP", "selectPrevious",
 		                  "KP_UP", "selectPrevious",
 		               "shift UP", "selectPreviousExtendSelection",
@@ -672,28 +742,47 @@ public abstract class SynthStyle {
     public Color getColor(SynthContext context, ColorType type) {
         JComponent c = context.getComponent();
         Region id = context.getRegion();
-        int cs = context.getComponentState();
-        // For the enabled state, prefer the widget's colors
-        if (!id.isSubregion() && cs == SynthConstants.ENABLED) {
-            if (type == ColorType.BACKGROUND) {
-                return c.getBackground();
-            }
-            else if (type == ColorType.FOREGROUND) {
-                return c.getForeground();
-            }
-            else if (type == ColorType.TEXT_FOREGROUND) {
-                // If getForeground returns a non-UIResource it means the
-                // developer has explicitly set the foreground, use it over
-                // that of TEXT_FOREGROUND as that is typically the expected
-                // behavior.
-                Color color = c.getForeground();
-                if (!(color instanceof UIResource)) {
-                    return color;
+
+        if ((context.getComponentState() & SynthConstants.DISABLED) != 0) {
+            //This component is disabled, so return the disabled color.
+            //In some cases this means ignoring the color specified by the
+            //developer on the component. In other cases it means using a
+            //specified disabledTextColor, such as on JTextComponents.
+            //For example, JLabel doesn't specify a disabled color that the
+            //developer can set, yet it should have a disabled color to the
+            //text when the label is disabled. This code allows for that.
+            if (c instanceof JTextComponent) {
+                JTextComponent txt = (JTextComponent)c;
+                Color disabledColor = txt.getDisabledTextColor();
+                if (disabledColor == null || disabledColor instanceof UIResource) {
+                    return getColorForState(context, type);
                 }
+            } else if (c instanceof JLabel 
+                    && (type == ColorType.FOREGROUND || type == ColorType.TEXT_FOREGROUND)){
+                return getColorForState(context, type);
             }
         }
-        // Then use what we've locally defined
-        Color color = getColorForState(context, type);
+        
+        // If the developer has specified a color, prefer it. Otherwise, get
+        // the color for the state.
+        Color color = null;
+        if (!id.isSubregion()) {
+            if (type == ColorType.BACKGROUND) {
+                color = c.getBackground();
+            }
+            else if (type == ColorType.FOREGROUND) {
+                color = c.getForeground();
+            }
+            else if (type == ColorType.TEXT_FOREGROUND) {
+                color = c.getForeground();
+            }
+        }
+        
+        if (color == null || color instanceof UIResource) {
+            // Then use what we've locally defined
+            color = getColorForState(context, type);
+        }
+        
         if (color == null) {
             // No color, fallback to that of the widget.
             if (type == ColorType.BACKGROUND ||

@@ -1,8 +1,8 @@
 /*
- * @(#)TablePrintable.java	1.39 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing;
@@ -40,7 +40,7 @@ import java.text.MessageFormat;
  * an <code>Object</code> array containing a single element of type
  * <code>Integer</code>, representing the current page number.
  * <p>
- * There are certain circumstances where this <code>Printable<code>
+ * There are certain circumstances where this <code>Printable</code>
  * cannot fit items appropriately, resulting in clipped output.
  * These are:
  * <ul>
@@ -75,7 +75,7 @@ import java.text.MessageFormat;
  * changed at any time after creation.
  *
  * @author  Shannon Hickey
- * @version 1.39 12/19/03
+ * @version %I% %G%
  */
 class TablePrintable implements Printable {
 
@@ -134,7 +134,7 @@ class TablePrintable implements Printable {
     private Font footerFont;
 
     /**
-     * Create a new <code>TablePrintable<code> for the given
+     * Create a new <code>TablePrintable</code> for the given
      * <code>JTable</code>. Header and footer text can be specified using the
      * two <code>MessageFormat</code> parameters. When called upon to provide
      * a String, each format is given the current page number.

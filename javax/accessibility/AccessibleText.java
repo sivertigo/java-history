@@ -1,8 +1,8 @@
 /*
- * @(#)AccessibleText.java	1.28 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.accessibility;
@@ -29,7 +29,7 @@ import javax.swing.text.*;
  * @see AccessibleContext
  * @see AccessibleContext#getAccessibleText
  *
- * @version	1.13 01/20/98 07:53:43
+ * @version	%I% %G%
  * @author	Peter Korn
  */
 public interface AccessibleText {
@@ -57,6 +57,13 @@ public interface AccessibleText {
     /**
      * Constant used to indicate that the part of the text that should be 
      * retrieved is a sentence.
+     *
+     * A sentence is a string of words which expresses an assertion,
+     * a question, a command, a wish, an exclamation, or the performance
+     * of an action. In English locales, the string usually begins with
+     * a capital letter and concludes with appropriate end punctuation;
+     * such as a period, question or exclamation mark. Other locales may
+     * use different capitalization and/or punctuation.
      * 
      * @see #getAtIndex
      * @see #getAfterIndex

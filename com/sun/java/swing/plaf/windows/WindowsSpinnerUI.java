@@ -1,8 +1,8 @@
 /*
- * @(#)WindowsSpinnerUI.java	1.14 06/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.java.swing.plaf.windows;
@@ -14,8 +14,9 @@ import javax.swing.plaf.basic.*;
 import javax.swing.plaf.*;
 import javax.swing.*;
 
-import com.sun.java.swing.plaf.windows.TMSchema.Part;
-
+import static com.sun.java.swing.plaf.windows.TMSchema.Part;
+import static com.sun.java.swing.plaf.windows.TMSchema.State;
+import static com.sun.java.swing.plaf.windows.XPStyle.Skin;
 
 
 public class WindowsSpinnerUI extends BasicSpinnerUI {
@@ -23,10 +24,38 @@ public class WindowsSpinnerUI extends BasicSpinnerUI {
         return new WindowsSpinnerUI();
     }
 
+    /**
+     * {@inheritDoc}
+     * @since 1.6
+     */
+    public void paint(Graphics g, JComponent c) {
+        if (XPStyle.getXP() != null) {
+            paintXPBackground(g, c);
+        }
+        super.paint(g,c);
+    }
+    
+    private State getXPState(JComponent c) {
+        State state = State.NORMAL;
+        if (!c.isEnabled()) {
+            state = State.DISABLED;
+        }
+        return state;
+    }
+
+    private void paintXPBackground(Graphics g, JComponent c) {
+        XPStyle xp = XPStyle.getXP();
+        Skin skin = xp.getSkin(c, Part.EP_EDIT);
+        State state = getXPState(c);
+        skin.paintSkin(g, 0, 0, c.getWidth(), c.getHeight(), state);
+    }
+    
     protected Component createPreviousButton() {
 	if (XPStyle.getXP() != null) {
-            JButton xpButton = new XPStyle.GlyphButton(spinner, Part.SPNP_SPINDOWN);
-	    xpButton.setRequestFocusEnabled(false);
+            JButton xpButton = new XPStyle.GlyphButton(spinner, Part.SPNP_DOWN);
+            Dimension size = UIManager.getDimension("Spinner.arrowButtonSize");
+            xpButton.setPreferredSize(size);
+            xpButton.setRequestFocusEnabled(false);
             installPreviousButtonListeners(xpButton);
             return xpButton;
         }
@@ -35,10 +64,12 @@ public class WindowsSpinnerUI extends BasicSpinnerUI {
 
     protected Component createNextButton() {
 	if (XPStyle.getXP() != null) {
-            JButton xpButton = new XPStyle.GlyphButton(spinner, Part.SPNP_SPINUP);
-	    xpButton.setRequestFocusEnabled(false);
+            JButton xpButton = new XPStyle.GlyphButton(spinner, Part.SPNP_UP);
+            Dimension size = UIManager.getDimension("Spinner.arrowButtonSize");
+            xpButton.setPreferredSize(size);
+            xpButton.setRequestFocusEnabled(false);
             installNextButtonListeners(xpButton);
-	    return xpButton;
+            return xpButton;
         }
         return super.createNextButton();
     }

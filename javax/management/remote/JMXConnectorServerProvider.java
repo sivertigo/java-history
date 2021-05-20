@@ -1,8 +1,8 @@
 /*
- * @(#)JMXConnectorServerProvider.java	1.6 04/05/05
+ * %W% %E%
  * 
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.management.remote;
@@ -35,7 +35,7 @@ public interface JMXConnectorServerProvider {
      * include a port number if the original address did not.
      *
      * @param environment a read-only Map containing named attributes
-     * to control the new connector server's behaviour.  Keys in this
+     * to control the new connector server's behavior.  Keys in this
      * map must be Strings.  The appropriate type of each associated
      * value depends on the attribute.
      *
@@ -50,8 +50,13 @@ public interface JMXConnectorServerProvider {
      * @exception NullPointerException if <code>serviceURL</code> or
      * <code>environment</code> is null.
      *
-     * @exception IOException if the connector server cannot be
-     * created.
+     * @exception IOException It is recommended for a provider
+     * implementation to throw {@code MalformedURLException} if the
+     * protocol in the {@code serviceURL} is not recognized by this
+     * provider, {@code JMXProviderException} if this is a provider
+     * for the protocol in {@code serviceURL} but it cannot be used
+     * for some reason or any other {@code IOException} if the
+     * connector server cannot be created.
      */
     public JMXConnectorServer newJMXConnectorServer(JMXServiceURL serviceURL,
 						    Map<String,?> environment,

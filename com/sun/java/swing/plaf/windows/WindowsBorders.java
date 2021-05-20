@@ -1,8 +1,8 @@
 /*
- * @(#)WindowsBorders.java	1.32 06/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.java.swing.plaf.windows;
@@ -21,12 +21,12 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.io.Serializable;
 
-import com.sun.java.swing.plaf.windows.TMSchema.*;
-import com.sun.java.swing.plaf.windows.XPStyle.Skin;
+import static com.sun.java.swing.plaf.windows.TMSchema.*;
+import static com.sun.java.swing.plaf.windows.XPStyle.Skin;
 
 /**
  * Factory object that can vend Borders appropriate for the Windows 95 L & F.
- * @version 1.32 12/19/06
+ * @version %I% %G%
  * @author Rich Schiavi
  */
 
@@ -148,9 +148,9 @@ public class WindowsBorders {
                                 int width, int height) {
 	    g.translate(x, y);
 
-            XPStyle xp = XPStyle.getXP();
+	    XPStyle xp = XPStyle.getXP();
 	    if (xp != null) {
-                Border xpBorder = xp.getBorder(c, Part.TP_TOOLBAR);
+		Border xpBorder = xp.getBorder(c, Part.TP_TOOLBAR);
 		if (xpBorder != null) {
 		    xpBorder.paintBorder(c, g, 0, 0, width, height);
 		}
@@ -159,8 +159,8 @@ public class WindowsBorders {
 		boolean vertical = ((JToolBar)c).getOrientation() == VERTICAL;
 
 		if (xp != null) {
-                    Part part = vertical ? Part.RP_GRIPPERVERT : Part.RP_GRIPPER;
-                    Skin skin = xp.getSkin(c, part);
+		    Part part = vertical ? Part.RP_GRIPPERVERT : Part.RP_GRIPPER;
+		    Skin skin = xp.getSkin(c, part);
 		    int dx, dy, dw, dh;
 		    if (vertical) {
 			dx = 0;
@@ -173,7 +173,7 @@ public class WindowsBorders {
 			dx = c.getComponentOrientation().isLeftToRight() ? 2 : (width-dw-2);
 			dy = 0;
 		    }
-                    skin.paintSkin(g, dx, dy, dw, dh, State.NORMAL);
+		    skin.paintSkin(g, dx, dy, dw, dh, State.NORMAL);
 
 		} else {
 

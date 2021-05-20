@@ -1,8 +1,8 @@
 /*
- * @(#)OpenMBeanOperationInfo.java	3.20 03/12/19
+ * %W% %E%
  * 
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 
@@ -32,7 +32,7 @@ import javax.management.MBeanOperationInfo;
  * which implements the {@link OpenMBeanParameterInfo} interface
  * (typically {@link OpenMBeanParameterInfoSupport}).</p>
  *
- * @version     3.20  03/12/19
+ * @version     %I%  %E%
  * @author      Sun Microsystems, Inc.
  *
  * @since 1.5
@@ -79,8 +79,9 @@ public interface OpenMBeanOperationInfo  {
      * 
      * The returned constant is one of {@link
      * javax.management.MBeanOperationInfo#INFO}, {@link
-     * javax.management.MBeanOperationInfo#ACTION} or {@link
-     * javax.management.MBeanOperationInfo#ACTION_INFO}.
+     * javax.management.MBeanOperationInfo#ACTION}, {@link
+     * javax.management.MBeanOperationInfo#ACTION_INFO}, or {@link
+     * javax.management.MBeanOperationInfo#UNKNOWN}.
      *
      * @return the impact code.
      */
@@ -108,7 +109,7 @@ public interface OpenMBeanOperationInfo  {
      *
      * @return the return type.
      */
-    public OpenType getReturnOpenType() ; // open MBean specific method
+    public OpenType<?> getReturnOpenType() ; // open MBean specific method
 
 
     // commodity methods

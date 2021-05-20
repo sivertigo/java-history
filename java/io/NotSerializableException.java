@@ -1,8 +1,8 @@
 /*
- * @(#)NotSerializableException.java	1.14 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.io;
@@ -13,10 +13,13 @@ package java.io;
  * this exception. The argument should be the name of the class.
  *
  * @author  unascribed
- * @version 1.14, 12/19/03
+ * @version %I%, %G%
  * @since   JDK1.1
  */
 public class NotSerializableException extends ObjectStreamException {
+
+    private static final long serialVersionUID = 2906642554793891381L;
+
     /** 
      * Constructs a NotSerializableException object with message string. 
      *

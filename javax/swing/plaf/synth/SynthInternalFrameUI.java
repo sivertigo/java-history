@@ -1,8 +1,8 @@
 /*
- * @(#)SynthInternalFrameUI.java	1.20 04/04/16
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing.plaf.synth;
@@ -24,7 +24,7 @@ import sun.swing.plaf.synth.SynthUI;
 /**
  * Synth's InternalFrameUI.
  *
- * @version 1.20 04/16/04
+ * @version %I% %G%
  * @author David Kloba
  * @author Joshua Outwater
  * @author Rich Schiavi
@@ -178,8 +178,21 @@ class SynthInternalFrameUI extends BasicInternalFrameUI implements SynthUI,
     }
 
     public void propertyChange(PropertyChangeEvent evt) {
+        SynthStyle oldStyle = style;
+        JInternalFrame f = (JInternalFrame)evt.getSource();
+        String prop = evt.getPropertyName();
+
         if (SynthLookAndFeel.shouldUpdateStyle(evt)) {
-            updateStyle((JInternalFrame)evt.getSource());
+            updateStyle(f);
+        }
+
+        if (style == oldStyle &&
+            (prop == JInternalFrame.IS_MAXIMUM_PROPERTY ||
+             prop == JInternalFrame.IS_SELECTED_PROPERTY)) {
+            // Border (and other defaults) may need to change
+            SynthContext context = getContext(f, ENABLED);
+            style.uninstallDefaults(context);
+            style.installDefaults(context, this);
         }
     }
 }

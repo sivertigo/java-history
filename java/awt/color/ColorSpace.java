@@ -1,8 +1,8 @@
 /*
- * @(#)ColorSpace.java	1.40 05/10/26
+ * %W% %E%
  *
- * Copyright 2005 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 /**********************************************************************
@@ -83,6 +83,7 @@ public abstract class ColorSpace implements java.io.Serializable {
 
     private int type;
     private int numComponents;
+    private transient String [] compName = null;
 
     // Cache of singletons for the predefined color spaces.
     private static ColorSpace sRGBspace;
@@ -314,7 +315,7 @@ public abstract class ColorSpace implements java.io.Serializable {
                     ICC_Profile theProfile = ICC_Profile.getInstance (CS_GRAY);
                     GRAYspace = new ICC_ColorSpace (theProfile);
                     /* to allow access from java.awt.ColorModel */
-                    CMM.GRAYspace = GRAYspace;
+                    CMM.CSAccessor.GRAYspace = GRAYspace;
                 }
 
                 theColorSpace = GRAYspace;
@@ -329,7 +330,7 @@ public abstract class ColorSpace implements java.io.Serializable {
                         ICC_Profile.getInstance(CS_LINEAR_RGB);
                     LINEAR_RGBspace = new ICC_ColorSpace (theProfile);
                     /* to allow access from java.awt.ColorModel */
-                    CMM.LINEAR_RGBspace = LINEAR_RGBspace;
+                    CMM.CSAccessor.LINEAR_RGBspace = LINEAR_RGBspace;
                 }
 
                 theColorSpace = LINEAR_RGBspace;
@@ -495,7 +496,53 @@ public abstract class ColorSpace implements java.io.Serializable {
             throw new IllegalArgumentException(
                 "Component index out of range: " + idx);
         }
-        return new String("Unnamed color component("+idx+")");
+
+        if (compName == null) {
+            switch (type) {
+                case ColorSpace.TYPE_XYZ:
+                    compName = new String[] {"X", "Y", "Z"};
+                    break;
+                case ColorSpace.TYPE_Lab:
+                    compName = new String[] {"L", "a", "b"};
+                    break;
+                case ColorSpace.TYPE_Luv:
+                    compName = new String[] {"L", "u", "v"};
+                    break;
+                case ColorSpace.TYPE_YCbCr:
+                    compName = new String[] {"Y", "Cb", "Cr"};
+                    break;
+                case ColorSpace.TYPE_Yxy:
+                    compName = new String[] {"Y", "x", "y"};
+                    break;
+                case ColorSpace.TYPE_RGB:
+                    compName = new String[] {"Red", "Green", "Blue"};
+                    break;
+                case ColorSpace.TYPE_GRAY:
+                    compName = new String[] {"Gray"};
+                    break;
+                case ColorSpace.TYPE_HSV:
+                    compName = new String[] {"Hue", "Saturation", "Value"};
+                    break;
+                case ColorSpace.TYPE_HLS:
+                    compName = new String[] {"Hue", "Lightness", 
+                                             "Saturation"};
+                    break;
+                case ColorSpace.TYPE_CMYK:
+                    compName = new String[] {"Cyan", "Magenta", "Yellow",
+                                             "Black"};
+                    break;
+                case ColorSpace.TYPE_CMY:
+                    compName = new String[] {"Cyan", "Magenta", "Yellow"};
+                    break;
+                default:
+                    String [] tmp = new String[numComponents]; 
+                    for (int i = 0; i < tmp.length; i++) {
+                        tmp[i] = "Unnamed color component(" + i + ")";
+                    }
+                    compName = tmp;
+            }
+        }
+        return compName[idx];
     }
 
     /**

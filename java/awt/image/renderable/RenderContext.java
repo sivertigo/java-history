@@ -1,8 +1,8 @@
 /*
- * @(#)RenderContext.java	1.16 04/05/18
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 /* ********************************************************************
@@ -146,6 +146,7 @@ public class RenderContext implements Cloneable {
      *
      * @param modTransform the AffineTransform to prepend to the
      *        current usr2dev transform.
+     * @since 1.3
      */
     public void preConcatenateTransform(AffineTransform modTransform) {
         this.preConcetenateTransform(modTransform);                
@@ -180,6 +181,7 @@ public class RenderContext implements Cloneable {
      *
      * @param modTransform the AffineTransform to append to the
      *        current usr2dev transform.
+     * @since 1.3
      */
     public void concatenateTransform(AffineTransform modTransform) {
         this.concetenateTransform(modTransform);                

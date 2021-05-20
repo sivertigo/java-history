@@ -1,8 +1,8 @@
 /*
- * @(#)INSURLOperationImpl.java	1.88 06/09/28
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.corba.se.impl.resolver;
@@ -35,8 +35,8 @@ import com.sun.corba.se.spi.orb.ORB;
 import com.sun.corba.se.spi.resolver.Resolver;
 
 import com.sun.corba.se.impl.encoding.EncapsInputStream;
-import com.sun.corba.se.impl.logging.ORBUtilSystemException ;
-import com.sun.corba.se.impl.logging.OMGSystemException ;
+import com.sun.corba.se.impl.logging.ORBUtilSystemException;
+import com.sun.corba.se.impl.logging.OMGSystemException;
 import com.sun.corba.se.impl.naming.namingutil.INSURLHandler;
 import com.sun.corba.se.impl.naming.namingutil.IIOPEndpointInfo;
 import com.sun.corba.se.impl.naming.namingutil.INSURL;

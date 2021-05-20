@@ -1,8 +1,8 @@
 /*
- * @(#)PreferenceChangeEvent.java	1.6 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.util.prefs;
@@ -18,7 +18,7 @@ import java.io.NotSerializableException;
  * serialization methods are implemented to throw NotSerializableException. 
  *
  * @author  Josh Bloch
- * @version 1.6, 12/19/03
+ * @version %I%, %G%
  * @see Preferences
  * @see PreferenceChangeListener
  * @see NodeChangeEvent

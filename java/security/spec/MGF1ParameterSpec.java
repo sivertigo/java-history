@@ -1,8 +1,8 @@
 /*
- * @(#)MGF1ParameterSpec.java	1.3 04/01/27
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.security.spec;
@@ -13,8 +13,8 @@ import java.security.spec.AlgorithmParameterSpec;
  * This class specifies the set of parameters used with mask generation
  * function MGF1 in OAEP Padding and RSA-PSS signature scheme, as 
  * defined in the
- * <a href="http://www.rsa.com/rsalabs/pubs/PKCS/html/pkcs-1.html">
- * PKCS #1 v2.1</a> standard.
+ * <a href="http://www.ietf.org/rfc/rfc3447.txt">PKCS #1 v2.1</a> 
+ * standard.
  * 
  * <p>Its ASN.1 definition in PKCS#1 standard is described below:
  * <pre>
@@ -35,7 +35,7 @@ import java.security.spec.AlgorithmParameterSpec;
  *
  * @author Valerie Peng
  *
- * @version 1.3, 01/27/04
+ * @version %I%, %G%
  * @since 1.5
  */
 public class MGF1ParameterSpec implements AlgorithmParameterSpec {

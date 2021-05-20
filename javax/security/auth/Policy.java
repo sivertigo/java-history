@@ -1,8 +1,8 @@
 /*
- * @(#)Policy.java	1.50 04/05/18
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
  
 package javax.security.auth;
@@ -110,8 +110,9 @@ package javax.security.auth;
  * (in the Java security properties file) to the fully qualified name of
  * the desired <code>Policy</code> implementation class.
  * The Java security properties file is located in the file named
- * &lt;JAVA_HOME&gt;/lib/security/java.security, where &lt;JAVA_HOME&gt;
- * refers to the directory where the JDK was installed.
+ * &lt;JAVA_HOME&gt;/lib/security/java.security.
+ * &lt;JAVA_HOME&gt; refers to the value of the java.home system property,
+ * and specifies the directory where the JRE is installed.
  *
  * @deprecated	as of JDK version 1.4 -- Replaced by java.security.Policy.
  *		java.security.Policy has a method:
@@ -133,7 +134,7 @@ package javax.security.auth;
  * Policy for Principal-based Permission entries.
  *
  *
- * @version 1.50, 05/18/04
+ * @version %I%, %G%
  */
 @Deprecated
 public abstract class Policy {

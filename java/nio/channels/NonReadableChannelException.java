@@ -1,9 +1,9 @@
 /*
- * @(#)NonReadableChannelException.java	1.9 01/11/19
+ * @(#)NonReadableChannelException.java	%I% %E%
  *
- * Copyright 2000 by Sun Microsystems, Inc.  All Rights Reserved.
+ * Copyright (c) 2000, Oracle and/or its affiliates. All rights reserved.
  * 
- * This software is the proprietary information of Sun Microsystems, Inc.  
+ * This software is the proprietary information of Oracle.
  * Use is subject to license terms.
  */
 
@@ -16,7 +16,7 @@ package java.nio.channels;
  * Unchecked exception thrown when an attempt is made to read
  * from a channel that was not originally opened for reading.
  *
- * @version 1.9, 01/11/19
+ * @version %I%, %E%
  * @since 1.4
  */
 

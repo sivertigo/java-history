@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /*
- * $Id: Translet.java,v 1.8 2004/02/16 20:54:58 minchau Exp $
+ * $Id: Translet.java,v 1.2.4.1 2005/08/31 10:46:27 pvedula Exp $
  */
 
 package com.sun.org.apache.xalan.internal.xsltc;
@@ -47,4 +47,7 @@ public interface Translet {
     public String[] getUrisArray();
     public int[]    getTypesArray();
     public String[] getNamespaceArray();
+    public boolean useServicesMechnism();
+    public void setServicesMechnism(boolean flag);
+
 }

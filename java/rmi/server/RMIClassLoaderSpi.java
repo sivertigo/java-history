@@ -1,8 +1,8 @@
 /*
- * @(#)RMIClassLoaderSpi.java	1.14 04/05/05
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.rmi.server;
@@ -36,11 +36,11 @@ import java.net.URL;
  * See the documentation for {@link RMIClassLoader} for a description
  * of how a provider instance is chosen.
  *
- * @version	1.14, 04/05/05
+ * @version	%I%, %E%
  * @author	Peter Jones
  * @author	Laird Dornin
  * @see		RMIClassLoader
- * @since	JDK1.4
+ * @since	1.4
  */
 public abstract class RMIClassLoaderSpi {
 

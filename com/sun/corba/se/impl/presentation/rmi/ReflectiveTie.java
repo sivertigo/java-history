@@ -1,8 +1,8 @@
 /*
- * @(#)ReflectiveTie.java	1.13 05/08/26
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.corba.se.impl.presentation.rmi ;
@@ -43,10 +43,10 @@ public final class ReflectiveTie extends Servant implements Tie
 
     public ReflectiveTie( PresentationManager pm, ORBUtilSystemException wrapper )
     {
-        SecurityManager s = System.getSecurityManager();
-        if (s != null) {
-            s.checkPermission(new DynamicAccessPermission("access"));
-        }
+	SecurityManager s = System.getSecurityManager();
+ 	if (s != null) {
+ 	    s.checkPermission(new DynamicAccessPermission("access"));
+ 	}
 	this.pm = pm ;
 	this.wrapper = wrapper ;
     }

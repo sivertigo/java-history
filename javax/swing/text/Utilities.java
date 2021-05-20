@@ -1,8 +1,8 @@
 /*
- * @(#)Utilities.java	1.49 06/04/10
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package javax.swing.text;
 
@@ -23,14 +23,14 @@ import java.text.*;
 import javax.swing.JComponent;
 import javax.swing.SwingConstants;
 import javax.swing.text.ParagraphView.Row;
-import com.sun.java.swing.SwingUtilities2;
+import sun.swing.SwingUtilities2;
 
 /**
  * A collection of methods to deal with various text
  * related activities.
  * 
  * @author  Timothy Prinzing
- * @version 1.49 04/10/06
+ * @version %I% %G%
  */
 public class Utilities {
     /**
@@ -387,6 +387,24 @@ public class Utilities {
     }
 
     /**
+     * Adjust text offset so that the length of a resulting string as a whole
+     * fits into the specified width.
+     */
+    static final int adjustOffsetForFractionalMetrics(
+                            Segment s, FontMetrics fm, int offset, int width) {
+        // Sometimes the offset returned by getTabbedTextOffset is beyond the
+        // available area, when fractional metrics are enabled. We should
+        // guard against this.
+        if (offset < s.count) {
+            while (offset > 0 &&
+                        fm.charsWidth(s.array, s.offset, offset + 1) > width) {
+                offset--;
+            }
+        }
+        return offset;
+    }
+    
+    /**
      * Determine where to break the given text to fit
      * within the given span. This tries to find a word boundary.
      * @param s  the source of the text
@@ -408,7 +426,7 @@ public class Utilities {
 	int txtCount = s.count;
 	int index = Utilities.getTabbedTextOffset(s, metrics, x0, x, 
 						  e, startOffset, false);
-	    
+        index = adjustOffsetForFractionalMetrics(s, metrics, index, x - x0);
 
         if (index >= txtCount - 1) {
             return txtCount;
@@ -456,7 +474,10 @@ public class Utilities {
 	int lastOffs = offs;
 	int y = r.y;
 	while ((r != null) && (y == r.y)) {
-	    offs = lastOffs;
+            // Skip invisible elements
+            if(r.height !=0) {
+	        offs = lastOffs;
+            }
 	    lastOffs -= 1;
 	    r = (lastOffs >= 0) ? c.modelToView(lastOffs) : null;
 	}
@@ -484,7 +505,10 @@ public class Utilities {
 	int lastOffs = offs;
 	int y = r.y;
 	while ((r != null) && (y == r.y)) {
-	    offs = lastOffs;
+            // Skip invisible elements
+            if (r.height !=0) {
+	        offs = lastOffs;
+            }
 	    lastOffs += 1;
 	    r = (lastOffs <= n) ? c.modelToView(lastOffs) : null;
 	}

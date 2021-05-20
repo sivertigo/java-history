@@ -1,13 +1,11 @@
 /*
- * @(#)ObjectStreamClass.java	1.56 05/09/13
- *
- * Copyright 2005 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 1998, 2012, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 /*
  * Licensed Materials - Property of IBM
  * RMI-IIOP v1.0
- * Copyright IBM Corp. 1998 1999  All Rights Reserved
+ * Copyright IBM Corp. 1998 2012  All Rights Reserved
  *
  * US Government Users Restricted Rights - Use, duplication or
  * disclosure restricted by GSA ADP Schedule Contract with IBM Corp.
@@ -40,11 +38,10 @@ import java.io.Serializable;
 
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Hashtable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import com.sun.corba.se.impl.util.RepositoryId;
-
-import sun.misc.SoftCache;
 
 import org.omg.CORBA.ValueMember;
 
@@ -70,8 +67,9 @@ public class ObjectStreamClass implements java.io.Serializable {
     private static Object noArgsList[] = {};
     private static Class noTypesList[] = {};
 	
-    private static Hashtable translatedFields;
-
+    /** true if represents enum type */
+    private boolean isEnum; 
+        
     private static final Bridge bridge = 
 	(Bridge)AccessController.doPrivileged(
 	    new PrivilegedAction() {
@@ -105,7 +103,7 @@ public class ObjectStreamClass implements java.io.Serializable {
 	ObjectStreamClass desc = null;
 	synchronized (descriptorFor) {
 	    /* Find the matching descriptor if it already known */
-            desc = (ObjectStreamClass)descriptorFor.get(cl);
+	    desc = findDescriptorFor(cl);
 	    if (desc == null) {
                 /* Check if it's serializable */
                 boolean serializable = classSerializable.isAssignableFrom(cl);
@@ -140,7 +138,6 @@ public class ObjectStreamClass implements java.io.Serializable {
                 desc = new ObjectStreamClass(cl, superdesc,
                                              serializable, externalizable);
             }
-
             // Must always call init.  See bug 4488137.  This code was
             // incorrectly changed to return immediately on a non-null
             // cache result.  That allowed threads to gain access to
@@ -156,7 +153,7 @@ public class ObjectStreamClass implements java.io.Serializable {
             // right approach to solving these problems would be to rewrite 
             // this class, based on the latest java.io.ObjectStreamClass. 
             desc.init();
-        }
+	}
 
 	return desc;
     }
@@ -348,6 +345,7 @@ public class ObjectStreamClass implements java.io.Serializable {
         }
 
 	name = cl.getName();
+        isEnum = Enum.class.isAssignableFrom(cl);
 	superclass = superdesc;
 	serializable = serial;
         if (!forProxyClass) {
@@ -360,7 +358,7 @@ public class ObjectStreamClass implements java.io.Serializable {
 	 * Otherwise, when the fields are read it may recurse
 	 * trying to find the descriptor for itself.
 	 */
-        descriptorFor.put(cl, this);
+	insertDescriptorFor(this);
 
         /*
          * The remainder of initialization occurs in init(), which is called
@@ -368,6 +366,55 @@ public class ObjectStreamClass implements java.io.Serializable {
          * released.
          */
     }
+
+    private static final class PersistentFieldsValue {
+        private final ConcurrentMap map = new ConcurrentHashMap();
+        private static final Object NULL_VALUE =
+            (PersistentFieldsValue.class.getName() + ".NULL_VALUE");
+
+        PersistentFieldsValue() { }
+
+        ObjectStreamField[] get(Class type) {
+            Object value = map.get(type);
+            if (value == null) {
+                value = computeValue(type);
+                map.putIfAbsent(type, value);
+            }
+            return ((value == NULL_VALUE) ? null : (ObjectStreamField[])value);
+        }
+
+        private static Object computeValue(Class<?> type) {
+            try {
+                Field pf = type.getDeclaredField("serialPersistentFields");
+                int mods = pf.getModifiers();
+                if (Modifier.isPrivate(mods) && Modifier.isStatic(mods) &&
+                        Modifier.isFinal(mods)) {
+                    pf.setAccessible(true);
+                    java.io.ObjectStreamField[] fields =
+                        (java.io.ObjectStreamField[])pf.get(type);
+                    return translateFields(fields);
+                }
+            } catch (NoSuchFieldException e1) {
+            } catch (IllegalAccessException e2) {
+            } catch (IllegalArgumentException e3) {
+            } catch (ClassCastException e4) { }
+            return NULL_VALUE;
+        }
+
+        private static ObjectStreamField[] translateFields(
+                java.io.ObjectStreamField[] fields) {
+            ObjectStreamField[] translation =
+                new ObjectStreamField[fields.length];
+            for (int i = 0; i < fields.length; i++) {
+                translation[i] = new ObjectStreamField(fields[i].getName(),
+                        fields[i].getType());
+            }
+            return translation;
+        }
+    }
+
+    private static final PersistentFieldsValue persistentFieldsValue =
+        new PersistentFieldsValue();
 
     /*
      * Initialize class descriptor.  This method is only invoked on class
@@ -390,7 +437,8 @@ public class ObjectStreamClass implements java.io.Serializable {
 	if (!serializable ||
 	    externalizable ||
 	    forProxyClass ||
-	    name.equals("java.lang.String")) {
+	    name.equals("java.lang.String") ||
+            isEnum) {
 	    fields = NO_FIELDS;
 	} else if (serializable) {
             /* Ask for permission to override field access checks.
@@ -401,36 +449,8 @@ public class ObjectStreamClass implements java.io.Serializable {
 		 * If it is declared, use the declared serialPersistentFields.
 		 * Otherwise, extract the fields from the class itself.
 		 */
-		try {
-                    Field pf = cl.getDeclaredField("serialPersistentFields");
-	            // serial bug 7; the serialPersistentFields were not
-	            // being read and stored as Accessible bit was not set
-		    pf.setAccessible(true);
-	            // serial bug 7; need to find if the field is of type
-	            // java.io.ObjectStreamField
-                    java.io.ObjectStreamField[] f =
-                           (java.io.ObjectStreamField[])pf.get(cl);
-		    int mods = pf.getModifiers();
-		    if ((Modifier.isPrivate(mods)) &&
-			(Modifier.isStatic(mods)) &&
-			(Modifier.isFinal(mods)))
-	            {
-			fields = (ObjectStreamField[])translateFields((Object[])pf.get(cl));
-		    }
-		} catch (NoSuchFieldException e) {
-		    fields = null;
-		} catch (IllegalAccessException e) {
-		    fields = null;
-		} catch (IllegalArgumentException e) {
-		    fields = null;
-                } catch (ClassCastException e) {
-                    /* Thrown if a field serialPersistentField exists
-                     * but it is not of type ObjectStreamField.
-                     */
-                    fields = null;
-                }
-
-
+                fields = persistentFieldsValue.get(cl);
+ 
 		if (fields == null) {
 		    /* Get all of the declared fields for this
 		     * Class. setAccessible on all fields so they
@@ -491,7 +511,7 @@ public class ObjectStreamClass implements java.io.Serializable {
          *
          * NonSerializable classes have a serialVerisonUID of 0L.
          */
-         if (isNonSerializable()) {
+         if (isNonSerializable() || isEnum) {
              suid = 0L;
          } else {
              // Lookup special Serializable members using reflection.
@@ -624,44 +644,6 @@ public class ObjectStreamClass implements java.io.Serializable {
 	name = n;
 	suid = s;
 	superclass = null;
-    }
-
-    private static Object[] translateFields(Object objs[])
-        throws NoSuchFieldException {
-        try{
-            java.io.ObjectStreamField fields[] = (java.io.ObjectStreamField[])objs;
-            Object translation[] = null;
-                       
-            if (translatedFields == null)
-                translatedFields = new Hashtable();
-                       
-            translation = (Object[])translatedFields.get(fields);
-                       
-            if (translation != null)
-                return translation;
-            else {
-                Class osfClass = Class.forName("com.sun.corba.se.impl.io.ObjectStreamField");
-                translation = (Object[])java.lang.reflect.Array.newInstance(osfClass, objs.length);
-                Object arg[] = new Object[2];
-                Class types[] = {String.class, Class.class};
-                Constructor constructor = osfClass.getDeclaredConstructor(types);
-                for (int i = fields.length -1; i >= 0; i--){
-                    arg[0] = fields[i].getName();
-                    arg[1] = fields[i].getType();
-                       
-                    translation[i] = constructor.newInstance(arg);
-                }
-                translatedFields.put(fields, translation);
-                       
-            }
-
-            return (Object[])translation;
-        }
-        catch(Throwable t){
-            NoSuchFieldException nsfe = new NoSuchFieldException();
-	    nsfe.initCause( t ) ;
-	    throw nsfe ;
-        }
     }
 
     /*
@@ -1400,7 +1382,64 @@ public class ObjectStreamClass implements java.io.Serializable {
 	return sb.toString();
     }
 
-    static private SoftCache descriptorFor = new SoftCache() ;
+    /*
+     * Cache of Class -> ClassDescriptor Mappings.
+     */
+    static private ObjectStreamClassEntry[] descriptorFor = new ObjectStreamClassEntry[61];
+
+    /*
+     * findDescriptorFor a Class.  This looks in the cache for a
+     * mapping from Class -> ObjectStreamClass mappings.  The hashCode
+     * of the Class is used for the lookup since the Class is the key.
+     * The entries are extended from java.lang.ref.SoftReference so the
+     * gc will be able to free them if needed.
+     */
+    private static ObjectStreamClass findDescriptorFor(Class cl) {
+
+	int hash = cl.hashCode();
+	int index = (hash & 0x7FFFFFFF) % descriptorFor.length;
+	ObjectStreamClassEntry e;
+	ObjectStreamClassEntry prev;
+
+	/* Free any initial entries whose refs have been cleared */
+	while ((e = descriptorFor[index]) != null && e.get() == null) {
+	    descriptorFor[index] = e.next;
+	}
+
+	/* Traverse the chain looking for a descriptor with ofClass == cl.
+	 * unlink entries that are unresolved.
+	 */
+	prev = e;
+	while (e != null ) {
+	    ObjectStreamClass desc = (ObjectStreamClass)(e.get());
+	    if (desc == null) {
+		// This entry has been cleared,  unlink it
+		prev.next = e.next;
+	    } else {
+		if (desc.ofClass == cl)
+		    return desc;
+		prev = e;
+	    }
+	    e = e.next;
+	}
+	return null;
+    }
+
+    /*
+     * insertDescriptorFor a Class -> ObjectStreamClass mapping.
+     */
+    private static void insertDescriptorFor(ObjectStreamClass desc) {
+	// Make sure not already present
+	if (findDescriptorFor(desc.ofClass) != null) {
+	    return;
+	}
+
+	int hash = desc.ofClass.hashCode();
+	int index = (hash & 0x7FFFFFFF) % descriptorFor.length;
+	ObjectStreamClassEntry e = new ObjectStreamClassEntry(desc);
+	e.next = descriptorFor[index];
+       	descriptorFor[index] = e;
+    }
 
     private static Field[] getDeclaredFields(final Class clz) {
         return (Field[]) AccessController.doPrivileged(new PrivilegedAction() {
@@ -1483,8 +1522,8 @@ public class ObjectStreamClass implements java.io.Serializable {
     private boolean hasExternalizableBlockData;
     Method writeObjectMethod;
     Method readObjectMethod;
-    private Method writeReplaceObjectMethod;
-    private Method readResolveObjectMethod;
+    private transient Method writeReplaceObjectMethod;
+    private transient Method readResolveObjectMethod;
     private Constructor cons ;
 
     /**

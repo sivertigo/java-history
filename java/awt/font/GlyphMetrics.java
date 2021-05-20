@@ -1,8 +1,8 @@
 /*
- * @(#)GlyphMetrics.java	1.40 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 /*
@@ -175,6 +175,7 @@ public final class GlyphMetrics {
      * @param advanceY the Y-component of the glyph's advance
      * @param bounds the visual bounds of the glyph
      * @param glyphType the type of the glyph
+     * @since 1.4
      */
     public GlyphMetrics(boolean horizontal, float advanceX, float advanceY,
 			Rectangle2D bounds, byte glyphType) {
@@ -199,6 +200,7 @@ public final class GlyphMetrics {
     /**
      * Returns the x-component of the advance of the glyph.
      * @return the x-component of the advance of the glyph
+     * @since 1.4
      */
     public float getAdvanceX() {
         return advanceX;
@@ -207,6 +209,7 @@ public final class GlyphMetrics {
     /**
      * Returns the y-component of the advance of the glyph.
      * @return the y-component of the advance of the glyph
+     * @since 1.4
      */
     public float getAdvanceY() {
         return advanceY;

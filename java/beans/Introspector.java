@@ -1,31 +1,29 @@
 /*
- * @(#)Introspector.java	1.144 09/05/06
+ * %W% %E%
  *
- * Copyright 2005 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 1996, 2011, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.beans;
 
+import com.sun.beans.WeakCache;
+
 import java.lang.ref.Reference;
 import java.lang.ref.SoftReference;
-
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.EventListener;
 import java.util.List;
-import java.util.WeakHashMap;
 import java.util.TreeMap;
-import sun.awt.AppContext;
+import java.util.WeakHashMap;
+import com.sun.beans.AppContext;
 import sun.reflect.misc.ReflectUtil;
 
 /**
@@ -90,9 +88,11 @@ public class Introspector {
     public final static int IGNORE_ALL_BEANINFO        = 3;
 
     // Static Caches to speed up introspection.
-    private static Map declaredMethodCache = 
-	Collections.synchronizedMap(new WeakHashMap());
+    private static  WeakCache<Class<?>, Method[]> declaredMethodCache =
+             new WeakCache<Class<?>, Method[]>();
+
     private static final Object BEANINFO_CACHE = new Object();
+
     private Class beanClass;
     private BeanInfo explicitBeanInfo;
     private BeanInfo superBeanInfo;
@@ -153,20 +153,23 @@ public class Introspector {
 	if (!ReflectUtil.isPackageAccessible(beanClass)) {
 	    return (new Introspector(beanClass, null, USE_ALL_BEANINFO)).getBeanInfo();
 	}
-        Map<Class<?>, BeanInfo> map;
+        Map<Class<?>, BeanInfo> beanInfoCache;
+        BeanInfo beanInfo;
         synchronized (BEANINFO_CACHE) {
-              map = (Map<Class<?>, BeanInfo>) AppContext.getAppContext().get(BEANINFO_CACHE);
-              if (map == null) {
-                  map = Collections.synchronizedMap(new WeakHashMap<Class<?>, BeanInfo>());
-                  AppContext.getAppContext().put(BEANINFO_CACHE, map);
-              }
+            beanInfoCache = (Map<Class<?>, BeanInfo>) AppContext.getAppContext().get(BEANINFO_CACHE);
+            if (beanInfoCache == null) {
+                beanInfoCache = new WeakHashMap<Class<?>, BeanInfo>();
+                AppContext.getAppContext().put(BEANINFO_CACHE, beanInfoCache);
+            }
+            beanInfo = beanInfoCache.get(beanClass);
         }
-        BeanInfo bi = map.get(beanClass);
-	if (bi == null) {
-	    bi = (new Introspector(beanClass, null, USE_ALL_BEANINFO)).getBeanInfo();
-            map.put(beanClass, bi);
-	}
-	return bi;
+        if (beanInfo == null) {
+            beanInfo = new Introspector(beanClass, null, USE_ALL_BEANINFO).getBeanInfo();
+            synchronized (BEANINFO_CACHE) {
+                beanInfoCache.put(beanClass, beanInfo);
+            }
+        }
+        return beanInfo;
     }
 
     /**
@@ -313,12 +316,14 @@ public class Introspector {
      */
 
     public static void flushCaches() {
-       	 Map map = (Map) AppContext.getAppContext().get(BEANINFO_CACHE);
-         if (map != null) {
-             map.clear();
-         }
+         synchronized (BEANINFO_CACHE) {
+           Map beanInfoCache = (Map) AppContext.getAppContext().get(BEANINFO_CACHE);
+           if (beanInfoCache != null) {
+               beanInfoCache.clear();
+           }
 
-	declaredMethodCache.clear();
+           declaredMethodCache.clear();
+         }   
     }
 
     /**
@@ -340,12 +345,13 @@ public class Introspector {
 	if (clz == null) {
 	    throw new NullPointerException();
 	}
-         Map map = (Map) AppContext.getAppContext().get(BEANINFO_CACHE);
-         if (map != null) {
-             map.remove(clz);
-         }
-
-	declaredMethodCache.remove(clz);
+        synchronized (BEANINFO_CACHE) {
+            Map beanInfoCache = (Map) AppContext.getAppContext().get(BEANINFO_CACHE);
+            if (beanInfoCache != null) {
+             beanInfoCache.put(clz, null);
+            }
+            declaredMethodCache.put(clz, null);
+        }
     }
 
     //======================================================================
@@ -419,7 +425,7 @@ public class Introspector {
      *
      * @return Instance of an explicit BeanInfo class or null if one isn't found.
      */
-    private static synchronized BeanInfo findExplicitBeanInfo(Class beanClass) {
+    private static BeanInfo findExplicitBeanInfo(Class beanClass) {
 	String name = beanClass.getName() + BEANINFO_SUFFIX;
         try {
 	    return (java.beans.BeanInfo)instantiate(beanClass, name);
@@ -438,6 +444,7 @@ public class Introspector {
 	// Now try looking for <searchPath>.fooBeanInfo
  	name = name.substring(name.lastIndexOf('.')+1);
 
+        String[] searchPath = getBeanInfoSearchPath();
 	for (int i = 0; i < searchPath.length; i++) {
 	    // This optimization will only use the BeanInfo search path if is has changed
 	    // from the original or trying to get the ComponentBeanInfo. 
@@ -808,6 +815,13 @@ public class Introspector {
 		    pd = new PropertyDescriptor(ipd);
 		}
 	    }
+
+            // Find the first property descriptor
+            // which does not have getter and setter methods.
+            // See regression bug 4984912.
+            if ( (pd == null) && (list.size() > 0) ) {
+                pd = (PropertyDescriptor) list.get(0);
+            }
 
 	    if (pd != null) {
 		properties.put(pd.getName(), pd);
@@ -1258,42 +1272,30 @@ public class Introspector {
     /*
      * Internal method to return *public* methods within a class.
      */
-    private static synchronized Method[] getPublicDeclaredMethods(Class clz) {
+    private static Method[] getPublicDeclaredMethods(Class clz) {
 	// Looking up Class.getDeclaredMethods is relatively expensive,
 	// so we cache the results.
-	Method[] result = null;
 	if (!ReflectUtil.isPackageAccessible(clz)) {
 	    return new Method[0];
 	}
-	final Class fclz = clz;
-	Reference ref = (Reference)declaredMethodCache.get(fclz);
-	if (ref != null) {
-	    result = (Method[])ref.get();
-	    if (result != null) {
-		return result;
-	    }
-	}
+         synchronized (BEANINFO_CACHE) {
+            Method[] result = declaredMethodCache.get(clz);
+            if (result == null) {
+              result = clz.getMethods();
+              for (int i = 0; i < result.length; i++) {
+                Method method = result[i];
+                if (!method.getDeclaringClass().equals(clz)) {
 
-	// We have to raise privilege for getDeclaredMethods
-	result = (Method[]) AccessController.doPrivileged(new PrivilegedAction() {
-		public Object run() {
-		    return fclz.getDeclaredMethods();
-		}
-	    });
+                   result[i] = null; 
+                } 
+              }
+              declaredMethodCache.put(clz, result);
+         }
+        return result;
+       }
+     }
 
-
-	// Null out any non-public methods.
-	for (int i = 0; i < result.length; i++) {
-	    Method method = result[i];
-	    int mods = method.getModifiers();
-	    if (!Modifier.isPublic(mods)) {
-	 	result[i] = null;
-	    }
-        }    
-	// Add it to the cache.
-	declaredMethodCache.put(fclz, new SoftReference(result));
-	return result;
-    }
+    
 
     //======================================================================
     // Package private support methods.
@@ -1488,7 +1490,7 @@ class GenericBeanInfo extends SimpleBeanInfo {
     private PropertyDescriptor[] properties;
     private int defaultProperty;
     private MethodDescriptor[] methods;
-    private BeanInfo targetBeanInfo;
+    private final Reference<BeanInfo> targetBeanInfoRef;
 
     public GenericBeanInfo(BeanDescriptor beanDescriptor,
 		EventSetDescriptor[] events, int defaultEvent,
@@ -1500,7 +1502,7 @@ class GenericBeanInfo extends SimpleBeanInfo {
 	this.properties = properties;
 	this.defaultProperty = defaultProperty;
 	this.methods = methods;
-	this.targetBeanInfo = targetBeanInfo;
+        this.targetBeanInfoRef = new SoftReference<BeanInfo>(targetBeanInfo);
     }
 
     /**
@@ -1539,7 +1541,7 @@ class GenericBeanInfo extends SimpleBeanInfo {
 		methods[i] = new MethodDescriptor(old.methods[i]);
 	    }
 	}
-	targetBeanInfo = old.targetBeanInfo;
+        this.targetBeanInfoRef = old.targetBeanInfoRef;
     }
 
     public PropertyDescriptor[] getPropertyDescriptors() {
@@ -1567,7 +1569,8 @@ class GenericBeanInfo extends SimpleBeanInfo {
     }
 
     public java.awt.Image getIcon(int iconKind) {
-	if (targetBeanInfo != null) {
+       BeanInfo targetBeanInfo = this.targetBeanInfoRef.get();
+       if (targetBeanInfo != null) {
 	    return targetBeanInfo.getIcon(iconKind);
 	}
 	return super.getIcon(iconKind);

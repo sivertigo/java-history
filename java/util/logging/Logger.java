@@ -1,8 +1,6 @@
 /*
- * @(#)Logger.java	1.47 08/06/27
- *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2000, 2013, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 
@@ -23,7 +21,10 @@ import java.lang.ref.WeakReference;
  * <p>
  * Logger objects may be obtained by calls on one of the getLogger
  * factory methods.  These will either create a new Logger or
- * return a suitable existing Logger.
+ * return a suitable existing Logger. It is important to note that
+ * the Logger returned by one of the {@code getLogger} factory methods
+ * may be garbage collected at any time if a strong reference to the
+ * Logger is not kept.
  * <p>
  * Logging messages will be forwarded to registered Handler
  * objects, which can forward the messages to a variety of
@@ -138,10 +139,9 @@ import java.lang.ref.WeakReference;
  * All the other logging methods are implemented as calls on this
  * log(LogRecord) method.
  *
- * @version 1.47, 06/27/08
+ * @version %I%, %G%
  * @since 1.4
  */
-
 
 public class Logger {
     private static final Handler emptyHandlers[] = new Handler[0];
@@ -164,9 +164,25 @@ public class Logger {
     // We keep weak references from parents to children, but strong
     // references from children to parents.
     private Logger parent;    // our nearest parent.
-    private ArrayList kids;   // WeakReferences to loggers that have us as parent
+    private ArrayList<LogManager.LoggerWeakRef> kids;   // WeakReferences to loggers that have us as parent
     private Level levelObject;
     private volatile int levelValue;  // current effective level value
+
+    /**
+     * GLOBAL_LOGGER_NAME is a name for the global logger.
+     * This name is provided as a convenience to developers who are making
+     * casual use of the Logging package.  Developers who are making serious
+     * use of the logging package (for example in products) should create
+     * and use their own Logger objects, with appropriate names, so that
+     * logging can be controlled on a suitable per-Logger granularity.
+     * Developers also need to keep a strong reference to their Logger
+     * objects to prevent them from being garbage collected.
+     * <p>
+     * The preferred way to get the global logger object is via the call
+     * <code>Logger.getLogger(Logger.GLOBAL_LOGGER_NAME)</code>.
+     * @since 1.6
+     */
+    public static final String GLOBAL_LOGGER_NAME = "global";
 
     /**
      * The "global" Logger object is provided as a convenience to developers
@@ -174,11 +190,19 @@ public class Logger {
      * who are making serious use of the logging package (for example
      * in products) should create and use their own Logger objects,
      * with appropriate names, so that logging can be controlled on a
-     * suitable per-Logger granularity.
+     * suitable per-Logger granularity. Developers also need to keep a
+     * strong reference to their Logger objects to prevent them from
+     * being garbage collected.
      * <p>
-     * The global logger is initialized by calling Logger.getLogger("global").
+     * @deprecated Initialization of this field is prone to deadlocks.
+     * The field must be initialized by the Logger class initialization
+     * which may cause deadlocks with the LogManager class initialization.
+     * In such cases two class initialization wait for each other to complete.
+     * As of JDK version 1.6, the preferred way to get the global logger object
+     * is via the call <code>Logger.getLogger(Logger.GLOBAL_LOGGER_NAME)</code>.
      */
-    public  static final Logger global = new Logger("global");
+    @Deprecated
+    public static final Logger global = new Logger(GLOBAL_LOGGER_NAME);
 
     /**
      * Protected method to construct a logger for a named subsystem.
@@ -222,14 +246,48 @@ public class Logger {
 	this.manager = manager;
     }
 
-    private void checkAccess() throws SecurityException {
+    private void checkPermission() throws SecurityException {
 	if (!anonymous) {
 	    if (manager == null) {
                 // Complete initialization of the global Logger.
 	        manager = LogManager.getLogManager();
             }
-	    manager.checkAccess();
+	    manager.checkPermission();
 	}
+    }
+
+    // Until all JDK code converted to call sun.util.logging.PlatformLogger
+    // (see 7054233), we need to determine if Logger.getLogger is to add
+    // a system logger or user logger.
+    //
+    // As an interim solution, if the immediate caller whose caller loader is
+    // null, we assume it's a system logger and add it to the system context.
+    // These system loggers only set the resource bundle to the given
+    // resource bundle name (rather than the default system resource bundle).
+    private static class SystemLoggerHelper {
+        static boolean disableCallerCheck = getBooleanProperty("sun.util.logging.disableCallerCheck");
+        private static boolean getBooleanProperty(final String key) {
+            String s = AccessController.doPrivileged(new PrivilegedAction<String>() {
+                public String run() {
+                    return System.getProperty(key);
+                }
+            });
+            return Boolean.valueOf(s);
+        }
+    }
+
+    private static Logger demandLogger(String name, String resourceBundleName) {
+        LogManager manager = LogManager.getLogManager();
+        SecurityManager sm = System.getSecurityManager();
+        if (sm != null && !SystemLoggerHelper.disableCallerCheck) {
+            // 0: Reflection 1: Logger.getLoggerContext 2: Logger.getLogger 3: caller
+            final int SKIP_FRAMES = 3;
+            Class<?> caller = sun.reflect.Reflection.getCallerClass(SKIP_FRAMES);
+            if (caller.getClassLoader() == null) {
+                return manager.demandSystemLogger(name, resourceBundleName);
+            }
+        }
+        return manager.demandLogger(name, resourceBundleName);
     }
 
     /**
@@ -241,6 +299,15 @@ public class Logger {
      * based on the LogManager configuration and it will configured
      * to also send logging output to its parent's handlers.  It will
      * be registered in the LogManager global namespace.
+     * <p>
+     * Note: The LogManager may only retain a weak reference to the newly
+     * created Logger. It is important to understand that a previously
+     * created Logger with the given name may be garbage collected at any
+     * time if there is no strong reference to the Logger. In particular,
+     * this means that two back-to-back calls like
+     * {@code getLogger("MyLogger").log(...)} may use different Logger
+     * objects named "MyLogger" if there is no strong reference to the
+     * Logger named "MyLogger" elsewhere in the program.
      * 
      * @param	name		A name for the logger.  This should
      *				be a dot-separated name and should normally
@@ -250,10 +317,8 @@ public class Logger {
      * @return a suitable Logger
      * @throws NullPointerException if the name is null.
      */
-    
     public static synchronized Logger getLogger(String name) {
-	LogManager manager = LogManager.getLogManager();
-	return manager.demandLogger(name);
+        return demandLogger(name, null);
     }
 
     /**
@@ -265,6 +330,15 @@ public class Logger {
      * based on the LogManager and it will configured to also send logging
      * output to its parent loggers Handlers.  It will be registered in
      * the LogManager global namespace.
+     * <p>
+     * Note: The LogManager may only retain a weak reference to the newly
+     * created Logger. It is important to understand that a previously
+     * created Logger with the given name may be garbage collected at any
+     * time if there is no strong reference to the Logger. In particular,
+     * this means that two back-to-back calls like
+     * {@code getLogger("MyLogger", ...).log(...)} may use different Logger
+     * objects named "MyLogger" if there is no strong reference to the
+     * Logger named "MyLogger" elsewhere in the program.
      * <p>
      * If the named Logger already exists and does not yet have a
      * localization resource bundle then the given resource bundle 
@@ -285,10 +359,9 @@ public class Logger {
      * @throws IllegalArgumentException if the Logger already exists and uses
      *		   a different resource bundle name.
      * @throws NullPointerException if the name is null.
-     */    
+     */
     public static synchronized Logger getLogger(String name, String resourceBundleName) {
-	LogManager manager = LogManager.getLogManager();
-        Logger result = manager.demandLogger(name);
+        Logger result = demandLogger(name, resourceBundleName);
 	if (result.resourceBundleName == null) {
 	    // Note: we may get a MissingResourceException here.
 	    result.setupResourceInfo(resourceBundleName);
@@ -297,8 +370,7 @@ public class Logger {
 				" != " + resourceBundleName);
 	}
 	return result;
-    }    
-
+    }
 
     /**
      * Create an anonymous Logger.  The newly created Logger is not
@@ -320,13 +392,8 @@ public class Logger {
      *
      * @return a newly created private Logger
      */
-    public static synchronized Logger getAnonymousLogger() {
-	LogManager manager = LogManager.getLogManager();
-	Logger result = new Logger(null, null);
-	result.anonymous = true;
-	Logger root = manager.getLogger("");
-	result.doSetParent(root);
-	return result;
+    public static Logger getAnonymousLogger() {
+        return getAnonymousLogger(null);
     }
 
     /**
@@ -354,6 +421,8 @@ public class Logger {
      */
     public static synchronized Logger getAnonymousLogger(String resourceBundleName) {
 	LogManager manager = LogManager.getLogManager();
+        // cleanup some Loggers that have been GC'ed
+        manager.drainLoggerRefQueueBounded();
 	Logger result = new Logger(null, resourceBundleName);
 	result.anonymous = true;
 	Logger root = manager.getLogger("");
@@ -396,7 +465,7 @@ public class Logger {
      *             the caller does not have LoggingPermission("control").
      */
     public void setFilter(Filter newFilter) throws SecurityException {
-	checkAccess();
+	checkPermission();
 	filter = newFilter;
     }
 
@@ -455,7 +524,7 @@ public class Logger {
     private void doLog(LogRecord lr) {
 	lr.setLoggerName(name);
 	String ebname = getEffectiveResourceBundleName();
-	if (ebname != null) {
+	if (ebname != null && !ebname.equals(SYSTEM_LOGGER_RB_NAME)) {
 	    lr.setResourceBundleName(ebname);
 	    lr.setResourceBundle(findResourceBundle(ebname));
 	}
@@ -1087,7 +1156,7 @@ public class Logger {
      *             the caller does not have LoggingPermission("control").
      */
     public void setLevel(Level newLevel) throws SecurityException {
-	checkAccess();
+	checkPermission();
 	synchronized (treeLock) {
 	    levelObject = newLevel;
 	    updateEffectiveLevel();
@@ -1142,7 +1211,7 @@ public class Logger {
     public synchronized void addHandler(Handler handler) throws SecurityException {
 	// Check for null handler
 	handler.getClass();
-	checkAccess();
+	checkPermission();
 	if (handlers == null) {
 	    handlers = new ArrayList();
 	}
@@ -1159,7 +1228,7 @@ public class Logger {
      *             the caller does not have LoggingPermission("control").
      */
     public synchronized void removeHandler(Handler handler) throws SecurityException {
-	checkAccess();
+	checkPermission();
 	if (handler == null) {
 	    return;
 	}
@@ -1195,7 +1264,7 @@ public class Logger {
      *             the caller does not have LoggingPermission("control").
      */
     public synchronized void setUseParentHandlers(boolean useParentHandlers) {
-	checkAccess();
+	checkPermission();
 	this.useParentHandlers = useParentHandlers;
     }
 
@@ -1215,6 +1284,23 @@ public class Logger {
     // May also return null if we can't find the resource bundle and
     // there is no suitable previous cached value.
 
+    static final String SYSTEM_LOGGER_RB_NAME = "sun.util.logging.resources.logging";
+
+    private static ResourceBundle findSystemResourceBundle(final Locale locale) {
+        // the resource bundle is in a restricted package
+        return AccessController.doPrivileged(new PrivilegedAction<ResourceBundle>() {
+            public ResourceBundle run() {
+                try {
+                    return ResourceBundle.getBundle(SYSTEM_LOGGER_RB_NAME,
+                                                    locale,
+                                                    ClassLoader.getSystemClassLoader());
+                } catch (MissingResourceException e) {
+                    throw new InternalError(e.toString());
+                }
+            }
+        });
+    }
+
     private synchronized ResourceBundle findResourceBundle(String name) {
 	// Return a null bundle for a null name.
 	if (name == null) {
@@ -1229,6 +1315,13 @@ public class Logger {
 	    return catalog;
 	}
 
+        if (name.equals(SYSTEM_LOGGER_RB_NAME)) {
+            catalog = findSystemResourceBundle(currentLocale);
+            catalogName = name;
+            catalogLocale = currentLocale;
+            return catalog;
+        }
+        
 	// Use the thread's context ClassLoader.  If there isn't one,
  	// use the SystemClassloader.
 	ClassLoader cl = Thread.currentThread().getContextClassLoader();
@@ -1244,7 +1337,6 @@ public class Logger {
 	    // Woops.  We can't find the ResourceBundle in the default
 	    // ClassLoader.  Drop through.
 	}
-
 
 	// Fall back to searching up the call stack and trying each
 	// calling ClassLoader.
@@ -1332,7 +1424,7 @@ public class Logger {
 	if (parent == null) {
 	    throw new NullPointerException();
   	}
-	manager.checkAccess();
+	manager.checkPermission();
 	doSetParent(parent);
     }
 
@@ -1346,14 +1438,18 @@ public class Logger {
 	synchronized (treeLock) {
 
 	    // Remove ourself from any previous parent.
+            LogManager.LoggerWeakRef ref = null;
 	    if (parent != null) {
 		// assert parent.kids != null;
-		for (Iterator iter = parent.kids.iterator(); iter.hasNext(); ) {
-		    WeakReference ref = (WeakReference) iter.next();
+                for (Iterator<LogManager.LoggerWeakRef> iter = parent.kids.iterator(); iter.hasNext(); ) {
+                    ref = iter.next();
 		    Logger kid = (Logger) ref.get();
 		    if (kid == this) {
+                        // ref is used down below to complete the reparenting
 		        iter.remove();
 			break;
+                    } else {
+                        ref = null;
 		    }
 	 	}
 		// We have now removed ourself from our parents' kids.
@@ -1362,15 +1458,35 @@ public class Logger {
 	    // Set our new parent.
 	    parent = newParent;
 	    if (parent.kids == null) {
-	        parent.kids = new ArrayList(2);
+                parent.kids = new ArrayList<LogManager.LoggerWeakRef>(2);
 	    }
-	    parent.kids.add(new WeakReference(this));
+            if (ref == null) {
+                // we didn't have a previous parent
+                ref = manager.new LoggerWeakRef(this);
+            }
+            ref.setParentRef(new WeakReference<Logger>(parent));
+            parent.kids.add(ref);
 
 	    // As a result of the reparenting, the effective level
 	    // may have changed for us and our children.
 	    updateEffectiveLevel();
 
 	}
+    }
+
+    // Package-level method.
+    // Remove the weak reference for the specified child Logger from the
+    // kid list. We should only be called from LoggerWeakRef.dispose().
+    final void removeChildLogger(LogManager.LoggerWeakRef child) {
+        synchronized (treeLock) {
+            for (Iterator<LogManager.LoggerWeakRef> iter = kids.iterator(); iter.hasNext(); ) {
+                LogManager.LoggerWeakRef ref = iter.next();
+                if (ref == child) {
+                    iter.remove();
+                    return;
+                }
+            }
+        }
     }
 
     // Recalculate the effective level for this node and
@@ -1404,7 +1520,7 @@ public class Logger {
 	// Recursively update the level on each of our kids.
 	if (kids != null) {
 	    for (int i = 0; i < kids.size(); i++) {
-	        WeakReference ref = (WeakReference)kids.get(i);
+                LogManager.LoggerWeakRef ref = kids.get(i);
 		Logger kid = (Logger) ref.get();
 		if (kid != null) {
 		    kid.updateEffectiveLevel();
@@ -1431,3 +1547,4 @@ public class Logger {
 
 
 }
+ 

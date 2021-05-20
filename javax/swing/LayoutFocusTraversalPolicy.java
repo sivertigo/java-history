@@ -1,8 +1,8 @@
 /*
- * @(#)LayoutFocusTraversalPolicy.java	1.10 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package javax.swing;
 
@@ -11,7 +11,7 @@ import java.awt.Container;
 import java.awt.ComponentOrientation;
 import java.util.Comparator;
 import java.io.*;
-
+import sun.awt.SunToolkit;
 
 /**
  * A SortingFocusTraversalPolicy which sorts Components based on their size,
@@ -23,7 +23,7 @@ import java.io.*;
  * <code>ComponentOrientation</code> for more information. All columns in a
  * row are fully traversed before proceeding to the next row.
  *
- * @version 1.10, 12/19/03
+ * @version %I%, %G%
  * @author David Mendenhall
  *
  * @see java.awt.ComponentOrientation
@@ -62,7 +62,7 @@ public class LayoutFocusTraversalPolicy extends SortingFocusTraversalPolicy
      * default Component to focus. This behavior can be disabled using the
      * <code>setImplicitDownCycleTraversal</code> method.
      * <p>
-     * If aContainer is <a href="doc-files/FocusSpec.html#FocusTraversalPolicyProviders">focus
+     * If aContainer is <a href="../../java/awt/doc-files/FocusSpec.html#FocusTraversalPolicyProviders">focus
      * traversal policy provider</a>, the focus is always transferred down-cycle.
      *
      * @param aContainer a focus cycle root of aComponent or a focus traversal policy provider
@@ -98,7 +98,7 @@ public class LayoutFocusTraversalPolicy extends SortingFocusTraversalPolicy
      * default Component to focus. This behavior can be disabled using the
      * <code>setImplicitDownCycleTraversal</code> method.
      * <p>
-     * If aContainer is <a href="doc-files/FocusSpec.html#FocusTraversalPolicyProviders">focus
+     * If aContainer is <a href="../../java/awt/doc-files/FocusSpec.html#FocusTraversalPolicyProviders">focus
      * traversal policy provider</a>, the focus is always transferred down-cycle.
      *
      * @param aContainer a focus cycle root of aComponent or a focus traversal policy provider
@@ -209,11 +209,11 @@ public class LayoutFocusTraversalPolicy extends SortingFocusTraversalPolicy
      protected boolean accept(Component aComponent) {
 	if (!super.accept(aComponent)) {
 	    return false;
-	} else if (aComponent instanceof JTable) {
+	} else if (SunToolkit.isInstanceOf(aComponent, "javax.swing.JTable")) {
             // JTable only has ancestor focus bindings, we thus force it
             // to be focusable by returning true here.
 	    return true;
-	} else if (aComponent instanceof JComboBox) {
+	} else if (SunToolkit.isInstanceOf(aComponent, "javax.swing.JComboBox")) {
 	    JComboBox box = (JComboBox)aComponent;
 	    return box.getUI().isFocusTraversable(box);
 	} else if (aComponent instanceof JComponent) {

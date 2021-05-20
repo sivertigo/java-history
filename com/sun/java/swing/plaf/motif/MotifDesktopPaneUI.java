@@ -1,8 +1,8 @@
 /*
- * @(#)MotifDesktopPaneUI.java	1.25 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.java.swing.plaf.motif;
@@ -27,7 +27,7 @@ import java.io.Serializable;
  * version of Swing.  A future release of Swing will provide support for
  * long term persistence.
  *
- * @version 1.25 12/19/03
+ * @version %I% %G%
  * @author David Kloba
  */
 public class MotifDesktopPaneUI extends javax.swing.plaf.basic.BasicDesktopPaneUI

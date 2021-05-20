@@ -1,8 +1,8 @@
 /*
- * @(#)SimpleTimeZone.java	1.50 09/06/16
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 /*
@@ -126,7 +126,7 @@ import sun.util.calendar.Gregorian;
  * @see      Calendar
  * @see      GregorianCalendar
  * @see      TimeZone
- * @version  1.50 06/16/09
+ * @version  %I% %G%
  * @author   David Goldsmith, Mark Davis, Chen-Lieh Huang, Alan Liu
  */
 
@@ -715,10 +715,10 @@ public class SimpleTimeZone extends TimeZone {
 
     private long getEnd(BaseCalendar cal, BaseCalendar.Date cdate, int year) {
 	int time = endTime;
-	if (startTimeMode != UTC_TIME) {
+	if (endTimeMode != UTC_TIME) {
 	    time -= rawOffset;
 	}
-	if (startTimeMode == WALL_TIME) {
+	if (endTimeMode == WALL_TIME) {
 	    time -= dstSavings;
 	}
 	return getTransition(cal, cdate, endMode, year, endMonth, endDay,
@@ -966,7 +966,7 @@ public class SimpleTimeZone extends TimeZone {
      * first Sunday of <code>startMonth</code>.  Likewise, +2 would indicate the
      * second Sunday, and -1 the last Sunday.  A value of 0 is illegal.
      * </dd>
-     * </ul>
+     * </dl>
      * <p>If <code>useDaylight</code> is false, this value is ignored.
      * @serial
      */
@@ -1027,7 +1027,7 @@ public class SimpleTimeZone extends TimeZone {
      * first Sunday of <code>endMonth</code>.  Likewise, +2 would indicate the
      * second Sunday, and -1 the last Sunday.  A value of 0 is illegal.
      * </dd>
-     * </ul>
+     * </dl>
      * <p>If <code>useDaylight</code> is false, this value is ignored.
      * @serial
      */

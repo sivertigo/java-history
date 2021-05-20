@@ -1,8 +1,8 @@
 /*
- * @(#)GraphicsEnvironment.java	1.62 04/04/13
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 
@@ -30,7 +30,7 @@ import sun.java2d.SunGraphicsEnvironment;
  * <code>GraphicsDevice</code> can be used.  
  * @see GraphicsDevice
  * @see GraphicsConfiguration
- * @version 	1.62, 04/13/04
+ * @version 	%I%, %G%
  */
 
 public abstract class GraphicsEnvironment {
@@ -206,6 +206,7 @@ public abstract class GraphicsEnvironment {
      * @param img the specified <code>BufferedImage</code>
      * @return a <code>Graphics2D</code> to be used for rendering into
      * the specified <code>BufferedImage</code>
+     * @throws NullPointerException if <code>img</code> is null
      */
     public abstract Graphics2D createGraphics(BufferedImage img);
 
@@ -281,6 +282,43 @@ public abstract class GraphicsEnvironment {
      * @since 1.2
      */
     public abstract String[] getAvailableFontFamilyNames(Locale l);
+
+    /**
+     * Registers a <i>/created</i> <code>Font</code>in this
+     * <code>GraphicsEnvironment</code>.
+     * A created font is one that was returned from calling
+     * {@link Font#createFont}, or derived from a created font by
+     * calling {@link Font#deriveFont}.
+     * After calling this method for such a font, it is available to
+     * be used in constructing new <code>Font</code>s by name or family name,
+     * and is enumerated by {@link #getAvailableFontFamilyNames} and
+     * {@link #getAllFonts} within the execution context of this
+     * application or applet. This means applets cannot register fonts in
+     * a way that they are visible to other applets.
+     * <p>
+     * Reasons that this method might not register the font and therefore
+     * return <code>false</code> are :
+     * <ul>
+     * <li>The font is not a <i>/created</i> <code>Font</code>.
+     * <li>The font conflicts with a non-created <code>Font</code> already
+     * in this <code>GraphicsEnvironment</code>. For example if the name
+     * is that of a system font, or a logical font as described in the
+     * documentation of the {@link Font} class. It is implementation dependent
+     * whether a font may also conflict if it has the same family name
+     * as a system font. The exception for created fonts means that an
+     * application can supersede the registration
+     * of an earlier created font with a new one.
+     * </ul>
+     * @return true if the <code>font</code> is successfully
+     * registered in this <code>GraphicsEnvironment</code>.
+     * @since 1.6
+     */
+    public boolean registerFont(Font font) {
+        if (font == null) {
+            throw new NullPointerException("font cannot be null.");
+        }
+        return sun.font.FontManager.registerFont(font);
+    }
 
     /**
      * Indicates a preference for locale-specific fonts in the mapping of

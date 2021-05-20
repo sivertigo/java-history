@@ -1,46 +1,46 @@
 /*
- * @(#)InstantiationException.java	1.7 95/08/13  
+ * %W% %E%
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang;
 
 /**
- * Signals that an attempt has been made to instantiate an abstract class or
- * an interface.
- * @version 	1.7, 08/13/95
+ * Thrown when an application tries to create an instance of a class
+ * using the {@code newInstance} method in class
+ * {@code Class}, but the specified class object cannot be
+ * instantiated.  The instantiation can fail for a variety of
+ * reasons including but not limited to:
+ *
+ * <ul>
+ * <li> the class object represents an abstract class, an interface,
+ *      an array class, a primitive type, or {@code void}
+ * <li> the class has no nullary constructor
+ *</ul>
+ *
+ * @author  unascribed
+ * @version %I%, %G%
+ * @see     java.lang.Class#newInstance()
+ * @since   JDK1.0
  */
 public
 class InstantiationException extends Exception {
     /**
-     * Constructs an InstantiationException with no detail message.
-     * A detail message is a String that describes this particular exception.
+     * Constructs an {@code InstantiationException} with no detail message.
      */
     public InstantiationException() {
 	super();
     }
 
     /**
-     * Constructs an InstantiationException with the specified detail message.
-     * A detail message is a String that describes this particular exception.
-     * @param s the String containing a detail message
+     * Constructs an {@code InstantiationException} with the 
+     * specified detail message. 
+     *
+     * @param   s   the detail message.
      */
     public InstantiationException(String s) {
 	super(s);
     }
 }
-

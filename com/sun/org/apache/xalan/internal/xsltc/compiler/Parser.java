@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /*
- * $Id: Parser.java,v 1.1.2.1 2006/09/19 01:06:32 jeffsuttor Exp $
+ * $Id: Parser.java,v 1.2.4.1 2005/09/13 12:14:32 pvedula Exp $
  */
 
 package com.sun.org.apache.xalan.internal.xsltc.compiler;
@@ -40,8 +40,10 @@ import com.sun.org.apache.xalan.internal.xsltc.compiler.util.ErrorMsg;
 import com.sun.org.apache.xalan.internal.xsltc.compiler.util.MethodType;
 import com.sun.org.apache.xalan.internal.xsltc.compiler.util.Type;
 import com.sun.org.apache.xalan.internal.xsltc.compiler.util.TypeCheckError;
-import com.sun.org.apache.xalan.internal.xsltc.runtime.AttributeList;
+import com.sun.org.apache.xalan.internal.utils.FactoryImpl;
+import com.sun.org.apache.xalan.internal.utils.ObjectFactory;
 import org.xml.sax.Attributes;
+import org.xml.sax.helpers.AttributesImpl;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.Locator;
@@ -89,8 +91,11 @@ public class Parser implements Constants, ContentHandler {
 
     private int _currentImportPrecedence;
 
-    public Parser(XSLTC xsltc) {
+    private boolean _useServicesMechanism = true;
+
+    public Parser(XSLTC xsltc, boolean useServicesMechanism) {
 	_xsltc = xsltc;
+        _useServicesMechanism = useServicesMechanism;
     }
 
     public void init() {
@@ -273,7 +278,7 @@ public class Parser implements Constants, ContentHandler {
 	    if (prefix.equals(XMLNS_PREFIX) == false) {
 		namespace = _symbolTable.lookupNamespace(prefix);
 		if (namespace == null && reportError) {
-		    final int line = _locator.getLineNumber();
+		    final int line = getLineNumber();
 		    ErrorMsg err = new ErrorMsg(ErrorMsg.NAMESPACE_UNDEF_ERR,
 						line, prefix);
 		    reportError(ERROR, err);
@@ -356,7 +361,7 @@ public class Parser implements Constants, ContentHandler {
 		stylesheet = new Stylesheet();
 		stylesheet.setSimplified();
 		stylesheet.addElement(element);
-		stylesheet.setAttributes((AttributeList) element.getAttributes());
+		stylesheet.setAttributes((AttributesImpl) element.getAttributes());
 
 		// Map the default NS if not already defined
 		if (element.lookupNamespace(EMPTYSTRING) == null) {
@@ -384,7 +389,7 @@ public class Parser implements Constants, ContentHandler {
 		while (elements.hasMoreElements()) {
 		    Object child = elements.nextElement();
 		    if (child instanceof Text) {
-			final int l = _locator.getLineNumber();
+			final int l = getLineNumber();
 			ErrorMsg err =
 			    new ErrorMsg(ErrorMsg.ILLEGAL_TEXT_NODE_ERR,l,null);
 			reportError(ERROR, err);
@@ -396,7 +401,7 @@ public class Parser implements Constants, ContentHandler {
 	    }
 	}
 	catch (TypeCheckError e) {
-	    reportError(ERROR, new ErrorMsg(e));
+            reportError(ERROR, new ErrorMsg(ErrorMsg.JAXP_COMPILE_ERR, e));
 	}
     }
 
@@ -416,7 +421,7 @@ public class Parser implements Constants, ContentHandler {
 	}
 	catch (IOException e) {
 	    if (_xsltc.debug()) e.printStackTrace();
-	    reportError(ERROR,new ErrorMsg(e));
+	    reportError(ERROR, new ErrorMsg(ErrorMsg.JAXP_COMPILE_ERR, e)); 
 	}
 	catch (SAXException e) {
 	    Throwable ex = e.getException();
@@ -424,15 +429,15 @@ public class Parser implements Constants, ContentHandler {
 		e.printStackTrace();
 		if (ex != null) ex.printStackTrace();
 	    }
-	    reportError(ERROR, new ErrorMsg(e));
+	    reportError(ERROR, new ErrorMsg(ErrorMsg.JAXP_COMPILE_ERR, e)); 
 	}
 	catch (CompilerException e) {
 	    if (_xsltc.debug()) e.printStackTrace();
-	    reportError(ERROR, new ErrorMsg(e));
+	    reportError(ERROR, new ErrorMsg(ErrorMsg.JAXP_COMPILE_ERR, e)); 
 	}
 	catch (Exception e) {
 	    if (_xsltc.debug()) e.printStackTrace();
-	    reportError(ERROR, new ErrorMsg(e));
+	    reportError(ERROR, new ErrorMsg(ErrorMsg.JAXP_COMPILE_ERR, e)); 
 	}
 	return null;
     }
@@ -445,16 +450,16 @@ public class Parser implements Constants, ContentHandler {
     public SyntaxTreeNode parse(InputSource input) {
 	try {
 	    // Create a SAX parser and get the XMLReader object it uses
-	    final SAXParserFactory factory = SAXParserFactory.newInstance();
-            
+	    final SAXParserFactory factory = FactoryImpl.getSAXFactory(_useServicesMechanism);
+	    
 	    if (_xsltc.isSecureProcessing()) {
 	        try {
 	            factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
 	        }
 	        catch (SAXException e) {}
 	    }
-
-            try {
+	    
+	    try {
 		factory.setFeature(Constants.NAMESPACE_FEATURE,true);
 	    }
 	    catch (Exception e) {
@@ -914,13 +919,12 @@ public class Parser implements Constants, ContentHandler {
 
 	if (className != null) {
 	    try {
-		final Class clazz = ObjectFactory.findProviderClass(
-                    className, ObjectFactory.findClassLoader(), true);
+		final Class clazz = ObjectFactory.findProviderClass(className, true);
 		node = (SyntaxTreeNode)clazz.newInstance();
 		node.setQName(qname);
 		node.setParser(this);
 		if (_locator != null) {
-		    node.setLineNumber(_locator.getLineNumber());
+		    node.setLineNumber(getLineNumber());
 		}
 		if (node instanceof Stylesheet) {
 		    _xsltc.setStylesheet((Stylesheet)node);
@@ -944,7 +948,7 @@ public class Parser implements Constants, ContentHandler {
 		    node = new UnsupportedElement(uri, prefix, local, false);
 		    UnsupportedElement element = (UnsupportedElement)node;
 		    ErrorMsg msg = new ErrorMsg(ErrorMsg.UNSUPPORTED_XSL_ERR,
-						_locator.getLineNumber(),local);
+						getLineNumber(),local);
 		    element.setErrorMessage(msg);
 		    if (versionIsOne) {
 		    	reportError(UNSUPPORTED,msg);
@@ -955,7 +959,7 @@ public class Parser implements Constants, ContentHandler {
 		    node = new UnsupportedElement(uri, prefix, local, true);
 		    UnsupportedElement element = (UnsupportedElement)node;
 		    ErrorMsg msg = new ErrorMsg(ErrorMsg.UNSUPPORTED_EXT_ERR,
-						_locator.getLineNumber(),local);
+						getLineNumber(),local);
 		    element.setErrorMessage(msg);
 		}
 		// Check if this is an extension of some other XSLT processor
@@ -967,7 +971,7 @@ public class Parser implements Constants, ContentHandler {
 			    UnsupportedElement elem = (UnsupportedElement)node;
 			    ErrorMsg msg =
 				new ErrorMsg(ErrorMsg.UNSUPPORTED_EXT_ERR,
-					     _locator.getLineNumber(),
+					     getLineNumber(),
 					     prefix+":"+local);
 			    elem.setErrorMessage(msg);
 			}
@@ -976,7 +980,7 @@ public class Parser implements Constants, ContentHandler {
 	    }
 	    if (node == null) {
                 node = new LiteralElement();
-                node.setLineNumber(_locator.getLineNumber());
+                node.setLineNumber(getLineNumber());
             }
 	}
 	if ((node != null) && (node instanceof LiteralElement)) {
@@ -1019,6 +1023,8 @@ public class Parser implements Constants, ContentHandler {
 	            final ErrorMsg err = 
 		        new ErrorMsg(ErrorMsg.ILLEGAL_ATTRIBUTE_ERR, 
 				attrQName, node);
+		    // Workaround for the TCK failure ErrorListener.errorTests.error001..
+	            err.setWarningError(true);
 		    reportError(WARNING, err);
 	        }
 	    }
@@ -1028,8 +1034,8 @@ public class Parser implements Constants, ContentHandler {
 
     /**
      * Parse an XPath expression:
-     *  @parent - XSL element where the expression occured
-     *  @exp    - textual representation of the expression
+     *  @param parent - XSL element where the expression occured
+     *  @param exp    - textual representation of the expression
      */
     public Expression parseExpression(SyntaxTreeNode parent, String exp) {
 	return (Expression)parseTopLevel(parent, "<EXPRESSION>"+exp, null);
@@ -1037,9 +1043,9 @@ public class Parser implements Constants, ContentHandler {
 
     /**
      * Parse an XPath expression:
-     *  @parent - XSL element where the expression occured
-     *  @attr   - name of this element's attribute to get expression from
-     *  @def    - default expression (if the attribute was not found)
+     *  @param parent - XSL element where the expression occured
+     *  @param attr   - name of this element's attribute to get expression from
+     *  @param def    - default expression (if the attribute was not found)
      */
     public Expression parseExpression(SyntaxTreeNode parent,
 				      String attr, String def) {
@@ -1053,8 +1059,8 @@ public class Parser implements Constants, ContentHandler {
 
     /**
      * Parse an XPath pattern:
-     *  @parent - XSL element where the pattern occured
-     *  @exp    - textual representation of the pattern
+     *  @param parent  - XSL element where the pattern occured
+     *  @param pattern - textual representation of the pattern
      */
     public Pattern parsePattern(SyntaxTreeNode parent, String pattern) {
 	return (Pattern)parseTopLevel(parent, "<PATTERN>"+pattern, pattern);
@@ -1062,9 +1068,9 @@ public class Parser implements Constants, ContentHandler {
 
     /**
      * Parse an XPath pattern:
-     *  @parent - XSL element where the pattern occured
-     *  @attr   - name of this element's attribute to get pattern from
-     *  @def    - default pattern (if the attribute was not found)
+     *  @param parent - XSL element where the pattern occured
+     *  @param attr   - name of this element's attribute to get pattern from
+     *  @param def    - default pattern (if the attribute was not found)
      */
     public Pattern parsePattern(SyntaxTreeNode parent,
 				String attr, String def) {
@@ -1082,8 +1088,7 @@ public class Parser implements Constants, ContentHandler {
      */
     private SyntaxTreeNode parseTopLevel(SyntaxTreeNode parent, String text,
 					 String expression) {
-	int line = 0;
-	if (_locator != null) line = _locator.getLineNumber();
+	int line = getLineNumber();
 
 	try {
 	    _xpathParser.setScanner(new XPathLexer(new StringReader(text)));
@@ -1260,7 +1265,7 @@ public class Parser implements Constants, ContentHandler {
 	    parent.addElement(element);
 	    element.setParent(parent);
 	}
-	element.setAttributes(new AttributeList(attributes));
+	element.setAttributes(new AttributesImpl(attributes));
 	element.setPrefixMapping(_prefixMapping);
 	
 	if (element instanceof Stylesheet) {
@@ -1375,6 +1380,17 @@ public class Parser implements Constants, ContentHandler {
      */
     public void setDocumentLocator(Locator locator) {
 	_locator = locator;
+    }
+    
+    /**
+     * Get the line number, or zero
+     * if there is no _locator.
+     */
+    private int getLineNumber() {
+    	int line = 0;
+    	if (_locator != null)
+    		line = _locator.getLineNumber();
+    	return line;
     }
 
 }

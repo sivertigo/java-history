@@ -1,8 +1,8 @@
 /*
- * @(#)ScrollPane.java	1.95 04/05/18
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2008, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package java.awt;
 
@@ -66,7 +66,7 @@ import java.io.IOException;
  * will change dynamically depending on whether the scrollbars are
  * currently visible or not.
  *
- * @version     1.95 05/18/04
+ * @version     %I% %G%
  * @author      Tom Ball
  * @author      Amy Fowler
  * @author      Tim Prinzing
@@ -338,7 +338,7 @@ public class ScrollPane extends Container implements Accessible {
      */
     public void setScrollPosition(int x, int y) {
     	synchronized (getTreeLock()) {
-	    if (ncomponents <= 0) {
+	    if (getComponentCount()==0) {
 		throw new NullPointerException("child is null");
 	    }
 	    hAdjustable.setValue(x);
@@ -373,10 +373,12 @@ public class ScrollPane extends Container implements Accessible {
      *     a child
      */
     public Point getScrollPosition() {
-	if (ncomponents <= 0) {
-	    throw new NullPointerException("child is null");
-	}
-	return new Point(hAdjustable.getValue(), vAdjustable.getValue());
+        synchronized (getTreeLock()) {
+            if (getComponentCount()==0) {
+                throw new NullPointerException("child is null");
+            }
+            return new Point(hAdjustable.getValue(), vAdjustable.getValue());
+        }
     }
 
     /**
@@ -466,26 +468,27 @@ public class ScrollPane extends Container implements Accessible {
      */
     @Deprecated
     public void layout() {
-	if (ncomponents > 0) {
-	    Component c = getComponent(0);
-	    Point p = getScrollPosition();
-	    Dimension cs = calculateChildSize();
-	    Dimension vs = getViewportSize();
-	    Insets i = getInsets();
-
-	    c.reshape(i.left - p.x, i.top - p.y, cs.width, cs.height);
-	    ScrollPanePeer peer = (ScrollPanePeer)this.peer;
-	    if (peer != null) {
-	        peer.childResized(cs.width, cs.height);
-	    }
-
-	    // update adjustables... the viewport size may have changed
-	    // with the scrollbars coming or going so the viewport size
-	    // is updated before the adjustables.
-	    vs = getViewportSize();
-	    hAdjustable.setSpan(0, cs.width, vs.width);
-	    vAdjustable.setSpan(0, cs.height, vs.height);
-	}
+        if (getComponentCount()==0) {
+            return;
+        }
+        Component c = getComponent(0);
+        Point p = getScrollPosition();
+        Dimension cs = calculateChildSize();
+        Dimension vs = getViewportSize();
+        Insets i = getInsets();
+        
+        c.reshape(i.left - p.x, i.top - p.y, cs.width, cs.height);
+        ScrollPanePeer peer = (ScrollPanePeer)this.peer;
+        if (peer != null) {
+            peer.childResized(cs.width, cs.height);
+        }
+        
+        // update adjustables... the viewport size may have changed
+        // with the scrollbars coming or going so the viewport size
+        // is updated before the adjustables.
+        vs = getViewportSize();
+        hAdjustable.setSpan(0, cs.width, vs.width);
+        vAdjustable.setSpan(0, cs.height, vs.height);
     }
 
     /**
@@ -495,21 +498,22 @@ public class ScrollPane extends Container implements Accessible {
      * @see Component#printAll
      */
     public void printComponents(Graphics g) {
-	if (ncomponents > 0) {
-	    Component c = component[0];
-	    Point p = c.getLocation();
-	    Dimension vs = getViewportSize();
-	    Insets i = getInsets();
-
-	    Graphics cg = g.create();
-	    try {
-	        cg.clipRect(i.left, i.top, vs.width, vs.height);
-	        cg.translate(p.x, p.y);
-		c.printAll(cg);
-	    } finally {
-		cg.dispose();
-	    }
-	}
+        if (getComponentCount()==0) {
+            return;
+        }
+        Component c = getComponent(0);
+        Point p = c.getLocation();
+        Dimension vs = getViewportSize();
+        Insets i = getInsets();
+        
+        Graphics cg = g.create();
+        try {
+            cg.clipRect(i.left, i.top, vs.width, vs.height);
+            cg.translate(p.x, p.y);
+            c.printAll(cg);
+        } finally {
+            cg.dispose();
+        }
     }
 
     /**
@@ -569,7 +573,7 @@ public class ScrollPane extends Container implements Accessible {
 	    default:
 		sdpStr = "invalid display policy";
 	}
-	Point p = ncomponents > 0? getScrollPosition() : new Point(0,0);
+	Point p = (getComponentCount()>0)? getScrollPosition() : new Point(0,0);
 	Insets i = getInsets();
 	return super.paramString()+",ScrollPosition=("+p.x+","+p.y+")"+
 	    ",Insets=("+i.top+","+i.left+","+i.bottom+","+i.right+")"+
@@ -737,6 +741,7 @@ public class ScrollPane extends Container implements Accessible {
      *
      * @return an AccessibleAWTScrollPane that serves as the 
      *         AccessibleContext of this ScrollPane
+     * @since 1.3
      */
     public AccessibleContext getAccessibleContext() {
         if (accessibleContext == null) {
@@ -750,6 +755,7 @@ public class ScrollPane extends Container implements Accessible {
      * <code>ScrollPane</code> class.  It provides an implementation of the 
      * Java Accessibility API appropriate to scroll pane user-interface 
      * elements.
+     * @since 1.3
      */
     protected class AccessibleAWTScrollPane extends AccessibleAWTContainer
     {
@@ -785,6 +791,10 @@ public class ScrollPane extends Container implements Accessible {
  * using JDK1.1
  */
 class PeerFixer implements AdjustmentListener, java.io.Serializable {
+    /*
+     * serialVersionUID
+     */
+    private static final long serialVersionUID = 7051237413532574756L;
 
     PeerFixer(ScrollPane scroller) {
 	this.scroller = scroller;

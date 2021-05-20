@@ -24,7 +24,7 @@ import com.sun.org.apache.xerces.internal.impl.XMLEntityDescription;
  *
  * @author Michael Glavassevich, IBM
  * 
- * @version $Id: XMLEntityDescriptionImpl.java,v 1.1.1.1 2004/05/04 10:22:35 vk112360 Exp $
+ * @version $Id: XMLEntityDescriptionImpl.java,v 1.4 2007/07/19 04:38:59 ofung Exp $
  */
 public class XMLEntityDescriptionImpl 
     extends XMLResourceIdentifierImpl

@@ -1,8 +1,8 @@
 /*
- * @(#)PNGImageWriter.java	1.36 09/04/08
+ * %W% %E%
  *
- * Copyright 2009 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2009, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.imageio.plugins.png;
@@ -76,7 +76,7 @@ class CRC {
 }
 
 
-class ChunkStream extends ImageOutputStreamImpl {
+final class ChunkStream extends ImageOutputStreamImpl {
     
     private ImageOutputStream stream;
     private long startPos;
@@ -121,11 +121,16 @@ class ChunkStream extends ImageOutputStreamImpl {
         stream.seek(pos);
         stream.flushBefore(pos);
     }
+
+    protected void finalize() throws Throwable {
+        // Empty finalizer (for improved performance; no need to call
+        // super.finalize() in this case)
+    }
 }
 
 // Compress output and write as a series of 'IDAT' chunks of
 // fixed length.
-class IDATOutputStream extends ImageOutputStreamImpl {
+final class IDATOutputStream extends ImageOutputStreamImpl {
     
     private static byte[] chunkType = {
         (byte)'I', (byte)'D', (byte)'A', (byte)'T'
@@ -232,6 +237,11 @@ class IDATOutputStream extends ImageOutputStreamImpl {
         } finally {
             def.end();
         }
+    }
+
+    protected void finalize() throws Throwable {
+        // Empty finalizer (for improved performance; no need to call
+        // super.finalize() in this case)
     }
 }
 
@@ -644,13 +654,13 @@ public class PNGImageWriter extends ImageWriter {
         }
     }
 
-    private byte[] deflate(String s) throws IOException {
+    private byte[] deflate(byte[] b) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DeflaterOutputStream dos = new DeflaterOutputStream(baos);
 
-        int len = s.length();
+        int len = b.length;
         for (int i = 0; i < len; i++) {
-            dos.write((int)s.charAt(i));
+            dos.write((int)(0xff & b[i]));
         }
         dos.close();
         
@@ -658,38 +668,37 @@ public class PNGImageWriter extends ImageWriter {
     }
 
     private void write_iTXt() throws IOException {
-        Iterator keywordIter = metadata.iTXt_keyword.iterator();
-        Iterator flagIter = metadata.iTXt_compressionFlag.iterator();
-        Iterator methodIter = metadata.iTXt_compressionMethod.iterator();
-        Iterator languageIter = metadata.iTXt_languageTag.iterator();
-        Iterator translatedKeywordIter =
+        Iterator<String> keywordIter = metadata.iTXt_keyword.iterator();
+        Iterator<Boolean> flagIter = metadata.iTXt_compressionFlag.iterator();
+        Iterator<Integer> methodIter = metadata.iTXt_compressionMethod.iterator();
+        Iterator<String> languageIter = metadata.iTXt_languageTag.iterator();
+        Iterator<String> translatedKeywordIter =
             metadata.iTXt_translatedKeyword.iterator();
-        Iterator textIter = metadata.iTXt_text.iterator();
+        Iterator<String> textIter = metadata.iTXt_text.iterator();
 
         while (keywordIter.hasNext()) {
             ChunkStream cs = new ChunkStream(PNGImageReader.iTXt_TYPE, stream);
-            String keyword = (String)keywordIter.next();
-            cs.writeBytes(keyword);
+
+            cs.writeBytes(keywordIter.next());
             cs.writeByte(0);
 
-            int flag = ((Integer)flagIter.next()).intValue();
-            cs.writeByte(flag);
-            int method = ((Integer)methodIter.next()).intValue();
-            cs.writeByte(method);
+            Boolean compressed = flagIter.next();
+            cs.writeByte(compressed ? 1 : 0);
 
-            String languageTag = (String)languageIter.next();
-            cs.writeBytes(languageTag);
+            cs.writeByte(methodIter.next().intValue());
+
+            cs.writeBytes(languageIter.next());
             cs.writeByte(0);
 
-            String translatedKeyword = (String)translatedKeywordIter.next();
-            cs.writeBytes(translatedKeyword);
+
+            cs.write(translatedKeywordIter.next().getBytes("UTF8"));
             cs.writeByte(0);
 
-            String text = (String)textIter.next();
-            if (flag == 1) {
-                cs.write(deflate(text));
+            String text = textIter.next();
+            if (compressed) {
+                cs.write(deflate(text.getBytes("UTF8")));
             } else {
-                cs.writeUTF(text);
+                cs.write(text.getBytes("UTF8"));
             }
             cs.finish();
         }
@@ -710,7 +719,7 @@ public class PNGImageWriter extends ImageWriter {
             cs.writeByte(compressionMethod);
 
             String text = (String)textIter.next();
-            cs.write(deflate(text));
+            cs.write(deflate(text.getBytes()));
             cs.finish();
         }
     }
@@ -721,12 +730,21 @@ public class PNGImageWriter extends ImageWriter {
 
         while (typeIter.hasNext() && dataIter.hasNext()) {
             String type = (String)typeIter.next();
-            ChunkStream cs = new ChunkStream(PNGImageReader.chunkType(type),
-                                             stream);
+            ChunkStream cs = new ChunkStream(chunkType(type), stream);
             byte[] data = (byte[])dataIter.next();
             cs.write(data);
             cs.finish();
         }
+    }
+
+    private static int chunkType(String typeString) {
+        char c0 = typeString.charAt(0);
+        char c1 = typeString.charAt(1);
+        char c2 = typeString.charAt(2);
+        char c3 = typeString.charAt(3);
+
+        int type = (c0 << 24) | (c1 << 16) | (c2 << 8) | c3;
+        return type;
     }
 
     private void encodePass(ImageOutputStream os,
@@ -777,7 +795,7 @@ public class PNGImageWriter extends ImageWriter {
             // will be used to calculate alpha value for the pixel
             icm_gray_alpha = (IndexColorModel)image.getColorModel();
         }
-
+ 
         currRow = new byte[bytesPerRow + bpp];
         prevRow = new byte[bytesPerRow + bpp];
         filteredRows = new byte[5][bytesPerRow + bpp];

@@ -1,8 +1,8 @@
 /*
- * @(#)WindowsPopupMenuUI.java	1.23 09/08/10
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.java.swing.plaf.windows;
@@ -19,6 +19,7 @@ import javax.swing.plaf.basic.*;
 import com.sun.java.swing.plaf.windows.TMSchema.Part;
 import com.sun.java.swing.plaf.windows.TMSchema.State;
 import com.sun.java.swing.plaf.windows.XPStyle.Skin;
+import static sun.swing.SwingUtilities2.BASICMENUITEMUI_MAX_TEXT_OFFSET;
 
 /**
  * Windows rendition of the component.
@@ -30,7 +31,7 @@ import com.sun.java.swing.plaf.windows.XPStyle.Skin;
  * version of Swing.  A future release of Swing will provide support for
  * long term persistence.
  * 
- * @version 1.23 08/10/09
+ * @version %I% %G%
  * @author Igor Kushnirskiy
  */
 public class WindowsPopupMenuUI extends BasicPopupMenuUI {
@@ -81,7 +82,7 @@ public class WindowsPopupMenuUI extends BasicPopupMenuUI {
                     if (repaintRoot != null) {
                         Window win =
                             SwingUtilities.getWindowAncestor(repaintRoot);
-                        WindowsUtils.repaintMnemonicsInWindow(win);
+                        WindowsGraphicsUtils.repaintMnemonicsInWindow(win);
                     }
                 }
             } else {
@@ -95,12 +96,26 @@ public class WindowsPopupMenuUI extends BasicPopupMenuUI {
     /**
      * Returns offset for the text.
      * BasicMenuItemUI sets max text offset on the JPopupMenuUI.
-     * Note: for 1.5 version it always returns {@code -1}
      * @param c PopupMenu to return text offset for.
      * @return text offset for the component
      */
     static int getTextOffset(JComponent c) {
         int rv = -1;
+        Object maxTextOffset = 
+            c.getClientProperty(BASICMENUITEMUI_MAX_TEXT_OFFSET);
+        if (maxTextOffset instanceof Integer) {
+            /* 
+             * this is in JMenuItem coordinates. 
+             * Let's assume all the JMenuItem have the same offset along X.
+             */
+            rv = (Integer) maxTextOffset;
+            int menuItemOffset = 0;
+            Component component = c.getComponent(0);
+            if (component != null) {
+                menuItemOffset = component.getX();
+            }
+            rv += menuItemOffset;
+        }
         return rv;
     }
     
@@ -156,10 +171,6 @@ public class WindowsPopupMenuUI extends BasicPopupMenuUI {
     
     @Override
     public void paint(Graphics g, JComponent c) {
-        /*
-         * Note: 1.5 backport does not paint gutter.
-         * See comment for getTextOffset()
-         */
         if (WindowsMenuItemUI.isVistaPainting()) {
             XPStyle xp = XPStyle.getXP();
             Skin skin = xp.getSkin(c, Part.MP_POPUPBACKGROUND);

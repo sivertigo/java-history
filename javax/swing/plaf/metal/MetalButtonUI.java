@@ -1,13 +1,13 @@
 /*
- * @(#)MetalButtonUI.java	1.38 09/07/30
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
  
 package javax.swing.plaf.metal;
 
-import com.sun.java.swing.SwingUtilities2;
+import sun.swing.SwingUtilities2;
 import sun.awt.AppContext;
 
 import javax.swing.*;
@@ -30,7 +30,7 @@ import javax.swing.plaf.*;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
- * @version 1.38 07/30/09
+ * @version %I% %G%
  * @author Tom Santos
  */
 public class MetalButtonUI extends BasicButtonUI {
@@ -39,9 +39,9 @@ public class MetalButtonUI extends BasicButtonUI {
     protected Color focusColor;
     protected Color selectColor;
     protected Color disabledTextColor;
- 
+    
     private static final Object METAL_BUTTON_UI_KEY = new Object();
-
+ 
     // ********************************
     //          Create PLAF
     // ********************************
@@ -53,7 +53,7 @@ public class MetalButtonUI extends BasicButtonUI {
             metalButtonUI = new MetalButtonUI();
             appContext.put(METAL_BUTTON_UI_KEY, metalButtonUI);
         }
-	return metalButtonUI;
+        return metalButtonUI;
     }
  
     // ********************************

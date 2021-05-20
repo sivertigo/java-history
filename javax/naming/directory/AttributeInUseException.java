@@ -1,8 +1,8 @@
 /*
- * @(#)AttributeInUseException.java	1.7 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.naming.directory;
@@ -18,7 +18,7 @@ import javax.naming.NamingException;
   *
   * @author Rosanna Lee
   * @author Scott Seligman
-  * @version 1.7 03/12/19
+  * @version %I% %E%
   *
   * @see DirContext#modifyAttributes
   * @since 1.3

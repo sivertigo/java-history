@@ -1,6 +1,6 @@
 /*
- * Copyright 2005 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package com.sun.java.swing.plaf.windows;
 
@@ -17,7 +17,7 @@ import javax.swing.plaf.*;
  * will force the UIs to update all known Frames. You can invoke
  * <code>invalidate</code> to force the value to be fetched again.
  *
- * @version @(#)DesktopProperty.java	1.9 05/03/25
+ * @version %W% %E%
  */
 // NOTE: Don't rely on this class staying in this location. It is likely
 // to move to a different package in the future.
@@ -30,8 +30,7 @@ public class DesktopProperty implements UIDefaults.ActiveValue {
     /**
      * ReferenceQueue of unreferenced WeakPCLs.
      */
-    private static ReferenceQueue queue;
-
+    private static final ReferenceQueue queue = new ReferenceQueue();
 
     /**
      * PropertyChangeListener attached to the Toolkit.
@@ -40,7 +39,7 @@ public class DesktopProperty implements UIDefaults.ActiveValue {
     /**
      * Key used to lookup value from desktop.
      */
-    private String key;
+    private final String key;
     /**
      * Value to return.
      */
@@ -48,17 +47,7 @@ public class DesktopProperty implements UIDefaults.ActiveValue {
     /**
      * Fallback value in case we get null from desktop.
      */
-    private Object fallback;
-
-    /**
-     * Toolkit.
-     */
-    private Toolkit toolkit;
-
-
-    static {
-        queue = new ReferenceQueue();
-    }
+    private final Object fallback;
 
     /**
      * Cleans up any lingering state held by unrefeernced
@@ -120,13 +109,10 @@ public class DesktopProperty implements UIDefaults.ActiveValue {
      *
      * @param key Key used in looking up desktop value.
      * @param fallback Value used if desktop property is null.
-     * @param toolkit Toolkit used to fetch property from, can be null
-     *        in which default will be used.
      */
-    public DesktopProperty(String key, Object fallback, Toolkit toolkit) {
+    public DesktopProperty(String key, Object fallback) {
         this.key = key;
         this.fallback = fallback;
-        this.toolkit = toolkit;
         // The only sure fire way to clear our references is to create a
         // Thread and wait for a reference to be added to the queue.
         // Because it is so rare that you will actually change the look
@@ -157,13 +143,13 @@ public class DesktopProperty implements UIDefaults.ActiveValue {
      * Returns the value from the desktop.
      */
     protected Object getValueFromDesktop() {
-        if (this.toolkit == null) {
-            this.toolkit = Toolkit.getDefaultToolkit();
-        }
-        Object value = toolkit.getDesktopProperty(getKey());
-        pcl = new WeakPCL(this, toolkit, getKey(), UIManager.getLookAndFeel());
-        toolkit.addPropertyChangeListener(getKey(), pcl);
-        return value;
+	Toolkit toolkit = Toolkit.getDefaultToolkit();
+	if (pcl == null) {
+	    pcl = new WeakPCL(this, getKey(), UIManager.getLookAndFeel());
+	    toolkit.addPropertyChangeListener(getKey(), pcl);
+	}
+
+	return toolkit.getDesktopProperty(getKey()); 
     }
 
     /**
@@ -174,16 +160,20 @@ public class DesktopProperty implements UIDefaults.ActiveValue {
     }
 
     /**
+     * Invalidates the current value.
+     *
+     * @param laf the LookAndFeel this DesktopProperty was created with
+     */
+    public void invalidate(LookAndFeel laf) {
+        invalidate();
+    }
+
+    /**
      * Invalides the current value so that the next invocation of
      * <code>createValue</code> will ask for the property again.
      */
     public void invalidate() {
-        if (pcl != null) {
-            toolkit.removePropertyChangeListener(getKey(), pcl);
-            toolkit = null;
-            pcl = null;
-            value = null;
-        }
+	value = null;
     }
 
     /**
@@ -244,13 +234,11 @@ public class DesktopProperty implements UIDefaults.ActiveValue {
      */
     private static class WeakPCL extends WeakReference
                                implements PropertyChangeListener {
-        private Toolkit kit;
         private String key;
         private LookAndFeel laf;
 
-        WeakPCL(Object target, Toolkit kit, String key, LookAndFeel laf) { 
+        WeakPCL(Object target, String key, LookAndFeel laf) {
             super(target, queue);
-            this.kit = kit;
             this.key = key;
             this.laf = laf;
         }
@@ -258,19 +246,19 @@ public class DesktopProperty implements UIDefaults.ActiveValue {
         public void propertyChange(PropertyChangeEvent pce) {
             DesktopProperty property = (DesktopProperty)get();
 
-            if (property == null || laf != UIManager.getLookAndFeel()) { 
+            if (property == null || laf != UIManager.getLookAndFeel()) {
                 // The property was GC'ed, we're no longer interested in
                 // PropertyChanges, remove the listener.
                 dispose();
             }
             else {
-                property.invalidate();
+                property.invalidate(laf);
                 property.updateUI();
             }
         }
 
         void dispose() {
-            kit.removePropertyChangeListener(key, this);
+	    Toolkit.getDefaultToolkit().removePropertyChangeListener(key, this);
         }
     }
 }

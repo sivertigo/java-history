@@ -1,8 +1,8 @@
 /*
- * @(#)Method.java	1.51 09/05/08
+ * %W% %E%
  *
- * Copyright 2009 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang.reflect;
@@ -43,8 +43,6 @@ import java.util.Map;
 public final
     class Method extends AccessibleObject implements GenericDeclaration, 
 						     Member {
-
-
     private Class		clazz;
     private int			slot;
     // This is guaranteed to be interned by the VM in the 1.4
@@ -72,7 +70,13 @@ public final
     private Class securityCheckCache;
     private Class securityCheckTargetClassCache;
 
-    // Generics infrastructure
+    // Modifiers that can be applied to a method in source code
+    private static final int LANGUAGE_MODIFIERS = 
+	Modifier.PUBLIC		| Modifier.PROTECTED	| Modifier.PRIVATE | 
+	Modifier.ABSTRACT	| Modifier.STATIC	| Modifier.FINAL   |  
+	Modifier.SYNCHRONIZED	| Modifier.NATIVE;
+
+   // Generics infrastructure
 
     private String getGenericSignature() {return signature;}
 
@@ -386,12 +390,12 @@ public final
      * <tt>public</tt>, <tt>protected</tt> or <tt>private</tt> first,
      * and then other modifiers in the following order:
      * <tt>abstract</tt>, <tt>static</tt>, <tt>final</tt>,
-     * <tt>synchronized</tt> <tt>native</tt>.
+     * <tt>synchronized</tt>, <tt>native</tt>.
      */
     public String toString() {
 	try {
 	    StringBuffer sb = new StringBuffer();
-	    int mod = getModifiers();
+	    int mod = getModifiers() & LANGUAGE_MODIFIERS;
 	    if (mod != 0) {
 		sb.append(Modifier.toString(mod) + " ");
 	    }
@@ -455,7 +459,7 @@ public final
     public String toGenericString() {
 	try {
 	    StringBuilder sb = new StringBuilder();
-	    int mod = getModifiers();
+	    int mod = getModifiers() & LANGUAGE_MODIFIERS;
 	    if (mod != 0) {
 		sb.append(Modifier.toString(mod) + " ");
 	    }
@@ -574,18 +578,19 @@ public final
                 Class targetClass = ((obj == null || !Modifier.isProtected(modifiers))
                                      ? clazz
                                      : obj.getClass());
-                boolean cached;
-                synchronized (this) {
-                    cached = (securityCheckCache == caller)
-                             && (securityCheckTargetClassCache == targetClass);
-                }
-                if (!cached) {
-                    Reflection.ensureMemberAccess(caller, clazz, obj, modifiers);
-                    synchronized (this) {
-                        securityCheckCache = caller;
-                        securityCheckTargetClassCache = targetClass;
-                    }
-                }
+
+		boolean cached;
+		synchronized (this) {
+		    cached = (securityCheckCache == caller)
+			    && (securityCheckTargetClassCache == targetClass);
+		}
+		if (!cached) {
+		    Reflection.ensureMemberAccess(caller, clazz, obj, modifiers);
+		    synchronized (this) {
+			securityCheckCache = caller;
+			securityCheckTargetClassCache = targetClass;
+		    }
+		}
             }
         }
         if (methodAccessor == null) acquireMethodAccessor();
@@ -663,6 +668,10 @@ public final
         }
     }
 
+    /**
+     * @throws NullPointerException {@inheritDoc}
+     * @since 1.5
+     */
     public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
         if (annotationClass == null)
             throw new NullPointerException();
@@ -670,10 +679,11 @@ public final
         return (T) declaredAnnotations().get(annotationClass);
     }
 
-    private static final Annotation[] EMPTY_ANNOTATION_ARRAY=new Annotation[0];
-
+    /**
+     * @since 1.5
+     */
     public Annotation[] getDeclaredAnnotations()  {
-        return declaredAnnotations().values().toArray(EMPTY_ANNOTATION_ARRAY);
+        return AnnotationParser.toArray(declaredAnnotations());
     }
 
     private transient Map<Class, Annotation> declaredAnnotations;

@@ -1,20 +1,8 @@
 /*
- * @(#)AppletContext.java	1.13 95/12/14 Arthur van Hoff
+ * %W% %E%
  *
- * Copyright (c) 1994-1995 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.applet;
@@ -24,63 +12,166 @@ import java.awt.Graphics;
 import java.awt.image.ColorModel;
 import java.net.URL;
 import java.util.Enumeration;
+import java.io.InputStream;
+import java.io.IOException;
+import java.util.Iterator;
 
 /**
- * This interface corresponds to an applet's environment. It can be
- * used by an applet to obtain information from the applet's
- * environment, which is usually the browser or the applet viewer.
+ * This interface corresponds to an applet's environment: the
+ * document containing the applet and the other applets in the same
+ * document.
+ * <p>
+ * The methods in this interface can be used by an applet to obtain
+ * information about its environment.
  *
- * @version 	1.13, 12/14/95
  * @author 	Arthur van Hoff
+ * @version     %I%, %G%
+ * @since       JDK1.0
  */
 public interface AppletContext {
     /**
-     * Gets an audio clip.
+     * Creates an audio clip.
+     *
+     * @param   url   an absolute URL giving the location of the audio clip.
+     * @return  the audio clip at the specified URL.
      */
     AudioClip getAudioClip(URL url);
 
     /**
-     * Gets an image. This usually involves downloading it
-     * over the net. However, the environment may decide to
-     * cache images. This method takes an array of URLs,
-     * each of which will be tried until the image is found.
+     * Returns an <code>Image</code> object that can then be painted on
+     * the screen. The <code>url</code> argument<code> </code>that is
+     * passed as an argument must specify an absolute URL.
+     * <p>
+     * This method always returns immediately, whether or not the image
+     * exists. When the applet attempts to draw the image on the screen,
+     * the data will be loaded. The graphics primitives that draw the
+     * image will incrementally paint on the screen.
+     *
+     * @param   url   an absolute URL giving the location of the image.
+     * @return  the image at the specified URL.
+     * @see     java.awt.Image
      */
     Image getImage(URL url);
 
     /**
-     * Gets an applet by name. 
-     * @return null if the applet does not exist.
+     * Finds and returns the applet in the document represented by this
+     * applet context with the given name. The name can be set in the
+     * HTML tag by setting the <code>name</code> attribute.
+     *
+     * @param   name   an applet name.
+     * @return  the applet with the given name, or <code>null</code> if
+     *          not found.
      */
     Applet getApplet(String name);
 
     /**
-     * Enumerates the applets in this context. Only applets
-     * that are accessible will be returned. This list always
-     * includes the applet itself.
+     * Finds all the applets in the document represented by this applet
+     * context.
+     *
+     * @return  an enumeration of all applets in the document represented by
+     *          this applet context.
      */
-    Enumeration getApplets();
+    Enumeration<Applet> getApplets();
 
     /**
-     * Shows a new document. This may be ignored by
-     * the applet context.
+     * Requests that the browser or applet viewer show the Web page 
+     * indicated by the <code>url</code> argument. The browser or 
+     * applet viewer determines which window or frame to display the 
+     * Web page. This method may be ignored by applet contexts that 
+     * are not browsers.
+     *
+     * @param   url   an absolute URL giving the location of the document.
      */
     void showDocument(URL url);
 
     /**
-     * Show a new document in a target window or frame. This may be ignored by
-     * the applet context.
+     * Requests that the browser or applet viewer show the Web page
+     * indicated by the <code>url</code> argument. The
+     * <code>target</code> argument indicates in which HTML frame the
+     * document is to be displayed.
+     * The target argument is interpreted as follows:
+     * <p>
+     * <center><table border="3" summary="Target arguments and their descriptions">
+     * <tr><th>Target Argument</th><th>Description</th></tr>
+     * <tr><td><code>"_self"</code>  <td>Show in the window and frame that
+     *                                   contain the applet.</tr>
+     * <tr><td><code>"_parent"</code><td>Show in the applet's parent frame. If
+     *                                   the applet's frame has no parent frame,
+     *                                   acts the same as "_self".</tr>
+     * <tr><td><code>"_top"</code>   <td>Show in the top-level frame of the applet's
+     *                                   window. If the applet's frame is the
+     *                                   top-level frame, acts the same as "_self".</tr>
+     * <tr><td><code>"_blank"</code> <td>Show in a new, unnamed
+     *                                   top-level window.</tr>
+     * <tr><td><i>name</i><td>Show in the frame or window named <i>name</i>. If
+     *                        a target named <i>name</i> does not already exist, a
+     *                        new top-level window with the specified name is created,
+     *                        and the document is shown there.</tr>
+     * </table> </center>
+     * <p>
+     * An applet viewer or browser is free to ignore <code>showDocument</code>.
      *
-     * This method accepts the target strings:
-     *   _self		show in current frame
-     *   _parent	show in parent frame
-     *   _top		show in top-most frame
-     *   _blank		show in new unnamed top-level window
-     *   <other>	show in new top-level window named <other>
+     * @param   url   an absolute URL giving the location of the document.
+     * @param   target   a <code>String</code> indicating where to display
+     *                   the page.
      */
     public void showDocument(URL url, String target);
 
     /**
-     * Show a status string.
+     * Requests that the argument string be displayed in the
+     * "status window". Many browsers and applet viewers
+     * provide such a window, where the application can inform users of
+     * its current state.
+     *
+     * @param   status   a string to display in the status window.
      */
     void showStatus(String status);
+
+    /**
+     * Associates the specified stream with the specified key in this
+     * applet context. If the applet context previously contained a mapping 
+     * for this key, the old value is replaced. 
+     * <p>
+     * For security reasons, mapping of streams and keys exists for each 
+     * codebase. In other words, applet from one codebase cannot access 
+     * the streams created by an applet from a different codebase
+     * <p>
+     * @param key key with which the specified value is to be associated.
+     * @param stream stream to be associated with the specified key. If this
+     *               parameter is <code>null</code>, the specified key is removed 
+     *               in this applet context.
+     * @throws <code>IOException</code> if the stream size exceeds a certain
+     *         size limit. Size limit is decided by the implementor of this
+     *         interface.
+     * @since 1.4
+     */
+    public void setStream(String key, InputStream stream)throws IOException;
+
+    /**
+     * Returns the stream to which specified key is associated within this 
+     * applet context. Returns <tt>null</tt> if the applet context contains 
+     * no stream for this key.  
+     * <p>
+     * For security reasons, mapping of streams and keys exists for each 
+     * codebase. In other words, applet from one codebase cannot access 
+     * the streams created by an applet from a different codebase
+     * <p>
+     * @return the stream to which this applet context maps the key
+     * @param key key whose associated stream is to be returned.
+     * @since 1.4
+     */
+    public InputStream getStream(String key);
+
+    /**
+     * Finds all the keys of the streams in this applet context.
+     * <p>
+     * For security reasons, mapping of streams and keys exists for each 
+     * codebase. In other words, applet from one codebase cannot access 
+     * the streams created by an applet from a different codebase
+     * <p>
+     * @return  an Iterator of all the names of the streams in this applet 
+     *          context.
+     * @since 1.4
+     */
+    public Iterator<String> getStreamKeys();
 }

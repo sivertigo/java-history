@@ -1,11 +1,11 @@
 /*
- * @(#)file      SnmpParameters.java
- * @(#)author    Sun Microsystems, Inc.
- * @(#)version   4.17
- * @(#)date      09/10/09
+ * %Z%file      %M%
+ * %Z%author    Sun Microsystems, Inc.
+ * %Z%version   %I%
+ * %Z%date      %D%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  *
  */
 // Copyright (c) 1995-96 by Cisco Systems, Inc.
@@ -30,7 +30,7 @@ import com.sun.jmx.snmp.SnmpStatusException;
  * <B>Note</B>: Changing values for an <CODE>SnmpParameter</CODE> object 
  * affects all <CODE>SnmpPeer</CODE> objects that share the parameter object.
  *
- * @version     4.17     12/19/03
+ * @version     %I%     %G%
  * @author      Sun Microsystems, Inc
  * @author      Cisco Systems, Inc.
  * @see com.sun.jmx.snmp.SnmpPeer

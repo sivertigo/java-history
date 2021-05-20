@@ -1,8 +1,8 @@
 /*
- * @(#)ConnectionCache.java	1.12 03/12/19
+ * %W% %E%
  * 
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2009, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.corba.se.pept.transport;
@@ -23,6 +23,13 @@ public interface ConnectionCache
     public long numberOfBusyConnections();
 
     public boolean reclaim();
+
+    /** Close all connections in the connection cache.
+     * This is used as a final cleanup, and will result
+     * in abrupt termination of any pending communications.
+     */
+    public void close(); 
+
 }
 
 // End of file.

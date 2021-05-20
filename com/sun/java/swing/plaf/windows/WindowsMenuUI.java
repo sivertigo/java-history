@@ -1,8 +1,8 @@
 /*
- * @(#)WindowsMenuUI.java	1.26 07/01/22
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.java.swing.plaf.windows;
@@ -29,6 +29,8 @@ import com.sun.java.swing.plaf.windows.TMSchema.State;
  * long term persistence.
  */
 public class WindowsMenuUI extends BasicMenuUI {
+    protected Integer menuBarHeight;
+    protected boolean hotTrackingOn;
 
     final WindowsMenuItemUIAccessor accessor = 
         new WindowsMenuItemUIAccessor() {
@@ -96,6 +98,11 @@ public class WindowsMenuUI extends BasicMenuUI {
 	if (!WindowsLookAndFeel.isClassicWindows()) {
 	    menuItem.setRolloverEnabled(true);
 	}
+
+	menuBarHeight = (Integer)UIManager.getInt("MenuBar.height");
+
+	Object obj      = UIManager.get("MenuBar.rolloverEnabled");
+	hotTrackingOn = (obj instanceof Boolean) ? (Boolean)obj : true;
     }
 
     /**
@@ -230,9 +237,8 @@ public class WindowsMenuUI extends BasicMenuUI {
 	    super.mouseEntered(evt);
 
 	    JMenu menu = (JMenu)evt.getSource();
-	    ButtonModel model = menu.getModel();
-	    if (menu.isRolloverEnabled()) {
-		model.setRollover(true);
+	    if (hotTrackingOn && menu.isTopLevelMenu() && menu.isRolloverEnabled()) {
+		menu.getModel().setRollover(true);
 		menuItem.repaint();
 	    }
 	}
@@ -247,6 +253,26 @@ public class WindowsMenuUI extends BasicMenuUI {
 		menuItem.repaint();
 	    }
 	}
+    }
+
+    protected Dimension getPreferredMenuItemSize(JComponent c,
+                                                     Icon checkIcon,
+                                                     Icon arrowIcon,
+                                                     int defaultTextIconGap) {
+
+	Dimension d = super.getPreferredMenuItemSize(c, checkIcon, arrowIcon,
+						     defaultTextIconGap);
+
+	// Note: When toolbar containers (rebars) are implemented, only do
+	// this if the JMenuBar is not in a rebar (i.e. ignore the desktop
+	// property win.menu.height if in a rebar.)
+	if (c instanceof JMenu && ((JMenu)c).isTopLevelMenu() &&
+	    menuBarHeight != null && d.height < menuBarHeight) {
+
+	    d.height = menuBarHeight;
+	}
+
+	return d;
     }
 }
 

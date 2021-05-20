@@ -1,8 +1,6 @@
 /*
- * @(#)JPEGImageWriter.java	1.33 03/10/01
- *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, 2013, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.imageio.plugins.jpeg;
@@ -160,8 +158,7 @@ public class JPEGImageWriter extends ImageWriter {
     static {
         java.security.AccessController.doPrivileged(
             new sun.security.action.LoadLibraryAction("jpeg"));
-        initWriterIDs(ImageOutputStream.class, 
-                      JPEGQTable.class, 
+        initWriterIDs(JPEGQTable.class,
                       JPEGHuffmanTable.class);
     }
 
@@ -175,11 +172,18 @@ public class JPEGImageWriter extends ImageWriter {
     }
 
     public void setOutput(Object output) {
-        super.setOutput(output); // validates output
-        resetInternalState();
-        ios = (ImageOutputStream) output; // so this will always work
-        // Set the native destination
-        setDest(structPointer, ios);
+        setThreadLock();
+        try {
+            cbLock.check();
+
+            super.setOutput(output); // validates output
+            resetInternalState();
+            ios = (ImageOutputStream) output; // so this will always work
+            // Set the native destination
+            setDest(structPointer);
+        } finally {
+            clearThreadLock();
+        }
     }
 
     public ImageWriteParam getDefaultWriteParam() {
@@ -187,13 +191,23 @@ public class JPEGImageWriter extends ImageWriter {
     }
 
     public IIOMetadata getDefaultStreamMetadata(ImageWriteParam param) {
-        return new JPEGMetadata(param, this);
+        setThreadLock(); 
+        try { 
+            return new JPEGMetadata(param, this); 
+        } finally { 
+            clearThreadLock(); 
+        } 
     }
 
     public IIOMetadata
         getDefaultImageMetadata(ImageTypeSpecifier imageType,
                                 ImageWriteParam param) {
-        return new JPEGMetadata(imageType, param, this);
+        setThreadLock();
+        try {
+            return new JPEGMetadata(imageType, param, this);
+        } finally {
+            clearThreadLock();
+        }
     }
 
     public IIOMetadata convertStreamMetadata(IIOMetadata inData,
@@ -215,6 +229,18 @@ public class JPEGImageWriter extends ImageWriter {
         convertImageMetadata(IIOMetadata inData,
                              ImageTypeSpecifier imageType,
                              ImageWriteParam param) {
+        setThreadLock();
+        try {
+            return convertImageMetadataOnThread(inData, imageType, param);
+        } finally {
+            clearThreadLock();
+        }
+    }
+
+    private IIOMetadata
+        convertImageMetadataOnThread(IIOMetadata inData,
+                                     ImageTypeSpecifier imageType,
+                                     ImageWriteParam param) {
         // If it's one of ours, just return it
         if (inData instanceof JPEGMetadata) {
             JPEGMetadata jpegData = (JPEGMetadata) inData;
@@ -247,7 +273,7 @@ public class JPEGImageWriter extends ImageWriter {
                 return jpegData;
             }
         }
-            return null;
+        return null;
     }
 
     public int getNumThumbnailsSupported(ImageTypeSpecifier imageType,
@@ -307,6 +333,19 @@ public class JPEGImageWriter extends ImageWriter {
     public void write(IIOMetadata streamMetadata,
                       IIOImage image,
                       ImageWriteParam param) throws IOException {
+        setThreadLock();
+        try {
+            cbLock.check();
+
+            writeOnThread(streamMetadata, image, param);
+        } finally {
+            clearThreadLock();
+        }
+    }
+
+    private void writeOnThread(IIOMetadata streamMetadata,
+                      IIOImage image,
+                      ImageWriteParam param) throws IOException {
 
         if (ios == null) {
             throw new IllegalStateException("Output has not been set!");
@@ -330,9 +369,30 @@ public class JPEGImageWriter extends ImageWriter {
         } else {
             rimage = image.getRenderedImage();
             if (rimage instanceof BufferedImage) {
+                // Use the Raster directly.
                 srcRas = ((BufferedImage)rimage).getRaster();
+            } else if (rimage.getNumXTiles() == 1 &&
+                       rimage.getNumYTiles() == 1)
+            {
+                // Get the unique tile.
+                srcRas = rimage.getTile(rimage.getMinTileX(),
+                                        rimage.getMinTileY());
+
+                // Ensure the Raster has dimensions of the image,
+                // as the tile dimensions might differ.
+                if (srcRas.getWidth() != rimage.getWidth() ||
+                    srcRas.getHeight() != rimage.getHeight())
+                {
+                    srcRas = srcRas.createChild(srcRas.getMinX(),
+                                                srcRas.getMinY(),
+                                                rimage.getWidth(),
+                                                rimage.getHeight(),
+                                                srcRas.getMinX(),
+                                                srcRas.getMinY(),
+                                                null);
+                }
             } else {
-                // XXX - this makes a copy, which is memory-inefficient
+                // Image is tiled so get a contiguous raster by copying.
                 srcRas = rimage.getData();
             }
         }
@@ -607,7 +667,11 @@ public class JPEGImageWriter extends ImageWriter {
                         newAdobeTransform = transform;
                     }
                 }
+                // re-create the metadata
+                metadata = new JPEGMetadata(destType, null, this);
             }
+            inCsType = getSrcCSType(destType);
+            outCsType = getDefaultDestCSType(destType);
         } else { // no destination type
             if (metadata == null) {
                 if (fullImage) {  // no dest, no metadata, full image
@@ -731,13 +795,13 @@ public class JPEGImageWriter extends ImageWriter {
                             }
                             break;
                         case ColorSpace.TYPE_3CLR:
-                            if (cs == JPEG.YCC) {
+                            if (cs == JPEG.JCS.getYCC()) {
                                 if (!alpha) {
                                     if (jfif != null) {
                                         convertTosRGB = true;
                                         convertOp = 
                                         new ColorConvertOp(cs, 
-                                                           JPEG.sRGB, 
+                                                           JPEG.JCS.sRGB, 
                                                            null);
                                         outCsType = JPEG.JCS_YCbCr;
                                     } else if (adobe != null) {
@@ -993,17 +1057,34 @@ public class JPEGImageWriter extends ImageWriter {
                              haveMetadata,
                              restartInterval);
 
-        if (aborted) {
-            processWriteAborted();
-        } else {
-            processImageComplete();
-        }
+        cbLock.lock();
+        try {
+            if (aborted) {
+                processWriteAborted();
+            } else {
+                processImageComplete();
+            }
 
-        ios.flush();
+            ios.flush();
+        } finally {
+            cbLock.unlock();
+        }
         currentImage++;  // After a successful write
     }
 
     public void prepareWriteSequence(IIOMetadata streamMetadata) 
+        throws IOException {
+        setThreadLock();
+        try {
+            cbLock.check();
+
+            prepareWriteSequenceOnThread(streamMetadata);
+        } finally {
+            clearThreadLock();
+        }
+    }
+
+    private void prepareWriteSequenceOnThread(IIOMetadata streamMetadata) 
         throws IOException {
         if (ios == null) {
             throw new IllegalStateException("Output has not been set!");
@@ -1074,23 +1155,46 @@ public class JPEGImageWriter extends ImageWriter {
 
     public void writeToSequence(IIOImage image, ImageWriteParam param)
         throws IOException {
-        if (sequencePrepared == false) {
-            throw new IllegalStateException("sequencePrepared not called!");
+        setThreadLock();
+        try {
+            cbLock.check();
+
+            if (sequencePrepared == false) {
+                throw new IllegalStateException("sequencePrepared not called!");
+            }
+            // In the case of JPEG this does nothing different from write
+            write(null, image, param);
+        } finally {
+            clearThreadLock();
         }
-        // In the case of JPEG this does nothing different from write
-        write(null, image, param);
     }
 
     public void endWriteSequence() throws IOException {
-        if (sequencePrepared == false) {
-            throw new IllegalStateException("sequencePrepared not called!");
+        setThreadLock();
+        try {
+            cbLock.check();
+
+            if (sequencePrepared == false) {
+                throw new IllegalStateException("sequencePrepared not called!");
+            }
+            sequencePrepared = false;
+        } finally {
+            clearThreadLock();
         }
-        sequencePrepared = false;
     }
 
     public synchronized void abort() {
-        super.abort();
-        abortWrite(structPointer);
+        setThreadLock();
+        try {
+            /**
+             * NB: we do not check the call back lock here, we allow to abort
+             * the reader any time.
+             */
+            super.abort();
+            abortWrite(structPointer);
+        } finally {
+            clearThreadLock();
+        }
     }
 
     private void resetInternalState() {
@@ -1106,16 +1210,28 @@ public class JPEGImageWriter extends ImageWriter {
         metadata = null;
     }
 
-    /**
-     * Note that there is no need to override reset() here, as the default
-     * implementation will call setOutput(null), which will invoke
-     * resetInternalState().
-     */
+    public void reset() {
+        setThreadLock();
+        try {
+            cbLock.check();
+
+            super.reset();
+        } finally {
+            clearThreadLock();
+        }
+    }
 
     public void dispose() {
-        if (structPointer != 0) {
-            disposerRecord.dispose();
-            structPointer = 0;
+        setThreadLock();
+        try {
+            cbLock.check();
+
+            if (structPointer != 0) {
+                disposerRecord.dispose();
+                structPointer = 0;
+            }
+        } finally {
+            clearThreadLock();
         }
     }
 
@@ -1129,13 +1245,18 @@ public class JPEGImageWriter extends ImageWriter {
      * sending warnings to listeners.
      */
     void warningOccurred(int code) {
-        if ((code < 0) || (code > MAX_WARNING)){
-            throw new InternalError("Invalid warning index");
+        cbLock.lock();
+        try {
+            if ((code < 0) || (code > MAX_WARNING)){
+                throw new InternalError("Invalid warning index");
+            }
+            processWarningOccurred
+                (currentImage,
+                 "com.sun.imageio.plugins.jpeg.JPEGImageWriterResources",
+                Integer.toString(code));
+        } finally {
+            cbLock.unlock();
         }
-        processWarningOccurred
-            (currentImage, 
-             "com.sun.imageio.plugins.jpeg.JPEGImageWriterResources",
-             Integer.toString(code));
     }
 
     /**
@@ -1152,21 +1273,41 @@ public class JPEGImageWriter extends ImageWriter {
      * library warnings from being printed to stderr.
      */
     void warningWithMessage(String msg) {
-        processWarningOccurred(currentImage, msg);
+        cbLock.lock();
+        try {
+            processWarningOccurred(currentImage, msg);
+        } finally {
+            cbLock.unlock();
+        }
     }
 
     void thumbnailStarted(int thumbnailIndex) {
-        processThumbnailStarted(currentImage, thumbnailIndex);
+        cbLock.lock();
+        try {
+            processThumbnailStarted(currentImage, thumbnailIndex);
+        } finally {
+            cbLock.unlock();
+        }
     }
 
     // Provide access to protected superclass method
     void thumbnailProgress(float percentageDone) {
-        processThumbnailProgress(percentageDone);
-    }    
+        cbLock.lock();
+        try {
+            processThumbnailProgress(percentageDone);
+        } finally {
+            cbLock.unlock();
+        }
+    }
 
     // Provide access to protected superclass method
     void thumbnailComplete() {
-        processThumbnailComplete();
+        cbLock.lock();
+        try {
+            processThumbnailComplete();
+        } finally {
+            cbLock.unlock();
+        }
     }
 
     ///////// End of Package-access API
@@ -1344,10 +1485,17 @@ public class JPEGImageWriter extends ImageWriter {
     /////////// End of metadata handling
 
     ////////////// ColorSpace conversion
-    
+
+    private int getSrcCSType(ImageTypeSpecifier type) {
+         return getSrcCSType(type.getColorModel());
+    }
+
     private int getSrcCSType(RenderedImage rimage) {
+        return getSrcCSType(rimage.getColorModel());
+    }
+    
+    private int getSrcCSType(ColorModel cm) {
         int retval = JPEG.JCS_UNKNOWN;
-        ColorModel cm = rimage.getColorModel();
         if (cm != null) {
             boolean alpha = cm.hasAlpha();
             ColorSpace cs = cm.getColorSpace();
@@ -1370,7 +1518,7 @@ public class JPEGImageWriter extends ImageWriter {
                 }
                 break;
             case ColorSpace.TYPE_3CLR:
-                if (cs == JPEG.YCC) {
+                if (cs == JPEG.JCS.getYCC()) {
                     if (alpha) {
                         retval = JPEG.JCS_YCCA;
                     } else {
@@ -1409,7 +1557,7 @@ public class JPEGImageWriter extends ImageWriter {
                 }
                 break;
             case ColorSpace.TYPE_3CLR:
-                if (cs == JPEG.YCC) {
+                if (cs == JPEG.JCS.getYCC()) {
                     if (alpha) {
                         retval = JPEG.JCS_YCCA;
                     } else {
@@ -1423,9 +1571,16 @@ public class JPEGImageWriter extends ImageWriter {
         return retval;
         }
 
+    private int getDefaultDestCSType(ImageTypeSpecifier type) {
+        return getDefaultDestCSType(type.getColorModel());
+    }
+
     private int getDefaultDestCSType(RenderedImage rimage) {
+        return getDefaultDestCSType(rimage.getColorModel());
+    }
+    
+    private int getDefaultDestCSType(ColorModel cm) {
         int retval = JPEG.JCS_UNKNOWN;
-        ColorModel cm = rimage.getColorModel();
         if (cm != null) {
             boolean alpha = cm.hasAlpha();
             ColorSpace cs = cm.getColorSpace();
@@ -1448,7 +1603,7 @@ public class JPEGImageWriter extends ImageWriter {
                 }
                 break;
             case ColorSpace.TYPE_3CLR:
-                if (cs == JPEG.YCC) {
+                if (cs == JPEG.JCS.getYCC()) {
                     if (alpha) {
                         retval = JPEG.JCS_YCCA;
                     } else {
@@ -1479,16 +1634,14 @@ public class JPEGImageWriter extends ImageWriter {
     ////////////// Native methods and callbacks
 
     /** Sets up static native structures. */
-    private static native void initWriterIDs(Class iosClass, 
-                                             Class qTableClass,
+    private static native void initWriterIDs(Class qTableClass,
                                              Class huffClass);
 
     /** Sets up per-writer native structure and returns a pointer to it. */
     private native long initJPEGImageWriter();
 
     /** Sets up native structures for output stream */
-    private native void setDest(long structPointer,
-                                ImageOutputStream ios);
+    private native void setDest(long structPointer);
 
     /**
      * Returns <code>true</code> if the write was aborted.
@@ -1613,7 +1766,12 @@ public class JPEGImageWriter extends ImageWriter {
         }
         raster.setRect(sourceLine);
         if ((y > 7) && (y%8 == 0)) {  // Every 8 scanlines
-            processImageProgress((float) y / (float) sourceHeight * 100.0F);
+            cbLock.lock();
+            try {
+                processImageProgress((float) y / (float) sourceHeight * 100.0F);
+            } finally {
+                cbLock.unlock();
+            }
         }
     }
 
@@ -1626,7 +1784,7 @@ public class JPEGImageWriter extends ImageWriter {
     /** Releases native structures */
     private static native void disposeWriter(long structPointer);
 
-    private static class JPEGWriterDisposerRecord extends DisposerRecord {
+    private static class JPEGWriterDisposerRecord implements DisposerRecord {
         private long pData;
 
         public JPEGWriterDisposerRecord(long pData) {
@@ -1638,6 +1796,90 @@ public class JPEGImageWriter extends ImageWriter {
                 disposeWriter(pData);
                 pData = 0;
             }
+        }
+    }
+    
+    /**
+     * This method is called from native code in order to write encoder
+     * output to the destination.
+     *
+     * We block any attempt to change the writer state during this
+     * method, in order to prevent a corruption of the native encoder
+     * state.
+     */
+    private void writeOutputData(byte[] data, int offset, int len)
+            throws IOException
+    {
+        cbLock.lock();
+        try {
+            ios.write(data, offset, len);
+        } finally {
+            cbLock.unlock();
+        }
+    }
+
+    private Thread theThread = null;
+    private int theLockCount = 0;
+
+    private synchronized void setThreadLock() {
+        Thread currThread = Thread.currentThread();
+        if (theThread != null) {
+            if (theThread != currThread) {
+                // it looks like that this reader instance is used
+                // by multiple threads.
+                throw new IllegalStateException("Attempt to use instance of " +
+                                                this + " locked on thread " +
+                                                theThread + " from thread " +
+                                                currThread);
+            } else {
+                theLockCount ++;
+            }
+        } else {
+            theThread = currThread;
+            theLockCount = 1;
+        }
+    }
+    
+    private synchronized void clearThreadLock() {
+        Thread currThread = Thread.currentThread();
+        if (theThread == null || theThread != currThread) {
+            throw new IllegalStateException("Attempt to clear thread lock form wrong thread. " +
+                                            "Locked thread: " + theThread + 
+                                            "; current thread: " + currThread);
+        }
+        theLockCount --;
+        if (theLockCount == 0) {
+            theThread = null;
+        }
+    }
+
+    private CallBackLock cbLock = new CallBackLock();
+
+    private static class CallBackLock {
+
+        private State lockState;
+
+        CallBackLock() {
+            lockState = State.Unlocked;
+        }
+
+        void check() {
+            if (lockState != State.Unlocked) {
+                throw new IllegalStateException("Access to the writer is not allowed");
+            }
+        }
+
+        private void lock() {
+            lockState = State.Locked;
+        }
+
+        private void unlock() {
+            lockState = State.Unlocked;
+        }
+
+        private static enum State {
+            Unlocked,
+            Locked
         }
     }
 }

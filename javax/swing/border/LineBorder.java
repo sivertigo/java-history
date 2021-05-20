@@ -1,8 +1,8 @@
 /*
- * @(#)LineBorder.java	1.23 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package javax.swing.border;
 
@@ -25,7 +25,7 @@ import java.awt.Component;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
- * @version 1.23 12/19/03
+ * @version %I% %G%
  * @author David Kloba
  */
 public class LineBorder extends AbstractBorder
@@ -146,6 +146,7 @@ public class LineBorder extends AbstractBorder
 
     /**
      * Returns whether this border will be drawn with rounded corners.
+     * @since 1.3
      */
     public boolean getRoundedCorners() {
         return roundedCorners;

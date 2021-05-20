@@ -1,8 +1,8 @@
 /*
- * @(#)PNGMetadataFormatResources.java	1.8 05/08/23
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.imageio.plugins.png;
@@ -10,6 +10,8 @@ package com.sun.imageio.plugins.png;
 import java.util.ListResourceBundle;
 
 public class PNGMetadataFormatResources extends ListResourceBundle {
+
+    public PNGMetadataFormatResources() {}
 
     protected Object[][] getContents() {
         return new Object[][] {

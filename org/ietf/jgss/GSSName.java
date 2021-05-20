@@ -1,8 +1,8 @@
 /*
- * @(#)GSSName.java	1.7 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package org.ietf.jgss;
@@ -74,7 +74,7 @@ import java.util.Enumeration;
  * @see GSSManager#createName(byte[], Oid)
  *
  * @author Mayank Upadhyay
- * @version 1.7, 12/19/03
+ * @version %I%, %G%
  * @since 1.4
  */
 public interface GSSName {

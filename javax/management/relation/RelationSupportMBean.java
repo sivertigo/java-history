@@ -1,8 +1,8 @@
 /*
- * @(#)RelationSupportMBean.java	1.19 03/12/19
+ * %W% %E%
  * 
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.management.relation;
@@ -49,10 +49,10 @@ public interface RelationSupportMBean
      * relation object in the Relation Service, but will provide wrong
      * information about it!
      *
-     * @param theFlg whether the relation is handled by the Relation Service.
+     * @param flag whether the relation is handled by the Relation Service.
      * 
      * @exception IllegalArgumentException  if null parameter
      */
-    public void setRelationServiceManagementFlag(Boolean theFlg)
+    public void setRelationServiceManagementFlag(Boolean flag)
 	throws IllegalArgumentException;
 }

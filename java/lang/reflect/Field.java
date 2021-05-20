@@ -1,8 +1,8 @@
 /*
- * @(#)Field.java	1.43 09/05/08
+ * %W% %E%
  *
- * Copyright 2009 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang.reflect;
@@ -202,7 +202,7 @@ class Field extends AccessibleObject implements Member {
      * <tt>Type</tt> object returned must accurately reflect the
      * actual type parameters used in the source code.
      * 
-     * <p>If an the  type of the underlying field is a type variable or a
+     * <p>If the type of the underlying field is a type variable or a
      * parameterized type, it is created. Otherwise, it is resolved.
      *
      * @return a <tt>Type</tt> object that represents the declared type for
@@ -950,17 +950,18 @@ class Field extends AccessibleObject implements Member {
                 Class targetClass = ((obj == null || !Modifier.isProtected(modifiers))
                                      ? clazz
                                      : obj.getClass());
-                synchronized (this) {
-                    if ((securityCheckCache == caller)
-                         && (securityCheckTargetClassCache == targetClass)) {
-                        return;
-                    }
-                }
-                Reflection.ensureMemberAccess(caller, clazz, obj, modifiers);
-                synchronized (this) {
-                    securityCheckCache = caller;
-                    securityCheckTargetClassCache = targetClass;
-                }
+
+		synchronized (this) {
+		    if ((securityCheckCache == caller)
+			    && (securityCheckTargetClassCache == targetClass)) {
+			return;
+		    }
+		}
+		Reflection.ensureMemberAccess(caller, clazz, obj, modifiers);
+		synchronized (this) {
+		    securityCheckCache = caller;
+		    securityCheckTargetClassCache = targetClass;
+		}
             }
         }
     }
@@ -988,6 +989,10 @@ class Field extends AccessibleObject implements Member {
 	return type.getName();
     }
 
+    /**
+     * @throws NullPointerException {@inheritDoc}
+     * @since 1.5
+     */
     public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
         if (annotationClass == null)
             throw new NullPointerException();
@@ -995,10 +1000,11 @@ class Field extends AccessibleObject implements Member {
         return (T) declaredAnnotations().get(annotationClass);
     }
 
-    private static final Annotation[] EMPTY_ANNOTATION_ARRAY=new Annotation[0];
-
+    /**
+     * @since 1.5
+     */
     public Annotation[] getDeclaredAnnotations()  {
-        return declaredAnnotations().values().toArray(EMPTY_ANNOTATION_ARRAY);
+        return AnnotationParser.toArray(declaredAnnotations());
     }
 
     private transient Map<Class, Annotation> declaredAnnotations;

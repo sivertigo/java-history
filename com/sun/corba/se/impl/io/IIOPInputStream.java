@@ -1,9 +1,8 @@
 /*
- * @(#)IIOPInputStream.java	1.76 09/02/05
- *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
+
 /*
  * Licensed Materials - Property of IBM
  * RMI-IIOP v1.0
@@ -557,8 +556,8 @@ public class IIOPInputStream
             // defaultReadObjectFVDMembers for more information.
             if (defaultReadObjectFVDMembers != null &&
                 defaultReadObjectFVDMembers.length > 0) {
-                ValueMember[] valueMembers = defaultReadObjectFVDMembers;
-                defaultReadObjectFVDMembers = null;    
+              ValueMember[] valueMembers = defaultReadObjectFVDMembers;
+              defaultReadObjectFVDMembers = null;
 
                 // WARNING:  Be very careful!  What if some of
                 // these fields actually have to do this, too?
@@ -2230,6 +2229,10 @@ public class IIOPInputStream
 		}
 
 		try {
+                    Class fieldCl = fields[i].getClazz();
+                    if (objectValue != null && !fieldCl.isInstance(objectValue)) {
+                        throw new IllegalArgumentException();
+                    }
 		    bridge.putObject( o, fields[i].getFieldID(), objectValue ) ;
 		    // reflective code: fields[i].getField().set( o, objectValue ) ;
 		} catch (IllegalArgumentException e) {
@@ -2540,12 +2543,16 @@ public class IIOPInputStream
     {
 	try {
 	    Field fld = c.getDeclaredField( fieldName ) ;
+            Class fieldCl = fld.getType();
+            if(v != null && !fieldCl.isInstance(v)) {
+                throw new Exception();
+            }
 	    long key = bridge.objectFieldOffset( fld ) ;
 	    bridge.putObject( o, key, v ) ;
 	} catch (Exception e) {
 	    throw utilWrapper.errorSetObjectField( e, fieldName, 
-		ObjectUtility.compactObjectToString( o ),
-		ObjectUtility.compactObjectToString( v )) ;
+		o.toString(),
+                v.toString() ) ;
 	}
     }
 
@@ -2557,7 +2564,7 @@ public class IIOPInputStream
 	    bridge.putBoolean( o, key, v ) ;
 	} catch (Exception e) {
 	    throw utilWrapper.errorSetBooleanField( e, fieldName, 
-		ObjectUtility.compactObjectToString( o ),
+		o.toString(),
 		new Boolean(v) ) ;
 	}
     }
@@ -2570,7 +2577,7 @@ public class IIOPInputStream
 	    bridge.putByte( o, key, v ) ;
 	} catch (Exception e) {
 	    throw utilWrapper.errorSetByteField( e, fieldName, 
-		ObjectUtility.compactObjectToString( o ),
+	        o.toString(),
 		new Byte(v) ) ;
 	}
     }
@@ -2583,7 +2590,7 @@ public class IIOPInputStream
 	    bridge.putChar( o, key, v ) ;
 	} catch (Exception e) {
 	    throw utilWrapper.errorSetCharField( e, fieldName, 
-		ObjectUtility.compactObjectToString( o ),
+		o.toString(),
 		new Character(v) ) ;
 	}
     }
@@ -2596,7 +2603,7 @@ public class IIOPInputStream
 	    bridge.putShort( o, key, v ) ;
 	} catch (Exception e) {
 	    throw utilWrapper.errorSetShortField( e, fieldName, 
-		ObjectUtility.compactObjectToString( o ),
+		o.toString(),
 		new Short(v) ) ;
 	}
     }
@@ -2609,7 +2616,7 @@ public class IIOPInputStream
 	    bridge.putInt( o, key, v ) ;
 	} catch (Exception e) {
 	    throw utilWrapper.errorSetIntField( e, fieldName, 
-		ObjectUtility.compactObjectToString( o ),
+		o.toString(),
 		new Integer(v) ) ;
 	}
     }
@@ -2622,7 +2629,7 @@ public class IIOPInputStream
 	    bridge.putLong( o, key, v ) ;
 	} catch (Exception e) {
 	    throw utilWrapper.errorSetLongField( e, fieldName, 
-		ObjectUtility.compactObjectToString( o ),
+		o.toString(),
 		new Long(v) ) ;
 	}
     }
@@ -2635,7 +2642,7 @@ public class IIOPInputStream
 	    bridge.putFloat( o, key, v ) ;
 	} catch (Exception e) {
 	    throw utilWrapper.errorSetFloatField( e, fieldName, 
-		ObjectUtility.compactObjectToString( o ),
+		o.toString(),
 		new Float(v) ) ;
 	}
     }
@@ -2648,7 +2655,7 @@ public class IIOPInputStream
 	    bridge.putDouble( o, key, v ) ;
 	} catch (Exception e) {
 	    throw utilWrapper.errorSetDoubleField( e, fieldName, 
-		ObjectUtility.compactObjectToString( o ),
+	        o.toString(),
 		new Double(v) ) ;
 	}
     }

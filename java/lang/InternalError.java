@@ -1,42 +1,34 @@
 /*
- * @(#)InternalError.java	1.11 95/08/11  
+ * %W% %E%
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang;
 
 /**
- * Signals that an internal error has occurred.
- * @version 	1.11, 08/11/95
+ * Thrown to indicate some unexpected internal error has occurred in 
+ * the Java Virtual Machine. 
+ *
+ * @author  unascribed
+ * @version %I%, %G%
+ * @since   JDK1.0
  */
 public
 class InternalError extends VirtualMachineError {
     /**
-     * Constructs an InternalError with no detail message.
-     * A detail message is a String that describes this particular exception.
+     * Constructs an <code>InternalError</code> with no detail message. 
      */
     public InternalError() {
 	super();
     }
 
     /**
-     * Constructs an InternalError with the specified detail message.
-     * A detail message is a String that describes this particular exception.
-     * @param s the detail message
+     * Constructs an <code>InternalError</code> with the specified 
+     * detail message. 
+     *
+     * @param   s   the detail message.
      */
     public InternalError(String s) {
 	super(s);

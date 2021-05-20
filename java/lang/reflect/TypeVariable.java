@@ -1,8 +1,8 @@
 /*
- * @(#)TypeVariable.java	1.3 04/01/12
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang.reflect;
@@ -25,8 +25,8 @@ package java.lang.reflect;
  * As a consequence, users of type variables must not rely on the identity 
  * of instances of classes implementing this interface.
  *
- * <p>The type parameter D represents the type of generic declaration
- * that declared the underlying type variable.
+ * @param <D> the type of generic declaration that declared the
+ * underlying type variable.
  *
  * @since 1.5
  */

@@ -1,8 +1,7 @@
 /*
- * @(#)Bits.java	1.18 04/05/24
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, 2011, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.nio;
@@ -589,7 +588,8 @@ class Bits {				// package-private
         PrivilegedAction pa
 	    = new sun.security.action.GetPropertyAction("os.arch");
         String arch = (String)AccessController.doPrivileged(pa);
-	unaligned = arch.equals("i386") || arch.equals("x86");
+	unaligned = arch.equals("i386") || arch.equals("x86")
+	    || arch.equals("amd64");
 	unalignedKnown = true;
 	return unaligned;
     }
@@ -642,7 +642,19 @@ class Bits {				// package-private
 	}
     }
 
-
+    static {
+        // setup access to this package in SharedSecrets
+        sun.misc.SharedSecrets.setJavaNioAccess(
+            new sun.misc.JavaNioAccess() {
+                public ByteBuffer newDirectByteBuffer(long addr, int cap, Object ob) {
+                    return new DirectByteBuffer(addr, cap, ob);
+                }
+                public void truncate(Buffer buf) {
+                    buf.truncate();
+                }
+        });
+    }
+
     // -- Bulk get/put acceleration --
 
     // These numbers represent the point at which we have empirically
@@ -651,14 +663,68 @@ class Bits {				// package-private
     static final int JNI_COPY_TO_ARRAY_THRESHOLD   = 6;
     static final int JNI_COPY_FROM_ARRAY_THRESHOLD = 6;
 
+    // This number limits the number of bytes to copy per call to Unsafe's
+    // copyMemory method. A limit is imposed to allow for safepoint polling
+    // during a large copy
+    static final long UNSAFE_COPY_THRESHOLD = 1024L * 1024L;
+
     // These methods do no bounds checking.  Verification that the copy will not
     // result in memory corruption should be done prior to invocation.
     // All positions and lengths are specified in bytes.
 
-    static native void copyFromByteArray(Object src, long srcPos, long dstAddr,
-					 long length);
-    static native void copyToByteArray(long srcAddr, Object dst, long dstPos,
-				       long length);
+    /**
+     * Copy from given source array to destination address.
+     *
+     * @param   src
+     *          source array
+     * @param   srcBaseOffset
+     *          offset of first element of storage in source array
+     * @param   srcPos
+     *          offset within source array of the first element to read
+     * @param   dstAddr
+     *          destination address
+     * @param   length
+     *          number of bytes to copy
+     */
+    static void copyFromArray(Object src, long srcBaseOffset, long srcPos,
+                              long dstAddr, long length)
+    {
+        long offset = srcBaseOffset + srcPos;
+        while (length > 0) {
+            long size = (length > UNSAFE_COPY_THRESHOLD) ? UNSAFE_COPY_THRESHOLD : length;
+            unsafe.copyMemory(src, offset, null, dstAddr, size);
+            length -= size;
+            offset += size;
+            dstAddr += size;
+        }
+    }
+
+    /**
+     * Copy from source address into given destination array.
+     *
+     * @param   srcAddr
+     *          source address
+     * @param   dst
+     *          destination array
+     * @param   dstBaseOffset
+     *          offset of first element of storage in destination array
+     * @param   dstPos
+     *          offset within destination array of the first element to write
+     * @param   length
+     *          number of bytes to copy
+     */
+    static void copyToArray(long srcAddr, Object dst, long dstBaseOffset, long dstPos,
+                            long length)
+    {
+        long offset = dstBaseOffset + dstPos;
+        while (length > 0) {
+            long size = (length > UNSAFE_COPY_THRESHOLD) ? UNSAFE_COPY_THRESHOLD : length;
+            unsafe.copyMemory(null, srcAddr, dst, offset, size);
+            length -= size;
+            srcAddr += size;
+            offset += size;
+        }
+    }
 
     static void copyFromCharArray(Object src, long srcPos, long dstAddr,
 				  long length)

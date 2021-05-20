@@ -1,8 +1,8 @@
 /*
- * @(#)CRL.java	1.12 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.security.cert;
@@ -18,7 +18,7 @@ package java.security.cert;
  *
  * @author Hemma Prafullchandra
  *
- * @version 1.12, 12/19/03
+ * @version %I%, %G%
  *
  * @see X509CRL
  * @see CertificateFactory
@@ -36,7 +36,7 @@ public abstract class CRL {
      *
      * @param type the standard name of the CRL type.
      * See Appendix A in the <a href=
-     * "../../../../guide/security/CryptoSpec.html#AppA">
+     * "../../../../technotes/guides/security/crypto/CryptoSpec.html#AppA">
      * Java Cryptography Architecture API Specification &amp; Reference </a>
      * for information about standard CRL types.
      */

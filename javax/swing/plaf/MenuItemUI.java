@@ -1,8 +1,8 @@
 /*
- * @(#)MenuItemUI.java	1.16 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package javax.swing.plaf;
 
@@ -12,7 +12,7 @@ import java.awt.event.*;
 /**
  * Pluggable look and feel interface for JMenuItem.
  *
- * @version @(#)MenuItemUI.java	1.16 03/12/19
+ * @version %W% %E%
  * @author Georges Saab
  * @author David Karlton
  * @author Arnaud Weber

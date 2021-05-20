@@ -1,8 +1,8 @@
 /*
- * @(#)TRANSACTION_REQUIRED.java	1.21 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package org.omg.CORBA;
@@ -15,7 +15,7 @@ package org.omg.CORBA;
  * a string describing the exception.
  * The OMG Transaction Service specfication has details.
  *
- * @see <A href="../../../../guide/idl/jidlExceptions.html">documentation on
+ * @see <A href="../../../../technotes/guides/idl/jidlExceptions.html">documentation on
  * Java&nbsp;IDL exceptions</A>
  * @version     1.5 09/09/97
  */

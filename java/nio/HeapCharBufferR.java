@@ -1,8 +1,8 @@
 /*
- * @(#)Heap-X-Buffer.java	1.28 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 // -- This file was mechanically generated: Do not edit! -- //
@@ -553,10 +553,13 @@ class HeapCharBufferR
 	    || (end > length())
 	    || (start > end))
 	    throw new IndexOutOfBoundsException();
-        int len = end - start;
+        int pos = position();
         return new HeapCharBufferR(hb,
-				      -1, 0, len, len,
-				      offset + position() + start);
+				      -1,
+				      pos + start,
+				      pos + end,
+				      capacity(),
+				      offset);
     }
 
 

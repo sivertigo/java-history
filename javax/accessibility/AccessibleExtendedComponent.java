@@ -1,8 +1,8 @@
 /*
- * @(#)AccessibleExtendedComponent.java	1.4 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.accessibility;
@@ -17,15 +17,16 @@ package javax.accessibility;
  * and then calling the
  * {@link AccessibleContext#getAccessibleComponent} method.
  * If the return value is not null and the type of the return value is
- * AccessibleEditableComponent, the object supports this interface.
+ * AccessibleExtendedComponent, the object supports this interface.
  *
  * @see Accessible
  * @see Accessible#getAccessibleContext
  * @see AccessibleContext
  * @see AccessibleContext#getAccessibleComponent
  *
- * @version     1.4 12/19/03
+ * @version     %I% %G%
  * @author	Lynn Monsanto
+ * @since 1.4
  */
 public interface AccessibleExtendedComponent extends AccessibleComponent {
 

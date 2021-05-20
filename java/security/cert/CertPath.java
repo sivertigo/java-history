@@ -1,8 +1,8 @@
 /*
- * @(#)CertPath.java	1.9 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.security.cert;
@@ -83,7 +83,7 @@ import java.util.List;
  * @see CertificateFactory
  * @see CertPathBuilder
  *
- * @version 1.9 12/19/03
+ * @version %I% %G%
  * @author	Yassir Elley
  * @since	1.4
  */
@@ -265,6 +265,7 @@ public abstract class CertPath implements Serializable {
 
     /**
      * Alternate <code>CertPath</code> class for serialization.
+     * @since 1.4
      */
     protected static class CertPathRep implements Serializable {
 

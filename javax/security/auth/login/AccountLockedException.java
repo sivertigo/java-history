@@ -1,8 +1,8 @@
 /*
- * @(#)AccountLockedException.java	1.2 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.security.auth.login;
@@ -14,7 +14,7 @@ package javax.security.auth.login;
  * determines that authentication is being attempted on a
  * locked account.
  *
- * @version 1.2, 12/19/03
+ * @version %I%, %G%
  * @since 1.5
  */
 public class AccountLockedException extends AccountException {

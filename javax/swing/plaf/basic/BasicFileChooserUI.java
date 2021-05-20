@@ -1,8 +1,6 @@
 /*
- * @(#)BasicFileChooserUI.java	1.61 04/06/15
- *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, 2011, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing.plaf.basic;
@@ -21,7 +19,7 @@ import java.util.*;
 import java.util.regex.*;
 import sun.awt.shell.ShellFolder;
 import sun.swing.*;
-import com.sun.java.swing.SwingUtilities2;
+import sun.swing.SwingUtilities2;
 
 /**
  * Basic L&F implementation of a FileChooser.
@@ -52,7 +50,7 @@ public class BasicFileChooserUI extends FileChooserUI {
 
     /**
      * The mnemonic keycode used for the approve button when a directory
-     * is selected and the current selection mode is not DIRECTORIES_ONLY.
+     * is selected and the current selection mode is FILES_ONLY.
      *
      * @since 1.4
      */
@@ -66,7 +64,7 @@ public class BasicFileChooserUI extends FileChooserUI {
 
     /**
      * The label text displayed on the approve button when a directory
-     * is selected and the current selection mode is not DIRECTORIES_ONLY.
+     * is selected and the current selection mode is FILES_ONLY.
      *
      * @since 1.4
      */
@@ -83,7 +81,7 @@ public class BasicFileChooserUI extends FileChooserUI {
 
     /**
      * The tooltip text displayed on the approve button when a directory
-     * is selected and the current selection mode is not DIRECTORIES_ONLY.
+     * is selected and the current selection mode is FILES_ONLY.
      *
      * @since 1.4
      */
@@ -313,10 +311,10 @@ public class BasicFileChooserUI extends FileChooserUI {
     }
 
     protected void createModel() {
+        if (model != null) {
+            model.invalidateFileCache();
+        }
 	model = new BasicDirectoryModel(getFileChooser());
-	if (model != null) {
-	    model.invalidateFileCache();
-	}
     }
 
     public BasicDirectoryModel getModel() {
@@ -413,24 +411,20 @@ public class BasicFileChooserUI extends FileChooserUI {
 	    // compatability
 	    if (list != null &&
 		SwingUtilities.isLeftMouseButton(evt) &&
-		evt.getClickCount() == 2) {
+		(evt.getClickCount()%2 == 0)) {
 
 		int index = SwingUtilities2.loc2IndexFileList(list, evt.getPoint());
 		if (index >= 0) {
 		    File f = (File)list.getModel().getElementAt(index);
 		    try {
 			// Strip trailing ".."
-			f = f.getCanonicalFile();
+			f = ShellFolder.getNormalizedFile(f);
 		    } catch (IOException ex) {
 			// That's ok, we'll use f as is
 		    }
 		    if(getFileChooser().isTraversable(f)) {
 			list.clearSelection();
 			changeDirectory(f);
-                        if (getFileChooser().getFileSelectionMode() == JFileChooser.FILES_AND_DIRECTORIES && 
-                            getFileChooser().getFileSystemView().isFileSystem(f)) {
-                            setFileName(f.toString());
-                        }
 		    } else {
 			getFileChooser().approveSelection();
 		    }
@@ -467,9 +461,8 @@ public class BasicFileChooserUI extends FileChooserUI {
 		JList list = (JList)evt.getSource();
 
 		int fsm = chooser.getFileSelectionMode();
-		boolean useSetDirectory =
-		    usesSingleFilePane ? (fsm == JFileChooser.FILES_ONLY)
-				       : (fsm != JFileChooser.DIRECTORIES_ONLY);
+		boolean useSetDirectory = usesSingleFilePane && 
+                                          (fsm == JFileChooser.FILES_ONLY);
 
 		if (chooser.isMultiSelectionEnabled()) {
 		    File[] files = null;
@@ -607,17 +600,7 @@ public class BasicFileChooserUI extends FileChooserUI {
      * Returns the mnemonic for the given key.
      */
     private int getMnemonic(String key, Locale l) {
-	Object value = UIManager.get(key, l);
-
-	if (value instanceof Integer) {
-	    return (Integer)value;
-	}
-	if (value instanceof String) {
-	    try {
-		return Integer.parseInt((String)value);
-	    } catch (NumberFormatException nfe) { }
-	}
-        return 0;
+        return SwingUtilities2.getUIDefaultsInt(key, l);
     }
 
     // *******************************************************
@@ -790,7 +773,7 @@ public class BasicFileChooserUI extends FileChooserUI {
 		if (dir != null) {
 		    try {
 			// Strip trailing ".."
-			dir = dir.getCanonicalFile();
+			dir = ShellFolder.getNormalizedFile(dir);
 		    } catch (IOException ex) {
 			// Ok, use f as is
 		    }
@@ -900,8 +883,10 @@ public class BasicFileChooserUI extends FileChooserUI {
 		    boolean isTrav = (selectedFile != null && chooser.isTraversable(selectedFile));
 		    boolean isDirSelEnabled = chooser.isDirectorySelectionEnabled();
 		    boolean isFileSelEnabled = chooser.isFileSelectionEnabled();
+		    boolean isCtrl = (e != null && (e.getModifiers() & 
+                            Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()) != 0);
 
-		    if (isDir && isTrav && !isDirSelEnabled) {
+		    if (isDir && isTrav && (isCtrl || !isDirSelEnabled)) {
 			changeDirectory(selectedFile);
 			return;
 		    } else if ((isDir || !isFileSelEnabled)
@@ -970,7 +955,6 @@ public class BasicFileChooserUI extends FileChooserUI {
 	    char[] rPat = new char[gPat.length * 2];
 	    boolean isWin32 = (File.separatorChar == '\\');
 	    boolean inBrackets = false;
-	    StringBuffer buf = new StringBuffer();
 	    int j = 0;
 
 	    this.globPattern = globPattern;
@@ -1108,19 +1092,32 @@ public class BasicFileChooserUI extends FileChooserUI {
     private void changeDirectory(File dir) {
 	JFileChooser fc = getFileChooser();
 	// Traverse shortcuts on Windows
-	if (dir != null && File.separatorChar == '\\' && dir.getPath().endsWith(".lnk")) {
+        if (dir != null && FilePane.usesShellFolder(fc)) {
 	    try {
-		File linkedTo = ShellFolder.getShellFolder(dir).getLinkLocation();
-		if (linkedTo != null && fc.isTraversable(linkedTo)) {
-		    dir = linkedTo;
-		} else {
-		    return;
-		}
+                ShellFolder shellFolder = ShellFolder.getShellFolder(dir);
+                if (shellFolder.isLink()) {
+                    File linkedTo = shellFolder.getLinkLocation();
+                    // If linkedTo is null we try to use dir
+                    if (linkedTo != null) {
+                        if (fc.isTraversable(linkedTo)) { 
+                            dir = linkedTo;
+                    	} else {
+                       	    return;
+                    	}
+		    } else {
+			dir = shellFolder;
+		    }
+                }
 	    } catch (FileNotFoundException ex) {
 		return;
 	    }
 	}
 	fc.setCurrentDirectory(dir);
+        if (fc.getFileSelectionMode() == JFileChooser.FILES_AND_DIRECTORIES &&
+            fc.getFileSystemView().isFileSystem(dir)) {
+
+            setFileName(dir.getAbsolutePath());
+        }
     }
 
 

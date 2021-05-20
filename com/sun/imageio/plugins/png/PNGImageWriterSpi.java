@@ -1,8 +1,8 @@
 /*
- * @(#)PNGImageWriterSpi.java	1.23 09/05/07
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.imageio.plugins.png;
@@ -29,7 +29,7 @@ public class PNGImageWriterSpi extends ImageWriterSpi {
     
     private static final String[] names = { "png", "PNG" };
     
-    private static final String[] suffixes = { "png", "PNG" };
+    private static final String[] suffixes = { "png" };
     
     private static final String[] MIMETypes = { "image/png", "image/x-png" };
     

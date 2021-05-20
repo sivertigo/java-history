@@ -1,20 +1,8 @@
 /*
- * @(#)ImageProducer.java	1.10 95/12/14 Jim Graham
+ * %W% %E%
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.awt.image;
@@ -28,67 +16,79 @@ package java.awt.image;
  *
  * @see ImageConsumer
  *
- * @version	1.10 12/14/95
+ * @version	%I% %G%
  * @author 	Jim Graham
  */
 public interface ImageProducer {
     /**
-     * This method is used to register an ImageConsumer with the
-     * ImageProducer for access to the image data during a later
-     * reconstruction of the Image.  The ImageProducer may, at its
-     * discretion, start delivering the image data to the consumer
-     * using the ImageConsumer interface immediately, or when the
-     * next available image reconstruction is triggered by a call
-     * to the startProduction method.
+     * Registers an <code>ImageConsumer</code> with the
+     * <code>ImageProducer</code> for access to the image data 
+     * during a later reconstruction of the <code>Image</code>.  
+     * The <code>ImageProducer</code> may, at its discretion, 
+     * start delivering the image data to the consumer
+     * using the <code>ImageConsumer</code> interface immediately, 
+     * or when the next available image reconstruction is triggered 
+     * by a call to the <code>startProduction</code> method.
+     * @param ic the specified <code>ImageConsumer</code>
      * @see #startProduction
      */
     public void addConsumer(ImageConsumer ic);
 
     /**
-     * This method determines if a given ImageConsumer object
-     * is currently registered with this ImageProducer as one
-     * of its consumers.
+     * Determines if a specified <code>ImageConsumer</code> 
+     * object is currently registered with this 
+     * <code>ImageProducer</code> as one of its consumers.
+     * @param ic the specified <code>ImageConsumer</code>
+     * @return <code>true</code> if the specified 
+     *         <code>ImageConsumer</code> is registered with
+     *         this <code>ImageProducer</code>;
+     *         <code>false</code> otherwise.
      */
     public boolean isConsumer(ImageConsumer ic);
 
     /**
-     * This method removes the given ImageConsumer object
+     * Removes the specified <code>ImageConsumer</code> object
      * from the list of consumers currently registered to
      * receive image data.  It is not considered an error
      * to remove a consumer that is not currently registered.
-     * The ImageProducer should stop sending data to this
-     * consumer as soon as is feasible.
+     * The <code>ImageProducer</code> should stop sending data 
+     * to this consumer as soon as is feasible.
+     * @param ic the specified <code>ImageConsumer</code>
      */
     public void removeConsumer(ImageConsumer ic);
 
     /**
-     * This method both registers the given ImageConsumer object
+     * Registers the specified <code>ImageConsumer</code> object
      * as a consumer and starts an immediate reconstruction of
      * the image data which will then be delivered to this
-     * consumer and any other consumer which may have already
+     * consumer and any other consumer which might have already
      * been registered with the producer.  This method differs
      * from the addConsumer method in that a reproduction of
      * the image data should be triggered as soon as possible.
+     * @param ic the specified <code>ImageConsumer</code>
      * @see #addConsumer
      */
     public void startProduction(ImageConsumer ic);
 
     /**
-     * This method is used by an ImageConsumer to request that
-     * the ImageProducer attempt to resend the image data one
-     * more time in TOPDOWNLEFTRIGHT order so that higher
-     * quality conversion algorithms which depend on receiving
-     * pixels in order can be used to produce a better output
-     * version of the image.  The ImageProducer is free to
+     * Requests, on behalf of the <code>ImageConsumer</code>, 
+     * that the <code>ImageProducer</code> attempt to resend 
+     * the image data one more time in TOPDOWNLEFTRIGHT order 
+     * so that higher quality conversion algorithms which 
+     * depend on receiving pixels in order can be used to 
+     * produce a better output version of the image.  The 
+     * <code>ImageProducer</code> is free to
      * ignore this call if it cannot resend the data in that
-     * order.  If the data can be resent, then the ImageProducer
-     * should respond by executing the following minimum set of
-     * ImageConsumer method calls:
+     * order.  If the data can be resent, the 
+     * <code>ImageProducer</code> should respond by executing 
+     * the following minimum set of <code>ImageConsumer</code>
+     * method calls:
      * <pre>
      *	ic.setHints(TOPDOWNLEFTRIGHT | < otherhints >);
      *	ic.setPixels(...);	// As many times as needed
      *	ic.imageComplete();
      * </pre>
+     * @param ic the specified <code>ImageConsumer</code>
      * @see ImageConsumer#setHints
      */
     public void requestTopDownLeftRightResend(ImageConsumer ic);

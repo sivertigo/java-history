@@ -1,19 +1,33 @@
 /*
- * @(#)MetaData.java	1.39 04/05/05
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2000, 2009, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package java.beans;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.Insets;
+import java.awt.Point;
+import java.awt.Rectangle;
+
 import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
-import java.util.Vector;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.Enumeration;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+
+import java.util.*;
+
+import javax.swing.border.MatteBorder;
+import javax.swing.plaf.ColorUIResource;
+
+import sun.swing.PrintColorUIResource;
 
 /*
  * Like the <code>Intropector</code>, the <code>MetaData</code> class
@@ -23,7 +37,7 @@ import java.util.Enumeration;
  *
  * @see java.beans.Intropector
  *
- * @version 1.39 05/05/04
+ * @version %I% %G%
  * @author Philip Milne
  * @author Steve Langley
  */
@@ -37,6 +51,22 @@ class NullPersistenceDelegate extends PersistenceDelegate {
 
     public void writeObject(Object oldInstance, Encoder out) {
     // System.out.println("NullPersistenceDelegate:writeObject " + oldInstance);
+    }
+}
+
+/**
+ * The persistence delegate for <CODE>enum</CODE> classes.
+ *
+ * @author Sergey A. Malenkov
+ */
+class EnumPersistenceDelegate extends PersistenceDelegate {
+    protected boolean mutatesTo(Object oldInstance, Object newInstance) {
+        return oldInstance == newInstance;
+    }
+
+    protected Expression instantiate(Object oldInstance, Encoder out) {
+        Enum e = (Enum) oldInstance;
+        return new Expression( e, e.getClass(), "valueOf", new Object[]{e.name()} );
     }
 }
 
@@ -200,6 +230,222 @@ ignore any delegates attached to interfaces and force all persistence
 delegates to be registered with concrete classes.
 */
 
+/**
+ * The base class for persistence delegates for inner classes
+ * that can be created using {@link Collections}.
+ *
+ * @author Sergey A. Malenkov
+ */
+abstract class java_util_Collections extends PersistenceDelegate {
+    protected boolean mutatesTo(Object oldInstance, Object newInstance) {
+        if (!super.mutatesTo(oldInstance, newInstance)) {
+            return false;
+        }
+        if ((oldInstance instanceof List) || (oldInstance instanceof Set) || (oldInstance instanceof Map)) {
+            return oldInstance.equals(newInstance);
+        }
+        Collection oldC = (Collection) oldInstance;
+        Collection newC = (Collection) newInstance;
+        return (oldC.size() == newC.size()) && oldC.containsAll(newC);
+    }
+
+    static final class EmptyList_PersistenceDelegate extends java_util_Collections {
+        protected Expression instantiate(Object oldInstance, Encoder out) {
+            return new Expression(oldInstance, Collections.class, "emptyList", null);
+        }
+    }
+
+    static final class EmptySet_PersistenceDelegate extends java_util_Collections {
+        protected Expression instantiate(Object oldInstance, Encoder out) {
+            return new Expression(oldInstance, Collections.class, "emptySet", null);
+        }
+    }
+
+    static final class EmptyMap_PersistenceDelegate extends java_util_Collections {
+        protected Expression instantiate(Object oldInstance, Encoder out) {
+            return new Expression(oldInstance, Collections.class, "emptyMap", null);
+        }
+    }
+
+    static final class SingletonList_PersistenceDelegate extends java_util_Collections {
+        protected Expression instantiate(Object oldInstance, Encoder out) {
+            List list = (List) oldInstance;
+            return new Expression(oldInstance, Collections.class, "singletonList", new Object[]{list.get(0)});
+        }
+    }
+
+    static final class SingletonSet_PersistenceDelegate extends java_util_Collections {
+        protected Expression instantiate(Object oldInstance, Encoder out) {
+            Set set = (Set) oldInstance;
+            return new Expression(oldInstance, Collections.class, "singleton", new Object[]{set.iterator().next()});
+        }
+    }
+
+    static final class SingletonMap_PersistenceDelegate extends java_util_Collections {
+        protected Expression instantiate(Object oldInstance, Encoder out) {
+            Map map = (Map) oldInstance;
+            Object key = map.keySet().iterator().next();
+            return new Expression(oldInstance, Collections.class, "singletonMap", new Object[]{key, map.get(key)});
+        }
+    }
+
+    static final class UnmodifiableCollection_PersistenceDelegate extends java_util_Collections {
+        protected Expression instantiate(Object oldInstance, Encoder out) {
+            List list = new ArrayList((Collection) oldInstance);
+            return new Expression(oldInstance, Collections.class, "unmodifiableCollection", new Object[]{list});
+        }
+    }
+
+    static final class UnmodifiableList_PersistenceDelegate extends java_util_Collections {
+        protected Expression instantiate(Object oldInstance, Encoder out) {
+            List list = new LinkedList((Collection) oldInstance);
+            return new Expression(oldInstance, Collections.class, "unmodifiableList", new Object[]{list});
+        }
+    }
+
+    static final class UnmodifiableRandomAccessList_PersistenceDelegate extends java_util_Collections {
+        protected Expression instantiate(Object oldInstance, Encoder out) {
+            List list = new ArrayList((Collection) oldInstance);
+            return new Expression(oldInstance, Collections.class, "unmodifiableList", new Object[]{list});
+        }
+    }
+
+    static final class UnmodifiableSet_PersistenceDelegate extends java_util_Collections {
+        protected Expression instantiate(Object oldInstance, Encoder out) {
+            Set set = new HashSet((Set) oldInstance);
+            return new Expression(oldInstance, Collections.class, "unmodifiableSet", new Object[]{set});
+        }
+    }
+
+    static final class UnmodifiableSortedSet_PersistenceDelegate extends java_util_Collections {
+        protected Expression instantiate(Object oldInstance, Encoder out) {
+            SortedSet set = new TreeSet((SortedSet) oldInstance);
+            return new Expression(oldInstance, Collections.class, "unmodifiableSortedSet", new Object[]{set});
+        }
+    }
+
+    static final class UnmodifiableMap_PersistenceDelegate extends java_util_Collections {
+        protected Expression instantiate(Object oldInstance, Encoder out) {
+            Map map = new HashMap((Map) oldInstance);
+            return new Expression(oldInstance, Collections.class, "unmodifiableMap", new Object[]{map});
+        }
+    }
+
+    static final class UnmodifiableSortedMap_PersistenceDelegate extends java_util_Collections {
+        protected Expression instantiate(Object oldInstance, Encoder out) {
+            SortedMap map = new TreeMap((SortedMap) oldInstance);
+            return new Expression(oldInstance, Collections.class, "unmodifiableSortedMap", new Object[]{map});
+        }
+    }
+
+    static final class SynchronizedCollection_PersistenceDelegate extends java_util_Collections {
+        protected Expression instantiate(Object oldInstance, Encoder out) {
+            List list = new ArrayList((Collection) oldInstance);
+            return new Expression(oldInstance, Collections.class, "synchronizedCollection", new Object[]{list});
+        }
+    }
+
+    static final class SynchronizedList_PersistenceDelegate extends java_util_Collections {
+        protected Expression instantiate(Object oldInstance, Encoder out) {
+            List list = new LinkedList((Collection) oldInstance);
+            return new Expression(oldInstance, Collections.class, "synchronizedList", new Object[]{list});
+        }
+    }
+
+    static final class SynchronizedRandomAccessList_PersistenceDelegate extends java_util_Collections {
+        protected Expression instantiate(Object oldInstance, Encoder out) {
+            List list = new ArrayList((Collection) oldInstance);
+            return new Expression(oldInstance, Collections.class, "synchronizedList", new Object[]{list});
+        }
+    }
+
+    static final class SynchronizedSet_PersistenceDelegate extends java_util_Collections {
+        protected Expression instantiate(Object oldInstance, Encoder out) {
+            Set set = new HashSet((Set) oldInstance);
+            return new Expression(oldInstance, Collections.class, "synchronizedSet", new Object[]{set});
+        }
+    }
+
+    static final class SynchronizedSortedSet_PersistenceDelegate extends java_util_Collections {
+        protected Expression instantiate(Object oldInstance, Encoder out) {
+            SortedSet set = new TreeSet((SortedSet) oldInstance);
+            return new Expression(oldInstance, Collections.class, "synchronizedSortedSet", new Object[]{set});
+        }
+    }
+
+    static final class SynchronizedMap_PersistenceDelegate extends java_util_Collections {
+        protected Expression instantiate(Object oldInstance, Encoder out) {
+            Map map = new HashMap((Map) oldInstance);
+            return new Expression(oldInstance, Collections.class, "synchronizedMap", new Object[]{map});
+        }
+    }
+
+    static final class SynchronizedSortedMap_PersistenceDelegate extends java_util_Collections {
+        protected Expression instantiate(Object oldInstance, Encoder out) {
+            SortedMap map = new TreeMap((SortedMap) oldInstance);
+            return new Expression(oldInstance, Collections.class, "synchronizedSortedMap", new Object[]{map});
+        }
+    }
+
+    static final class CheckedCollection_PersistenceDelegate extends java_util_Collections {
+        protected Expression instantiate(Object oldInstance, Encoder out) {
+            Object type = MetaData.getPrivateFieldValue(oldInstance, "java.util.Collections$CheckedCollection.type");
+            List list = new ArrayList((Collection) oldInstance);
+            return new Expression(oldInstance, Collections.class, "checkedCollection", new Object[]{list, type});
+        }
+    }
+
+    static final class CheckedList_PersistenceDelegate extends java_util_Collections {
+        protected Expression instantiate(Object oldInstance, Encoder out) {
+            Object type = MetaData.getPrivateFieldValue(oldInstance, "java.util.Collections$CheckedCollection.type");
+            List list = new LinkedList((Collection) oldInstance);
+            return new Expression(oldInstance, Collections.class, "checkedList", new Object[]{list, type});
+        }
+    }
+
+    static final class CheckedRandomAccessList_PersistenceDelegate extends java_util_Collections {
+        protected Expression instantiate(Object oldInstance, Encoder out) {
+            Object type = MetaData.getPrivateFieldValue(oldInstance, "java.util.Collections$CheckedCollection.type");
+            List list = new ArrayList((Collection) oldInstance);
+            return new Expression(oldInstance, Collections.class, "checkedList", new Object[]{list, type});
+        }
+    }
+
+    static final class CheckedSet_PersistenceDelegate extends java_util_Collections {
+        protected Expression instantiate(Object oldInstance, Encoder out) {
+            Object type = MetaData.getPrivateFieldValue(oldInstance, "java.util.Collections$CheckedCollection.type");
+            Set set = new HashSet((Set) oldInstance);
+            return new Expression(oldInstance, Collections.class, "checkedSet", new Object[]{set, type});
+        }
+    }
+
+    static final class CheckedSortedSet_PersistenceDelegate extends java_util_Collections {
+        protected Expression instantiate(Object oldInstance, Encoder out) {
+            Object type = MetaData.getPrivateFieldValue(oldInstance, "java.util.Collections$CheckedCollection.type");
+            SortedSet set = new TreeSet((SortedSet) oldInstance);
+            return new Expression(oldInstance, Collections.class, "checkedSortedSet", new Object[]{set, type});
+        }
+    }
+
+    static final class CheckedMap_PersistenceDelegate extends java_util_Collections {
+        protected Expression instantiate(Object oldInstance, Encoder out) {
+            Object keyType   = MetaData.getPrivateFieldValue(oldInstance, "java.util.Collections$CheckedMap.keyType");
+            Object valueType = MetaData.getPrivateFieldValue(oldInstance, "java.util.Collections$CheckedMap.valueType");
+            Map map = new HashMap((Map) oldInstance);
+            return new Expression(oldInstance, Collections.class, "checkedMap", new Object[]{map, keyType, valueType});
+        }
+    }
+
+    static final class CheckedSortedMap_PersistenceDelegate extends java_util_Collections {
+        protected Expression instantiate(Object oldInstance, Encoder out) {
+            Object keyType   = MetaData.getPrivateFieldValue(oldInstance, "java.util.Collections$CheckedMap.keyType");
+            Object valueType = MetaData.getPrivateFieldValue(oldInstance, "java.util.Collections$CheckedMap.valueType");
+            SortedMap map = new TreeMap((SortedMap) oldInstance);
+            return new Expression(oldInstance, Collections.class, "checkedSortedMap", new Object[]{map, keyType, valueType});
+        }
+    }
+}
+
 // Collection
 class java_util_Collection_PersistenceDelegate extends DefaultPersistenceDelegate {
     protected void initialize(Class<?> type, Object oldInstance, Object newInstance, Encoder out) {
@@ -259,9 +505,7 @@ class java_util_Map_PersistenceDelegate extends DefaultPersistenceDelegate {
         // Remove the new elements.
         // Do this first otherwise we undo the adding work.
         if (newMap != null) {
-            java.util.Iterator newKeys = newMap.keySet().iterator();
-            while(newKeys.hasNext()) {
-                Object newKey = newKeys.next();
+            for ( Object newKey : newMap.keySet() ) {
                // PENDING: This "key" is not in the right environment.
                 if (!oldMap.containsKey(newKey)) {
                     invokeStatement(oldInstance, "remove", new Object[]{newKey}, out);
@@ -269,10 +513,7 @@ class java_util_Map_PersistenceDelegate extends DefaultPersistenceDelegate {
             }
         }
         // Add the new elements.
-        java.util.Iterator oldKeys = oldMap.keySet().iterator();
-        while(oldKeys.hasNext()) {
-            Object oldKey = oldKeys.next();
-
+        for ( Object oldKey : oldMap.keySet() ) {
             Expression oldGetExp = new Expression(oldInstance, "get", new Object[]{oldKey});
             // Pending: should use newKey.
             Expression newGetExp = new Expression(newInstance, "get", new Object[]{oldKey});
@@ -281,6 +522,9 @@ class java_util_Map_PersistenceDelegate extends DefaultPersistenceDelegate {
                 Object newValue = newGetExp.getValue();
                 out.writeExpression(oldGetExp);
                 if (!MetaData.equals(newValue, out.get(oldValue))) {
+                    invokeStatement(oldInstance, "put", new Object[]{oldKey, oldValue}, out);
+                } else if ((newValue == null) && !newMap.containsKey(oldKey)) {
+                    // put oldValue(=null?) if oldKey is absent in newMap
                     invokeStatement(oldInstance, "put", new Object[]{oldKey, oldValue}, out);
                 }
             }
@@ -301,6 +545,128 @@ class java_util_Hashtable_PersistenceDelegate extends java_util_Map_PersistenceD
 class java_beans_beancontext_BeanContextSupport_PersistenceDelegate extends java_util_Collection_PersistenceDelegate {}
 
 // AWT
+
+/**
+ * The persistence delegate for {@link Dimension}.
+ * It is impossible to use {@link DefaultPersistenceDelegate}
+ * because all getters have return types that differ from parameter types
+ * of the constructor {@link Dimension#Dimension(int, int)}.
+ *
+ * @author Sergey A. Malenkov
+ */
+final class java_awt_Dimension_PersistenceDelegate extends PersistenceDelegate {
+    protected boolean mutatesTo(Object oldInstance, Object newInstance) {
+        return oldInstance.equals(newInstance);
+    }
+
+    protected Expression instantiate(Object oldInstance, Encoder out) {
+        Dimension dimension = (Dimension) oldInstance;
+        Object[] args = new Object[] {
+                dimension.width,
+                dimension.height,
+        };
+        return new Expression(dimension, dimension.getClass(), "new", args);
+    }
+}
+
+/**
+ * The persistence delegate for {@link GridBagConstraints}.
+ * It is impossible to use {@link DefaultPersistenceDelegate}
+ * because this class does not have any properties.
+ *
+ * @author Sergey A. Malenkov
+ */
+final class java_awt_GridBagConstraints_PersistenceDelegate extends PersistenceDelegate {
+    protected Expression instantiate(Object oldInstance, Encoder out) {
+        GridBagConstraints gbc = (GridBagConstraints) oldInstance;
+        Object[] args = new Object[] {
+                gbc.gridx,
+                gbc.gridy,
+                gbc.gridwidth,
+                gbc.gridheight,
+                gbc.weightx,
+                gbc.weighty,
+                gbc.anchor,
+                gbc.fill,
+                gbc.insets,
+                gbc.ipadx,
+                gbc.ipady,
+        };
+        return new Expression(gbc, gbc.getClass(), "new", args);
+    }
+}
+
+/**
+ * The persistence delegate for {@link Insets}.
+ * It is impossible to use {@link DefaultPersistenceDelegate}
+ * because this class does not have any properties.
+ *
+ * @author Sergey A. Malenkov
+ */
+final class java_awt_Insets_PersistenceDelegate extends PersistenceDelegate {
+    protected boolean mutatesTo(Object oldInstance, Object newInstance) {
+        return oldInstance.equals(newInstance);
+    }
+
+    protected Expression instantiate(Object oldInstance, Encoder out) {
+        Insets insets = (Insets) oldInstance;
+        Object[] args = new Object[] {
+                insets.top,
+                insets.left,
+                insets.bottom,
+                insets.right,
+        };
+        return new Expression(insets, insets.getClass(), "new", args);
+    }
+}
+
+/**
+ * The persistence delegate for {@link Point}.
+ * It is impossible to use {@link DefaultPersistenceDelegate}
+ * because all getters have return types that differ from parameter types
+ * of the constructor {@link Point#Point(int, int)}.
+ *
+ * @author Sergey A. Malenkov
+ */
+final class java_awt_Point_PersistenceDelegate extends PersistenceDelegate {
+    protected boolean mutatesTo(Object oldInstance, Object newInstance) {
+        return oldInstance.equals(newInstance);
+    }
+
+    protected Expression instantiate(Object oldInstance, Encoder out) {
+        Point point = (Point) oldInstance;
+        Object[] args = new Object[] {
+                point.x,
+                point.y,
+        };
+        return new Expression(point, point.getClass(), "new", args);
+    }
+}
+
+/**
+ * The persistence delegate for {@link Rectangle}.
+ * It is impossible to use {@link DefaultPersistenceDelegate}
+ * because all getters have return types that differ from parameter types
+ * of the constructor {@link Rectangle#Rectangle(int, int, int, int)}.
+ *
+ * @author Sergey A. Malenkov
+ */
+final class java_awt_Rectangle_PersistenceDelegate extends PersistenceDelegate {
+    protected boolean mutatesTo(Object oldInstance, Object newInstance) {
+        return oldInstance.equals(newInstance);
+    }
+
+    protected Expression instantiate(Object oldInstance, Encoder out) {
+        Rectangle rectangle = (Rectangle) oldInstance;
+        Object[] args = new Object[] {
+                rectangle.x,
+                rectangle.y,
+                rectangle.width,
+                rectangle.height,
+        };
+        return new Expression(rectangle, rectangle.getClass(), "new", args);
+    }
+}
 
 class StaticFieldsPersistenceDelegate extends PersistenceDelegate {
     protected void installFields(Encoder out, Class<?> cls) {
@@ -397,9 +763,18 @@ class java_awt_Container_PersistenceDelegate extends DefaultPersistenceDelegate 
         java.awt.Component[] oldChildren = oldC.getComponents();
         java.awt.Container newC = (java.awt.Container)newInstance;
         java.awt.Component[] newChildren = (newC == null) ? new java.awt.Component[0] : newC.getComponents();
+
+        BorderLayout layout = ( oldC.getLayout() instanceof BorderLayout )
+                ? ( BorderLayout )oldC.getLayout()
+                : null;
+
         // Pending. Assume all the new children are unaltered.
         for(int i = newChildren.length; i < oldChildren.length; i++) {
-            invokeStatement(oldInstance, "add", new Object[]{oldChildren[i]}, out);
+            Object[] args = ( layout != null )
+                    ? new Object[] {oldChildren[i], layout.getConstraints( oldChildren[i] )}
+                    : new Object[] {oldChildren[i]};
+
+            invokeStatement(oldInstance, "add", args, out);
         }
     }
 }
@@ -639,6 +1014,32 @@ class javax_swing_JMenu_PersistenceDelegate extends DefaultPersistenceDelegate {
     }
 }
 
+/**
+ * The persistence delegate for {@link MatteBorder}.
+ * It is impossible to use {@link DefaultPersistenceDelegate}
+ * because this class does not have writable properties.
+ *
+ * @author Sergey A. Malenkov
+ */
+final class javax_swing_border_MatteBorder_PersistenceDelegate extends PersistenceDelegate {
+    protected Expression instantiate(Object oldInstance, Encoder out) {
+        MatteBorder border = (MatteBorder) oldInstance;
+        Insets insets = border.getBorderInsets();
+        Object object = border.getTileIcon();
+        if (object == null) {
+            object = border.getMatteColor();
+        }
+        Object[] args = new Object[] {
+                insets.top,
+                insets.left,
+                insets.bottom,
+                insets.right,
+                object,
+        };
+        return new Expression(border, border.getClass(), "new", args);
+    }
+}
+
 /* XXX - doens't seem to work. Debug later.
 class javax_swing_JMenu_PersistenceDelegate extends DefaultPersistenceDelegate {
     protected void initialize(Class<?> type, Object oldInstance, Object newInstance, Encoder out) {
@@ -652,11 +1053,35 @@ class javax_swing_JMenu_PersistenceDelegate extends DefaultPersistenceDelegate {
 }
 */
 
+/**
+ * The persistence delegate for {@link PrintColorUIResource}.
+ * It is impossible to use {@link DefaultPersistenceDelegate}
+ * because this class has special rule for serialization:
+ * it should be converted to {@link ColorUIResource}.
+ *
+ * @see PrintColorUIResource#writeReplace
+ *
+ * @author Sergey A. Malenkov
+ */
+final class sun_swing_PrintColorUIResource_PersistenceDelegate extends PersistenceDelegate {
+    protected boolean mutatesTo(Object oldInstance, Object newInstance) {
+        return oldInstance.equals(newInstance);
+    }
+
+    protected Expression instantiate(Object oldInstance, Encoder out) {
+        Color color = (Color) oldInstance;
+        Object[] args = new Object[] {color.getRGB()};
+        return new Expression(color, ColorUIResource.class, "new", args);
+    }
+}
+
 class MetaData {
+    private static final Map<String,Field> fields = Collections.synchronizedMap(new WeakHashMap<String, Field>());
     private static Hashtable internalPersistenceDelegates = new Hashtable();
     private static Hashtable transientProperties = new Hashtable();
 
     private static PersistenceDelegate nullPersistenceDelegate = new NullPersistenceDelegate();
+    private static PersistenceDelegate enumPersistenceDelegate = new EnumPersistenceDelegate();
     private static PersistenceDelegate primitivePersistenceDelegate = new PrimitivePersistenceDelegate();
     private static PersistenceDelegate defaultPersistenceDelegate = new DefaultPersistenceDelegate();
     private static PersistenceDelegate arrayPersistenceDelegate;
@@ -678,19 +1103,9 @@ class MetaData {
 
   // awt
   
-        registerConstructor("java.awt.Point", new String[]{"x", "y"});
-        registerConstructor("java.awt.Dimension", new String[]{"width", "height"});
-        registerConstructor("java.awt.Rectangle", new String[]{"x", "y", "width", "height"});
-
-        registerConstructor("java.awt.Insets", new String[]{"top", "left", "bottom", "right"});
         registerConstructor("java.awt.Color", new String[]{"red", "green", "blue", "alpha"});
         registerConstructor("java.awt.Font", new String[]{"name", "style", "size"});
         registerConstructor("java.awt.Cursor", new String[]{"type"});
-        registerConstructor("java.awt.GridBagConstraints",
-                            new String[]{"gridx", "gridy", "gridwidth", "gridheight",
-                                         "weightx", "weighty",
-                                         "anchor", "fill", "insets",
-                                         "ipadx", "ipady"});                               
         registerConstructor("java.awt.ScrollPane", new String[]{"scrollbarDisplayPolicy"});
 
   // swing
@@ -721,31 +1136,35 @@ class MetaData {
         registerConstructor("javax.swing.JSplitPane", new String[]{"orientation"});
         // Try to synthesize the ImageIcon from its description.
         registerConstructor("javax.swing.ImageIcon", new String[]{"description"});
-        // JButton's "label" and "actionCommand" properties are related,
-        // use the label as a constructor argument to ensure that it is set first.
+        // JButton's "text" and "actionCommand" properties are related,
+        // use the text as a constructor argument to ensure that it is set first.
         // This remove the benign, but unnecessary, manipulation of actionCommand
         // property in the common case.
-        registerConstructor("javax.swing.JButton", new String[]{"label"});
+        registerConstructor("javax.swing.JButton", new String[]{"text"});
 
         // borders
 
-        registerConstructor("javax.swing.border.BevelBorder", new String[]{"bevelType", "highlightOuter", "highlightInner", "shadowOuter", "shadowInner"});
-        registerConstructor("javax.swing.plaf.BorderUIResource$BevelBorderUIResource", new String[]{"bevelType", "highlightOuter", "highlightInner", "shadowOuter", "shadowInner"});
+        registerConstructor("javax.swing.border.BevelBorder", new String[]{"bevelType", "highlightOuterColor", "highlightInnerColor", "shadowOuterColor", "shadowInnerColor"});
+        registerConstructor("javax.swing.plaf.BorderUIResource$BevelBorderUIResource", new String[]{"bevelType", "highlightOuterColor", "highlightInnerColor", "shadowOuterColor", "shadowInnerColor"});
         registerConstructor("javax.swing.border.CompoundBorder", new String[]{"outsideBorder", "insideBorder"});
         registerConstructor("javax.swing.plaf.BorderUIResource$CompoundBorderUIResource", new String[]{"outsideBorder", "insideBorder"});
-        registerConstructor("javax.swing.border.EmptyBorder", new String[]{"top", "left", "bottom", "right"});
-        registerConstructor("javax.swing.plaf.BorderUIResource$EmptyBorderUIResource", new String[]{"top", "left", "bottom", "right"});
-        registerConstructor("javax.swing.border.EtchedBorder", new String[]{"etchType", "highlight", "shadow"});
-        registerConstructor("javax.swing.plaf.BorderUIResource$EtchedBorderUIResource", new String[]{"etchType", "highlight", "shadow"});
+        registerConstructor("javax.swing.border.EmptyBorder", new String[]{"borderInsets"});
+        registerConstructor("javax.swing.plaf.BorderUIResource$EmptyBorderUIResource", new String[]{"borderInsets"});
+        registerConstructor("javax.swing.border.EtchedBorder", new String[]{"etchType", "highlightColor", "shadowColor"});
+        registerConstructor("javax.swing.plaf.BorderUIResource$EtchedBorderUIResource", new String[]{"etchType", "highlightColor", "shadowColor"});
         registerConstructor("javax.swing.border.LineBorder", new String[]{"lineColor", "thickness"});
         registerConstructor("javax.swing.plaf.BorderUIResource$LineBorderUIResource", new String[]{"lineColor", "thickness"});
-        // Note this should check to see which of "color" and "tileIcon" is non-null.
-        registerConstructor("javax.swing.border.MatteBorder", new String[]{"top", "left", "bottom", "right", "tileIcon"});
-        registerConstructor("javax.swing.plaf.BorderUIResource$MatteBorderUIResource", new String[]{"top", "left", "bottom", "right", "tileIcon"});
-        registerConstructor("javax.swing.border.SoftBevelBorder", new String[]{"bevelType", "highlightOuter", "highlightInner", "shadowOuter", "shadowInner"});
+        registerConstructor("javax.swing.border.SoftBevelBorder", new String[]{"bevelType", "highlightOuterColor", "highlightInnerColor", "shadowOuterColor", "shadowInnerColor"});
         // registerConstructorWithBadEqual("javax.swing.plaf.BorderUIResource$SoftBevelBorderUIResource", new String[]{"bevelType", "highlightOuter", "highlightInner", "shadowOuter", "shadowInner"});
         registerConstructor("javax.swing.border.TitledBorder", new String[]{"border", "title", "titleJustification", "titlePosition", "titleFont", "titleColor"});
         registerConstructor("javax.swing.plaf.BorderUIResource$TitledBorderUIResource", new String[]{"border", "title", "titleJustification", "titlePosition", "titleFont", "titleColor"});
+
+        internalPersistenceDelegates.put("java.net.URI",
+                                         new PrimitivePersistenceDelegate());
+
+        // it is possible because MatteBorder is assignable from MatteBorderUIResource
+        internalPersistenceDelegates.put("javax.swing.plaf.BorderUIResource$MatteBorderUIResource",
+                                         new javax_swing_border_MatteBorder_PersistenceDelegate());
 
 // Transient properties
 
@@ -860,6 +1279,9 @@ class MetaData {
         if (type == null) {
             return nullPersistenceDelegate;
         }
+        if (Enum.class.isAssignableFrom(type)) {
+            return enumPersistenceDelegate;
+        }
         if (ReflectionUtils.isPrimitive(type)) {
             return primitivePersistenceDelegate;
         }
@@ -911,13 +1333,52 @@ class MetaData {
                 pd = (PersistenceDelegate)c.newInstance();
                 internalPersistenceDelegates.put(typeName, pd);
             }
-            catch (ClassNotFoundException e) {}
+            catch (ClassNotFoundException e) {
+                String[] properties = getConstructorProperties(type);
+                if (properties != null) {
+                    pd = new DefaultPersistenceDelegate(properties);
+                    internalPersistenceDelegates.put(typeName, pd);
+                }
+            }
             catch (Exception e) {
                 System.err.println("Internal error: " + e);
             }
         }
 
         return (pd != null) ? pd : defaultPersistenceDelegate;
+    }
+
+    private static String[] getConstructorProperties(Class type) {
+        String[] names = null;
+        int length = 0;
+        for (Constructor constructor : type.getConstructors()) {
+            String[] value = getAnnotationValue(constructor);
+            if ((value != null) && (length < value.length) && isValid(constructor, value)) {
+                names = value;
+                length = value.length;
+            }
+        }
+        return names;
+    }
+
+    private static String[] getAnnotationValue(Constructor constructor) {
+        ConstructorProperties annotation = constructor.getAnnotation(ConstructorProperties.class);
+        return (annotation != null)
+                ? annotation.value()
+                : null;
+    }
+
+    private static boolean isValid(Constructor constructor, String[] names) {
+        Class[] parameters = constructor.getParameterTypes();
+        if (names.length != parameters.length) {
+            return false;
+        }
+        for (String name : names) {
+            if (name == null) {
+                return false;
+            }
+        }
+        return true;
     }
 
     // Wrapper for Introspector.getBeanInfo to handle exception handling.
@@ -979,5 +1440,35 @@ class MetaData {
         }
         tp.add(property);
     }
-}
 
+    static Object getPrivateFieldValue(Object instance, String name) {
+        Field field = fields.get(name);
+        if (field == null) {
+            int index = name.lastIndexOf('.');
+            final String className = name.substring(0, index);
+            final String fieldName = name.substring(1 + index);
+            field = AccessController.doPrivileged(new PrivilegedAction<Field>() {
+                public Field run() {
+                    try {
+                        Field field = Class.forName(className).getDeclaredField(fieldName);
+                        field.setAccessible(true);
+                        return field;
+                    }
+                    catch (ClassNotFoundException exception) {
+                        throw new IllegalStateException("Could not find class", exception);
+                    }
+                    catch (NoSuchFieldException exception) {
+                        throw new IllegalStateException("Could not find field", exception);
+                    }
+                }
+            });
+            fields.put(name, field);
+        }
+        try {
+            return field.get(instance);
+        }
+        catch (IllegalAccessException exception) {
+            throw new IllegalStateException("Could not get value of the field", exception);
+        }
+    }
+}

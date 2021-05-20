@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /*
- * $Id: SyntaxTreeNode.java,v 1.31 2004/12/10 18:46:42 santiagopg Exp $
+ * $Id: SyntaxTreeNode.java,v 1.6 2006/06/06 22:34:33 spericas Exp $
  */
 
 package com.sun.org.apache.xalan.internal.xsltc.compiler;
@@ -43,10 +43,10 @@ import com.sun.org.apache.xalan.internal.xsltc.compiler.util.MethodGenerator;
 import com.sun.org.apache.xalan.internal.xsltc.compiler.util.Type;
 import com.sun.org.apache.xalan.internal.xsltc.compiler.util.TypeCheckError;
 import com.sun.org.apache.xalan.internal.xsltc.DOM;
-import com.sun.org.apache.xalan.internal.xsltc.runtime.AttributeList;
+import com.sun.org.apache.xalan.internal.xsltc.compiler.util.Util;
 
 import org.xml.sax.Attributes;
-
+import org.xml.sax.helpers.AttributesImpl;
 
 
 /**
@@ -71,7 +71,7 @@ public abstract class SyntaxTreeNode implements Constants {
     // Element description data
     protected QName _qname;                    // The element QName
     private int _line;                         // Source file line number
-    protected AttributeList _attributes = null;   // Attributes of this element
+    protected AttributesImpl _attributes = null;   // Attributes of this element
     private   Hashtable _prefixMapping = null; // Namespace declarations
 
     // Sentinel - used to denote unrecognised syntaxt tree nodes.
@@ -162,7 +162,7 @@ public abstract class SyntaxTreeNode implements Constants {
      * @param attributes Attributes for the element. Must be passed in as an
      *                   implementation of org.xml.sax.Attributes.
      */
-    protected void setAttributes(AttributeList attributes) {
+    protected void setAttributes(AttributesImpl attributes) {
 	_attributes = attributes;
     }
 
@@ -189,7 +189,15 @@ public abstract class SyntaxTreeNode implements Constants {
     }
     
     protected void addAttribute(String qname, String value) {
-        _attributes.add(qname, value);
+        int index = _attributes.getIndex(qname);
+        if (index != -1) {
+            _attributes.setAttribute(index, "", Util.getLocalName(qname), 
+                    qname, "CDATA", value);
+        }
+        else {
+            _attributes.addAttribute("", Util.getLocalName(qname), qname, 
+                    "CDATA", value);            
+        }
     }
 
     /**
@@ -311,12 +319,13 @@ public abstract class SyntaxTreeNode implements Constants {
     }
 
     /**
-     * Set this syntax tree node's parent node
+     * Set this syntax tree node's parent node, if unset. For
+     * re-parenting just use <code>node._parent = newparent</code>.
+     *
      * @param parent The parent node.
      */
     protected void setParent(SyntaxTreeNode parent) {
-	if (_parent == null)
-	    _parent = parent;
+        if (_parent == null) _parent = parent;
     }
 
     /**

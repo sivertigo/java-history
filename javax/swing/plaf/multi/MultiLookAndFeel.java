@@ -1,8 +1,8 @@
 /*
- * @(#)MultiLookAndFeel.java	1.34 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package javax.swing.plaf.multi;
 
@@ -36,7 +36,7 @@ import javax.swing.plaf.*;
  * @see UIManager#addAuxiliaryLookAndFeel
  * @see javax.swing.plaf.multi
  *
- * @version 1.34 12/19/03
+ * @version %I% %G%
  * @author Willie Walker
  */
 public class MultiLookAndFeel extends LookAndFeel {
@@ -108,7 +108,6 @@ public class MultiLookAndFeel extends LookAndFeel {
      * @see javax.swing.JComponent#getUIClassID
      */
     public UIDefaults getDefaults() {
-        UIDefaults table = new MultiUIDefaults();
 	String packageName = "javax.swing.plaf.multi.Multi";
 	Object[] uiDefaults = {
 		   "ButtonUI", packageName + "ButtonUI",
@@ -156,6 +155,7 @@ public class MultiLookAndFeel extends LookAndFeel {
 		 "ViewportUI", packageName + "ViewportUI",
 	};
 
+        UIDefaults table = new MultiUIDefaults(uiDefaults.length / 2, 0.75f);
 	table.putDefaults(uiDefaults);
 	return table;
     }
@@ -277,6 +277,9 @@ public class MultiLookAndFeel extends LookAndFeel {
  * LAF.
  */
 class MultiUIDefaults extends UIDefaults {
+    MultiUIDefaults(int initialCapacity, float loadFactor) {
+        super(initialCapacity, loadFactor);
+    }
     protected void getUIError(String msg) {
 	System.err.println("Multiplexing LAF:  " + msg);
     }

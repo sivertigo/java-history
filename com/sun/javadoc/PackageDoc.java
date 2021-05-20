@@ -1,8 +1,8 @@
 /*
  * @(#)PackageDoc.java	1.9 02/09/29
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.javadoc;
@@ -15,7 +15,7 @@ package com.sun.javadoc;
  * Each method whose return type is an array will return an empty
  * array (never null) when there are no objects in the result.
  *
- * @since JDK1.2
+ * @since 1.2
  * @author Kaiyang Liu (original)
  * @author Robert Field (rewrite)
  */

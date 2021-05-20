@@ -1,8 +1,8 @@
 /*
- * @(#)JToolTip.java	1.47 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 
@@ -29,6 +29,11 @@ import java.io.IOException;
  * in <em>The Java Tutorial</em>
  * for further documentation.
  * <p>
+ * <strong>Warning:</strong> Swing is not thread safe. For more
+ * information see <a
+ * href="package-summary.html#threading">Swing's Threading
+ * Policy</a>.
+ * <p>
  * <strong>Warning:</strong>
  * Serialized objects of this class will not be compatible with
  * future Swing releases. The current serialization support is
@@ -40,7 +45,7 @@ import java.io.IOException;
  *
  * @see JComponent#setToolTipText
  * @see JComponent#createToolTip
- * @version 1.47 12/19/03
+ * @version %I% %G%
  * @author Dave Moore
  * @author Rich Shiavi
  */
@@ -237,11 +242,16 @@ public class JToolTip extends JComponent implements Accessible {
          * @return a localized String describing this object.
          */
         public String getAccessibleDescription() {
-            if (accessibleDescription != null) {
-                return accessibleDescription;
-            } else {
-                return getTipText();
+            String description = accessibleDescription;
+
+            // fallback to client property
+            if (description == null) {
+                description = (String)getClientProperty(AccessibleContext.ACCESSIBLE_DESCRIPTION_PROPERTY);
             }
+            if (description == null) {
+                description = getTipText();
+            }
+            return description;
         }
 
         /**

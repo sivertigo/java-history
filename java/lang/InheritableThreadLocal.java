@@ -1,8 +1,8 @@
 /*
- * @(#)InheritableThreadLocal.java	1.21 04/02/09
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang;
@@ -23,7 +23,7 @@ import java.lang.ref.*;
  * automatically transmitted to any child threads that are created.
  *
  * @author  Josh Bloch and Doug Lea
- * @version 1.21, 02/09/04
+ * @version %I%, %G%
  * @see     ThreadLocal
  * @since   1.2
  */

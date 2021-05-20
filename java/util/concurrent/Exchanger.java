@@ -1,8 +1,8 @@
 /*
- * @(#)Exchanger.java	1.6 06/09/20
+ * %W% %E%
  *
- * Copyright 2006 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.util.concurrent;
@@ -10,20 +10,22 @@ import java.util.concurrent.atomic.*;
 import java.util.concurrent.locks.LockSupport;
 
 /**
- * A synchronization point at which two threads can exchange objects.
- * Each thread presents some object on entry to the {@link #exchange
- * exchange} method, and receives the object presented by the other
- * thread on return.
+ * A synchronization point at which threads can pair and swap elements
+ * within pairs.  Each thread presents some object on entry to the
+ * {@link #exchange exchange} method, matches with a partner thread,
+ * and receives its partner's object on return.  An Exchanger may be
+ * viewed as a bidirectional form of a {@link SynchronousQueue}.
+ * Exchangers may be useful in applications such as genetic algorithms
+ * and pipeline designs.
  *
  * <p><b>Sample Usage:</b>
- * Here are the highlights of a class that uses an <tt>Exchanger</tt> to
- * swap buffers between threads so that the thread filling the
- * buffer gets a freshly
- * emptied one when it needs it, handing off the filled one to
- * the thread emptying the buffer.
- * <pre>
+ * Here are the highlights of a class that uses an {@code Exchanger}
+ * to swap buffers between threads so that the thread filling the
+ * buffer gets a freshly emptied one when it needs it, handing off the
+ * filled one to the thread emptying the buffer.
+ * <pre>{@code
  * class FillAndEmpty {
- *   Exchanger&lt;DataBuffer&gt; exchanger = new Exchanger();
+ *   Exchanger<DataBuffer> exchanger = new Exchanger<DataBuffer>();
  *   DataBuffer initialEmptyBuffer = ... a made-up type
  *   DataBuffer initialFullBuffer = ...
  *
@@ -33,7 +35,7 @@ import java.util.concurrent.locks.LockSupport;
  *       try {
  *         while (currentBuffer != null) {
  *           addToBuffer(currentBuffer);
- *           if (currentBuffer.full())
+ *           if (currentBuffer.isFull())
  *             currentBuffer = exchanger.exchange(currentBuffer);
  *         }
  *       } catch (InterruptedException ex) { ... handle ... }
@@ -46,7 +48,7 @@ import java.util.concurrent.locks.LockSupport;
  *       try {
  *         while (currentBuffer != null) {
  *           takeFromBuffer(currentBuffer);
- *           if (currentBuffer.empty())
+ *           if (currentBuffer.isEmpty())
  *             currentBuffer = exchanger.exchange(currentBuffer);
  *         }
  *       } catch (InterruptedException ex) { ... handle ...}
@@ -58,10 +60,17 @@ import java.util.concurrent.locks.LockSupport;
  *     new Thread(new EmptyingLoop()).start();
  *   }
  * }
- * </pre>
+ * }</pre>
+ *
+ * <p>Memory consistency effects: For each pair of threads that
+ * successfully exchange objects via an {@code Exchanger}, actions
+ * prior to the {@code exchange()} in each thread
+ * <a href="package-summary.html#MemoryVisibility"><i>happen-before</i></a>
+ * those subsequent to a return from the corresponding {@code exchange()}
+ * in the other thread.
  *
  * @since 1.5
- * @author Doug Lea
+ * @author Doug Lea and Bill Scherer and Michael Scott
  * @param <V> The type of objects that may be exchanged
  */
 public class Exchanger<V> {
@@ -462,7 +471,7 @@ public class Exchanger<V> {
             else if (w.isInterrupted())         // Abort on interrupt
                 tryCancel(node, slot);
             else                                // Block
-                LockSupport.park();
+                LockSupport.park(node);
         }
     }
 
@@ -497,7 +506,7 @@ public class Exchanger<V> {
                 else if (w.isInterrupted())
                     tryCancel(node, slot);
                 else
-                    LockSupport.parkNanos(nanos);
+                    LockSupport.parkNanos(node, nanos);
             }
             else if (tryCancel(node, slot) && !w.isInterrupted())
                 return scanOnTimeout(node);
@@ -538,42 +547,44 @@ public class Exchanger<V> {
     }
 
     /**
-     * Create a new Exchanger.
-     **/
+     * Creates a new Exchanger.
+     */
     public Exchanger() {
     }
 
     /**
      * Waits for another thread to arrive at this exchange point (unless
-     * it is {@link Thread#interrupt interrupted}),
+     * the current thread is {@linkplain Thread#interrupt interrupted}),
      * and then transfers the given object to it, receiving its object
      * in return.
+     *
      * <p>If another thread is already waiting at the exchange point then
      * it is resumed for thread scheduling purposes and receives the object
-     * passed in by the current thread. The current thread returns immediately,
+     * passed in by the current thread.  The current thread returns immediately,
      * receiving the object passed to the exchange by that other thread.
-     * <p>If no other thread is already waiting at the exchange then the 
+     *
+     * <p>If no other thread is already waiting at the exchange then the
      * current thread is disabled for thread scheduling purposes and lies
      * dormant until one of two things happens:
      * <ul>
      * <li>Some other thread enters the exchange; or
-     * <li>Some other thread {@link Thread#interrupt interrupts} the current
+     * <li>Some other thread {@linkplain Thread#interrupt interrupts} the current
      * thread.
      * </ul>
      * <p>If the current thread:
      * <ul>
-     * <li>has its interrupted status set on entry to this method; or 
-     * <li>is {@link Thread#interrupt interrupted} while waiting
-     * for the exchange, 
+     * <li>has its interrupted status set on entry to this method; or
+     * <li>is {@linkplain Thread#interrupt interrupted} while waiting
+     * for the exchange,
      * </ul>
-     * then {@link InterruptedException} is thrown and the current thread's 
-     * interrupted status is cleared. 
+     * then {@link InterruptedException} is thrown and the current thread's
+     * interrupted status is cleared.
      *
      * @param x the object to exchange
-     * @return the object provided by the other thread.
-     * @throws InterruptedException if current thread was interrupted 
-     * while waiting
-     **/
+     * @return the object provided by the other thread
+     * @throws InterruptedException if the current thread was
+     *         interrupted while waiting
+     */
     public V exchange(V x) throws InterruptedException {
         if (!Thread.interrupted()) {
             Object v = doExchange(x == null? NULL_ITEM : x, false, 0);
@@ -588,48 +599,46 @@ public class Exchanger<V> {
 
     /**
      * Waits for another thread to arrive at this exchange point (unless
-     * it is {@link Thread#interrupt interrupted}, or the specified waiting
-     * time elapses),
-     * and then transfers the given object to it, receiving its object
-     * in return.
+     * the current thread is {@linkplain Thread#interrupt interrupted} or
+     * the specified waiting time elapses), and then transfers the given
+     * object to it, receiving its object in return.
      *
      * <p>If another thread is already waiting at the exchange point then
      * it is resumed for thread scheduling purposes and receives the object
-     * passed in by the current thread. The current thread returns immediately,
+     * passed in by the current thread.  The current thread returns immediately,
      * receiving the object passed to the exchange by that other thread.
      *
-     * <p>If no other thread is already waiting at the exchange then the 
+     * <p>If no other thread is already waiting at the exchange then the
      * current thread is disabled for thread scheduling purposes and lies
      * dormant until one of three things happens:
      * <ul>
      * <li>Some other thread enters the exchange; or
-     * <li>Some other thread {@link Thread#interrupt interrupts} the current
-     * thread; or
+     * <li>Some other thread {@linkplain Thread#interrupt interrupts}
+     * the current thread; or
      * <li>The specified waiting time elapses.
      * </ul>
      * <p>If the current thread:
      * <ul>
-     * <li>has its interrupted status set on entry to this method; or 
-     * <li>is {@link Thread#interrupt interrupted} while waiting
-     * for the exchange, 
+     * <li>has its interrupted status set on entry to this method; or
+     * <li>is {@linkplain Thread#interrupt interrupted} while waiting
+     * for the exchange,
      * </ul>
-     * then {@link InterruptedException} is thrown and the current thread's 
-     * interrupted status is cleared. 
+     * then {@link InterruptedException} is thrown and the current thread's
+     * interrupted status is cleared.
      *
-     * <p>If the specified waiting time elapses then {@link TimeoutException}
-     * is thrown.
-     * If the time is 
-     * less than or equal to zero, the method will not wait at all.
+     * <p>If the specified waiting time elapses then {@link
+     * TimeoutException} is thrown.  If the time is less than or equal
+     * to zero, the method will not wait at all.
      *
      * @param x the object to exchange
      * @param timeout the maximum time to wait
-     * @param unit the time unit of the <tt>timeout</tt> argument.
-     * @return the object provided by the other thread.
-     * @throws InterruptedException if current thread was interrupted
-     * while waiting
-     * @throws TimeoutException if the specified waiting time elapses before
-     * another thread enters the exchange.
-     **/
+     * @param unit the time unit of the <tt>timeout</tt> argument
+     * @return the object provided by the other thread
+     * @throws InterruptedException if the current thread was
+     *         interrupted while waiting
+     * @throws TimeoutException if the specified waiting time elapses
+     *         before another thread enters the exchange
+     */
     public V exchange(V x, long timeout, TimeUnit unit)
         throws InterruptedException, TimeoutException {
         if (!Thread.interrupted()) {

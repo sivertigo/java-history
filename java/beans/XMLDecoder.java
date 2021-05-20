@@ -1,8 +1,8 @@
 /*
- * @(#)XMLDecoder.java	1.30 04/06/01
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, 2012, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package java.beans;
 
@@ -13,6 +13,10 @@ import java.io.IOException;
 
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
+
+import java.security.AccessControlContext;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 
 import org.xml.sax.SAXException;
 
@@ -45,10 +49,11 @@ import javax.xml.parsers.SAXParser;
  *
  * @since 1.4
  * 
- * @version 1.30 06/01/04
+ * @version %I% %G%
  * @author Philip Milne
  */
 public class XMLDecoder { 
+    private final AccessControlContext acc = AccessController.getContext();
     private InputStream in; 
     private Object owner; 
     private ExceptionListener exceptionListener; 
@@ -61,7 +66,7 @@ public class XMLDecoder {
      *
      * @param in The underlying stream. 
      *
-     * @see XMLEncoder#XMLEncoder(OutputStream)
+     * @see XMLEncoder#XMLEncoder(java.io.OutputStream)
      */ 
     public XMLDecoder(InputStream in) { 
         this(in, null); 
@@ -147,6 +152,7 @@ public class XMLDecoder {
      */
     public void close() { 
         if (in != null) {
+            getHandler();
             try { 
                 in.close(); 
             } 
@@ -197,25 +203,7 @@ public class XMLDecoder {
 	if (in == null) {
 	    return null;
 	}
-        if (handler == null) {
-            SAXParserFactory factory = SAXParserFactory.newInstance();
-            try {
-                SAXParser saxParser = factory.newSAXParser();
-                handler = new ObjectHandler(this, getClassLoader());
-                saxParser.parse(in, handler); 
-            } 
-            catch (ParserConfigurationException e) {
-                getExceptionListener().exceptionThrown(e);
-            } 
-            catch (SAXException se) { 
-                Exception e = se.getException(); 
-                getExceptionListener().exceptionThrown((e == null) ? se : e); 
-            }
-            catch (IOException ioe) { 
-                getExceptionListener().exceptionThrown(ioe); 
-            }
-        }
-        return handler.dequeueResult(); 
+        return getHandler().dequeueResult();
     } 
 	
     /** 
@@ -238,5 +226,44 @@ public class XMLDecoder {
      */ 
     public Object getOwner() {
 	return owner; 
+    }
+
+    /**
+     * Returns the object handler for input stream.
+     * The object handler is created if necessary.
+     *
+     * @return  the object handler
+     */
+    private ObjectHandler getHandler() {
+        if ( handler == null ) {
+            if ((this.acc == null) && (null != System.getSecurityManager())) {
+                throw new SecurityException("AccessControlContext is not set");
+            }
+            handler = AccessController.doPrivileged(new PrivilegedAction<ObjectHandler>() {
+                public ObjectHandler run() {
+                    ObjectHandler handler = new ObjectHandler(XMLDecoder.this, getClassLoader());
+                    SAXParserFactory factory = SAXParserFactory.newInstance();
+                    try {
+                        SAXParser parser = factory.newSAXParser();
+                        parser.parse( in, handler );
+                    }
+                    catch ( ParserConfigurationException e ) {
+                        getExceptionListener().exceptionThrown( e );
+                    }
+                    catch ( SAXException se ) {
+                        Exception e = se.getException();
+                        if ( e == null ) {
+                            e = se;
+                        }
+                        getExceptionListener().exceptionThrown( e );
+                    }
+                    catch ( IOException ioe ) {
+                        getExceptionListener().exceptionThrown( ioe );
+                    }
+                    return handler;
+                }
+            }, this.acc);
+        }
+        return handler;
     }
 }

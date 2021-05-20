@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 /*
- * $Id: XMLMessages.java,v 1.5 2004/02/17 04:14:26 minchau Exp $
+ * $Id: XMLMessages.java,v 1.2.4.1 2005/09/15 07:45:48 suresh_emailid Exp $
  */
 package com.sun.org.apache.xml.internal.res;
 
+import com.sun.org.apache.xalan.internal.utils.SecuritySupport;
 import java.util.ListResourceBundle;
 import java.util.Locale;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
 
 /**
  * A utility class for issuing XML error messages.
@@ -41,10 +40,10 @@ public class XMLMessages
     "com.sun.org.apache.xml.internal.res.XMLErrorResources";
 
   /** String to use if a bad message code is used. */
-  protected static String BAD_CODE = "BAD_CODE";
+  protected static final String BAD_CODE = "BAD_CODE";
 
   /** String to use if the message format operation failed.  */
-  protected static String FORMAT_FAILED = "FORMAT_FAILED";
+  protected static final String FORMAT_FAILED = "FORMAT_FAILED";
     
   /**
    * Set the Locale object to use.
@@ -70,7 +69,7 @@ public class XMLMessages
    * Creates a message from the specified key and replacement
    * arguments, localized to the given locale.
    *
-   * @param errorCode The key for the message text.
+   * @param msgKey    The key for the message text.
    * @param args      The arguments to be used as replacement text
    *                  in the message created.
    *
@@ -78,8 +77,9 @@ public class XMLMessages
    */
   public static final String createXMLMessage(String msgKey, Object args[])
   {
-    if (XMLBundle == null)
-      XMLBundle = loadResourceBundle(XML_ERROR_RESOURCES);
+    if (XMLBundle == null) {
+        XMLBundle = SecuritySupport.getResourceBundle(XML_ERROR_RESOURCES);
+    }
     
     if (XMLBundle != null)
     {
@@ -92,8 +92,6 @@ public class XMLMessages
   /**
    * Creates a message from the specified key and replacement
    * arguments, localized to the given locale.
-   *
-   * @param errorCode The key for the message text.
    *
    * @param fResourceBundle The resource bundle to use.
    * @param msgKey  The message key to use.
@@ -154,64 +152,4 @@ public class XMLMessages
     return fmsg;
   }
 
-  /**
-   * Return a named ResourceBundle for a particular locale.  This method mimics the behavior
-   * of ResourceBundle.getBundle().
-   *
-   * @param res the name of the resource to load.
-   * @param locale the locale to prefer when searching for the bundle
-   *
-   * @param className The class name of the resource bundle.
-   * @return the ResourceBundle
-   * @throws MissingResourceException
-   */
-  public static ListResourceBundle loadResourceBundle(String className)
-          throws MissingResourceException
-  {    
-    Locale locale = Locale.getDefault();
-
-    try
-    {
-      return (ListResourceBundle)ResourceBundle.getBundle(className, locale);
-    }
-    catch (MissingResourceException e)
-    {
-      try  // try to fall back to en_US if we can't load
-      {
-
-        // Since we can't find the localized property file,
-        // fall back to en_US.
-        return (ListResourceBundle)ResourceBundle.getBundle(
-          className, new Locale("en", "US"));
-      }
-      catch (MissingResourceException e2)
-      {
-
-        // Now we are really in trouble.
-        // very bad, definitely very bad...not going to get very far
-        throw new MissingResourceException(
-          "Could not load any resource bundles." + className, className, "");
-      }
-    }
-  }
-
-  /**
-   * Return the resource file suffic for the indicated locale
-   * For most locales, this will be based the language code.  However
-   * for Chinese, we do distinguish between Taiwan and PRC
-   *
-   * @param locale the locale
-   * @return an String suffix which can be appended to a resource name
-   */
-  protected static String getResourceSuffix(Locale locale)
-  {
-
-    String suffix = "_" + locale.getLanguage();
-    String country = locale.getCountry();
-
-    if (country.equals("TW"))
-      suffix += "_" + country;
-
-    return suffix;
-  }
 }

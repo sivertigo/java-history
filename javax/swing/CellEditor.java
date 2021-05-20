@@ -1,8 +1,8 @@
 /*
- * @(#)CellEditor.java	1.24 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing;
@@ -15,7 +15,7 @@ import javax.swing.event.*;
  * to implement. <p>
  *
  * Having this interface enables complex components (the client of the
- * editor) such as <code>JList</code>, <code>JTree</code>, and
+ * editor) such as <code>JTree</code> and
  * <code>JTable</code> to allow any generic editor to
  * edit values in a table cell, or tree cell, etc.  Without this generic
  * editor interface, <code>JTable</code> would have to know about specific editors,
@@ -38,7 +38,7 @@ import javax.swing.event.*;
  *
  * @see javax.swing.event.CellEditorListener
  *
- * @version 1.24 12/19/03
+ * @version %I% %G%
  * @author Alan Chung
  */
 public interface CellEditor {

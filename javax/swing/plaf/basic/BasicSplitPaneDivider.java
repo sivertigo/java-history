@@ -1,8 +1,8 @@
 /*
- * @(#)BasicSplitPaneDivider.java	1.52 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 
@@ -39,7 +39,7 @@ import sun.swing.DefaultLookup;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
- * @version 1.52 12/19/03
+ * @version %I% %G%
  * @author Scott Violet
  */
 public class BasicSplitPaneDivider extends Container
@@ -258,7 +258,8 @@ public class BasicSplitPaneDivider extends Container
     /**
      * Returns whether or not the mouse is currently over the divider
      *
-     * @param Returns whether or not the mouse is currently over the divider
+     * @return whether or not the mouse is currently over the divider
+     * @since 1.5
      */
     public boolean isMouseOver() {
         return mouseOver;

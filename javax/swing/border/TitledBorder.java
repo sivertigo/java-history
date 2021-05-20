@@ -1,12 +1,12 @@
 /*
- * @(#)TitledBorder.java	1.40 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package javax.swing.border;
 
-import com.sun.java.swing.SwingUtilities2;
+import sun.swing.SwingUtilities2;
 
 import java.awt.Graphics;
 import java.awt.Insets;
@@ -47,7 +47,7 @@ import javax.swing.UIManager;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
- * @version 1.40 12/19/03 
+ * @version %I% %G% 
  * @author David Kloba
  * @author Amy Fowler
  */
@@ -115,7 +115,7 @@ public class TitledBorder extends AbstractBorder
      * @param title  the title the border should display
      */
     public TitledBorder(String title)     {
-        this(null, title, LEADING, TOP, null, null);
+        this(null, title, LEADING, DEFAULT_POSITION, null, null);
     }
 
     /**
@@ -125,7 +125,7 @@ public class TitledBorder extends AbstractBorder
      * @param border  the border
      */
     public TitledBorder(Border border)       {
-        this(border, "", LEADING, TOP, null, null);
+        this(border, "", LEADING, DEFAULT_POSITION, null, null);
     }
 
     /**
@@ -136,7 +136,7 @@ public class TitledBorder extends AbstractBorder
      * @param title  the title the border should display
      */
     public TitledBorder(Border border, String title) {
-        this(border, title, LEADING, TOP, null, null);
+        this(border, title, LEADING, DEFAULT_POSITION, null, null);
     }
 
     /**
@@ -491,7 +491,33 @@ public class TitledBorder extends AbstractBorder
     /**
      * Returns the title-position of the titled border.
      */
-    public int getTitlePosition()   {       return titlePosition;   }
+    public int getTitlePosition() {
+        if (titlePosition == DEFAULT_POSITION) {
+            Object value = UIManager.get("TitledBorder.position");
+            if (value instanceof String) {
+                String s = (String)value;
+                if ("ABOVE_TOP".equalsIgnoreCase(s)) {
+                    return ABOVE_TOP;
+                } else if ("TOP".equalsIgnoreCase(s)) {
+                    return TOP;
+                } else if ("BELOW_TOP".equalsIgnoreCase(s)) {
+                    return BELOW_TOP;
+                } else if ("ABOVE_BOTTOM".equalsIgnoreCase(s)) {
+                    return ABOVE_BOTTOM;
+                } else if ("BOTTOM".equalsIgnoreCase(s)) {
+                    return BOTTOM;
+                } else if ("BELOW_BOTTOM".equalsIgnoreCase(s)) {
+                    return BELOW_BOTTOM;
+                }
+            } else if (value instanceof Integer) {
+                int i = (Integer)value;
+                if (i >= 0 && i <= 6) {
+                    return i;
+                }
+            }
+        }
+        return titlePosition;
+    }
 
     /**
      * Returns the title-justification of the titled border.
@@ -602,7 +628,7 @@ public class TitledBorder extends AbstractBorder
         Font font = getFont(c);
         FontMetrics fm = c.getFontMetrics(font);
         JComponent jc = (c instanceof JComponent) ? (JComponent)c : null;
-        switch (titlePosition) {
+        switch (getTitlePosition()) {
           case ABOVE_TOP:
           case BELOW_BOTTOM:
               minSize.width = Math.max(SwingUtilities2.stringWidth(jc, fm,
@@ -619,6 +645,96 @@ public class TitledBorder extends AbstractBorder
         return minSize;       
     }
 
+    /**
+     * Returns the baseline.
+     *
+     * @throws NullPointerException {@inheritDoc}
+     * @throws IllegalArgumentException {@inheritDoc}
+     * @see javax.swing.JComponent#getBaseline(int, int)
+     * @since 1.6
+     */
+    public int getBaseline(Component c, int width, int height) {
+        if (c == null) {
+            throw new NullPointerException("Must supply non-null component");
+        }
+        if (width < 0) {
+            throw new IllegalArgumentException("Width must be >= 0");
+        }
+        if (height < 0) {
+            throw new IllegalArgumentException("Height must be >= 0");
+        }
+        String title = getTitle();
+        if (title != null && !"".equals(title)) {
+            Font font = getFont(c);
+            Border border2 = getBorder();
+            Insets borderInsets;
+            if (border2 != null) {
+                borderInsets = border2.getBorderInsets(c);
+            }
+            else {
+                borderInsets = new Insets(0, 0, 0, 0);
+            }
+            FontMetrics fm = c.getFontMetrics(font);
+            int fontHeight = fm.getHeight();
+            int descent = fm.getDescent();
+            int ascent = fm.getAscent();
+            int y = EDGE_SPACING;
+            int h = height - EDGE_SPACING * 2;
+            int diff;
+            switch (getTitlePosition()) {
+            case ABOVE_TOP:
+                diff = ascent + descent + (Math.max(EDGE_SPACING,
+                                                    TEXT_SPACING * 2) -
+                                           EDGE_SPACING);
+                return y + diff - (descent + TEXT_SPACING);
+            case TOP:
+            case DEFAULT_POSITION:
+                diff = Math.max(0, ((ascent/2) + TEXT_SPACING) -
+                                EDGE_SPACING);
+                return (y + diff - descent) +
+                    (borderInsets.top + ascent + descent)/2;
+            case BELOW_TOP:
+                return y + borderInsets.top + ascent + TEXT_SPACING;
+            case ABOVE_BOTTOM:
+                return (y + h) - (borderInsets.bottom + descent +
+                                  TEXT_SPACING);
+            case BOTTOM:
+                h -= fontHeight / 2;
+                return ((y + h) - descent) +
+                        ((ascent + descent) - borderInsets.bottom)/2;
+            case BELOW_BOTTOM:
+                h -= fontHeight;
+                return y + h + ascent + TEXT_SPACING;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Returns an enum indicating how the baseline of the border
+     * changes as the size changes.
+     *
+     * @throws NullPointerException {@inheritDoc}
+     * @see javax.swing.JComponent#getBaseline(int, int)
+     * @since 1.6
+     */
+    public Component.BaselineResizeBehavior getBaselineResizeBehavior(
+            Component c) {
+        super.getBaselineResizeBehavior(c);
+        switch(getTitlePosition()) {
+        case TitledBorder.ABOVE_TOP:
+        case TitledBorder.TOP:
+        case TitledBorder.DEFAULT_POSITION:
+        case TitledBorder.BELOW_TOP:
+            return Component.BaselineResizeBehavior.CONSTANT_ASCENT;
+        case TitledBorder.ABOVE_BOTTOM:
+        case TitledBorder.BOTTOM:
+        case TitledBorder.BELOW_BOTTOM:
+            return JComponent.BaselineResizeBehavior.CONSTANT_DESCENT;
+        }
+        return Component.BaselineResizeBehavior.OTHER;
+    }
+
     protected Font getFont(Component c) {
         Font font;
         if ((font = getTitleFont()) != null) {
@@ -626,7 +742,7 @@ public class TitledBorder extends AbstractBorder
         } else if (c != null && (font = c.getFont()) != null) {
             return font;
         } 
-        return new Font("Dialog", Font.PLAIN, 12);
+        return new Font(Font.DIALOG, Font.PLAIN, 12);
     }  
 
     private static boolean computeIntersection(Rectangle dest, 

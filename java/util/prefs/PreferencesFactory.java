@@ -1,8 +1,8 @@
 /*
- * @(#)PreferencesFactory.java	1.4 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.util.prefs;
@@ -16,11 +16,11 @@ import java.util.*;
  * platform-specific default implementation.
  *
  * <p><strong>This class is for <tt>Preferences</tt> implementers only.
- * Normal users of the  <tt>Preferences</tt> facility should have no need to
+ * Normal users of the <tt>Preferences</tt> facility should have no need to
  * consult this documentation.</strong>
  *
  * @author  Josh Bloch
- * @version 1.4, 12/19/03
+ * @version %I%, %G%
  * @see     Preferences
  * @since   1.4
  */

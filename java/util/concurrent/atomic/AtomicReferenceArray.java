@@ -1,13 +1,15 @@
 /*
- * @(#)AtomicReferenceArray.java	1.6 04/01/24
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, 2011 Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.util.concurrent.atomic;
+
+import java.lang.reflect.Array;
+import java.util.Arrays;
 import sun.misc.Unsafe;
-import java.util.*;
 
 /**
  * An array of object references in which elements may be updated
@@ -18,51 +20,60 @@ import java.util.*;
  * @author Doug Lea
  * @param <E> The base class of elements held in this array
  */
-public class AtomicReferenceArray<E> implements java.io.Serializable { 
+public class AtomicReferenceArray<E> implements java.io.Serializable {
     private static final long serialVersionUID = -6209656149925076980L;
 
-    private static final Unsafe unsafe =  Unsafe.getUnsafe();
-    private static final int base = unsafe.arrayBaseOffset(Object[].class);
-    private static final int scale = unsafe.arrayIndexScale(Object[].class);
-    private final Object[] array;
+    private static final Unsafe unsafe;
+    private static final int base;
+    private static final int shift;
+    private static final long arrayFieldOffset;
+    private final Object[] array; // must have exact type Object[]
 
-    private long rawIndex(int i) {
+    static {
+        int scale;
+        try {
+            unsafe = Unsafe.getUnsafe();
+            arrayFieldOffset = unsafe.objectFieldOffset
+                (AtomicReferenceArray.class.getDeclaredField("array"));
+            base = unsafe.arrayBaseOffset(Object[].class);
+            scale = unsafe.arrayIndexScale(Object[].class);
+        } catch (Exception e) {
+            throw new Error(e);
+        }
+        if ((scale & (scale - 1)) != 0)
+            throw new Error("data type scale not a power of two");
+        shift = 31 - Integer.numberOfLeadingZeros(scale);
+    }
+
+    private long checkedByteOffset(int i) {
         if (i < 0 || i >= array.length)
             throw new IndexOutOfBoundsException("index " + i);
-        return base + i * scale;
+
+        return byteOffset(i);
+    }
+
+    private static long byteOffset(int i) {
+        return ((long) i << shift) + base;
     }
 
     /**
-     * Create a new AtomicReferenceArray of given length.
+     * Creates a new AtomicReferenceArray of given length.
      * @param length the length of the array
      */
     public AtomicReferenceArray(int length) {
         array = new Object[length];
-        // must perform at least one volatile write to conform to JMM
-        if (length > 0) 
-            unsafe.putObjectVolatile(array, rawIndex(0), null);
     }
 
     /**
-     * Create a new AtomicReferenceArray with the same length as, and
+     * Creates a new AtomicReferenceArray with the same length as, and
      * all elements copied from, the given array.
      *
      * @param array the array to copy elements from
      * @throws NullPointerException if array is null
      */
     public AtomicReferenceArray(E[] array) {
-        if (array == null) 
-            throw new NullPointerException();
-        int length = array.length;
-        this.array = new Object[length];
-        if (length > 0) {
-            int last = length-1;
-            for (int i = 0; i < last; ++i)
-                this.array[i] = array[i];
-            // Do the last write as volatile
-            E e = array[last];
-            unsafe.putObjectVolatile(this.array, rawIndex(last), e);
-        }
+        // Visibility guaranteed by final field guarantees
+        this.array = Arrays.copyOf(array, array.length, Object[].class);
     }
 
     /**
@@ -75,44 +86,62 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
     }
 
     /**
-     * Get the current value at position <tt>i</tt>.
+     * Gets the current value at position {@code i}.
      *
      * @param i the index
      * @return the current value
      */
     public final E get(int i) {
-        return (E) unsafe.getObjectVolatile(array, rawIndex(i));
+        return getRaw(checkedByteOffset(i));
     }
- 
+
+    private E getRaw(long offset) {
+        return (E) unsafe.getObjectVolatile(array, offset);
+    }
+
     /**
-     * Set the element at position <tt>i</tt> to the given value.
+     * Sets the element at position {@code i} to the given value.
      *
      * @param i the index
      * @param newValue the new value
      */
     public final void set(int i, E newValue) {
-        unsafe.putObjectVolatile(array, rawIndex(i), newValue);
+        unsafe.putObjectVolatile(array, checkedByteOffset(i), newValue);
     }
-  
+
     /**
-     * Set the element at position <tt>i</tt> to the given value and return the
-     * old value.
+     * Eventually sets the element at position {@code i} to the given value.
+     *
+     * @param i the index
+     * @param newValue the new value
+     * @since 1.6
+     */
+    public final void lazySet(int i, E newValue) {
+        unsafe.putOrderedObject(array, checkedByteOffset(i), newValue);
+    }
+
+
+    /**
+     * Atomically sets the element at position {@code i} to the given
+     * value and returns the old value.
      *
      * @param i the index
      * @param newValue the new value
      * @return the previous value
      */
     public final E getAndSet(int i, E newValue) {
+        long offset = checkedByteOffset(i);
         while (true) {
-            E current = get(i);
-            if (compareAndSet(i, current, newValue))
+            E current = getRaw(offset);
+            if (compareAndSetRaw(offset, current, newValue))
                 return current;
         }
     }
-  
+
     /**
-     * Atomically set the value to the given updated value
-     * if the current value <tt>==</tt> the expected value.
+     * Atomically sets the element at position {@code i} to the given
+     * updated value if the current value {@code ==} the expected value.
+     *
      * @param i the index
      * @param expect the expected value
      * @param update the new value
@@ -120,14 +149,21 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
      * the actual value was not equal to the expected value.
      */
     public final boolean compareAndSet(int i, E expect, E update) {
-        return unsafe.compareAndSwapObject(array, rawIndex(i), 
-                                         expect, update);
+        return compareAndSetRaw(checkedByteOffset(i), expect, update);
+    }
+
+    private boolean compareAndSetRaw(long offset, E expect, E update) {
+        return unsafe.compareAndSwapObject(array, offset, expect, update);
     }
 
     /**
-     * Atomically set the value to the given updated value
-     * if the current value <tt>==</tt> the expected value.
-     * May fail spuriously.
+     * Atomically sets the element at position {@code i} to the given
+     * updated value if the current value {@code ==} the expected value.
+     *
+     * <p>May <a href="package-summary.html#Spurious">fail spuriously</a>
+     * and does not provide ordering guarantees, so is only rarely an
+     * appropriate alternative to {@code compareAndSet}.
+     *
      * @param i the index
      * @param expect the expected value
      * @param update the new value
@@ -142,9 +178,33 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
      * @return the String representation of the current values of array.
      */
     public String toString() {
-        if (array.length > 0) // force volatile read
-            get(0);
-        return Arrays.toString(array);
+        int iMax = array.length - 1;
+        if (iMax == -1)
+            return "[]";
+
+        StringBuilder b = new StringBuilder();
+        b.append('[');
+        for (int i = 0; ; i++) {
+            b.append(getRaw(byteOffset(i)));
+            if (i == iMax)
+                return b.append(']').toString();
+            b.append(',').append(' ');
+        }
+    }
+
+    /**
+     * Reconstitutes the instance from a stream (that is, deserializes it).
+     * @param s the stream
+     */
+    private void readObject(java.io.ObjectInputStream s)
+        throws java.io.IOException, ClassNotFoundException {
+        // Note: This must be changed if any additional fields are defined
+        Object a = s.readFields().get("array", null);
+        if (a == null || !a.getClass().isArray())
+            throw new java.io.InvalidObjectException("Not array type");
+        if (a.getClass() != Object[].class)
+            a = Arrays.copyOf((Object[])a, Array.getLength(a), Object[].class);
+        unsafe.putObjectVolatile(this, arrayFieldOffset, a);
     }
 
 }

@@ -1,8 +1,8 @@
 /*
- * @(#)InetAddressImpl.java	1.4 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.net;
@@ -19,7 +19,7 @@ import java.io.IOException;
 interface InetAddressImpl {
 
     String getLocalHostName() throws UnknownHostException;
-    byte[][]
+    InetAddress[]
         lookupAllHostAddr(String hostname) throws UnknownHostException;
     String getHostByAddr(byte[] addr) throws UnknownHostException;
 

@@ -1,20 +1,21 @@
 /*
- * @(#)WindowsSliderUI.java	1.18 06/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.java.swing.plaf.windows;
 
 import java.awt.*;
+import java.awt.event.MouseEvent;
 
 import javax.swing.plaf.*;
 import javax.swing.plaf.basic.*;
 import javax.swing.*;
 
-import com.sun.java.swing.plaf.windows.TMSchema.*;
-import com.sun.java.swing.plaf.windows.XPStyle.Skin;
+import static com.sun.java.swing.plaf.windows.TMSchema.*;
+import static com.sun.java.swing.plaf.windows.XPStyle.Skin;
 
 
 /**
@@ -29,6 +30,9 @@ import com.sun.java.swing.plaf.windows.XPStyle.Skin;
  */
 public class WindowsSliderUI extends BasicSliderUI
 {
+    private boolean rollover = false;
+    private boolean pressed = false;
+
     public WindowsSliderUI(JSlider b){
 	super(b);
     }
@@ -38,21 +42,82 @@ public class WindowsSliderUI extends BasicSliderUI
     }
 
 
+    /**
+     * Overrides to return a private track listener subclass which handles
+     * the HOT, PRESSED, and FOCUSED states.
+     * @since 1.6
+     */
+    protected TrackListener createTrackListener(JSlider slider) {
+        return new WindowsTrackListener();
+    }
+    
+    private class WindowsTrackListener extends TrackListener {
+        
+        public void mouseMoved(MouseEvent e) {
+            updateRollover(thumbRect.contains(e.getX(), e.getY()));
+            super.mouseMoved(e);
+        }
+        
+        public void mouseEntered(MouseEvent e) {
+            updateRollover(thumbRect.contains(e.getX(), e.getY()));
+            super.mouseEntered(e);
+        }
+        
+        public void mouseExited(MouseEvent e) {
+            updateRollover(false);
+            super.mouseExited(e);
+        }
+        
+        public void mousePressed(MouseEvent e) {
+            updatePressed(thumbRect.contains(e.getX(), e.getY()));
+            super.mousePressed(e);
+        }
+        
+        public void mouseReleased(MouseEvent e) {
+            updatePressed(false);
+            super.mouseReleased(e);
+        }
+        
+        public void updatePressed(boolean newPressed) {
+            // You can't press a disabled slider
+            if (!slider.isEnabled()) {
+                return;
+            }
+            if (pressed != newPressed) {
+                pressed = newPressed;
+                slider.repaint(thumbRect);
+            }
+        }
+        
+        public void updateRollover(boolean newRollover) {
+            // You can't have a rollover on a disabled slider
+            if (!slider.isEnabled()) {
+                return;
+            }
+            if (rollover != newRollover) {
+                rollover = newRollover;
+                slider.repaint(thumbRect);
+            }
+        }
+        
+    }
+
+
     public void paintTrack(Graphics g)  {        
 	XPStyle xp = XPStyle.getXP();
 	if (xp != null) {
 	    boolean vertical = (slider.getOrientation() == JSlider.VERTICAL);
-            Part part = vertical ? Part.TKP_TRACKVERT : Part.TKP_TRACK;
-            Skin skin = xp.getSkin(slider, part);
+	    Part part = vertical ? Part.TKP_TRACKVERT : Part.TKP_TRACK;
+	    Skin skin = xp.getSkin(slider, part);
 
 	    if (vertical) {
 		int x = (trackRect.width - skin.getWidth()) / 2;
-                skin.paintSkin(g, trackRect.x + x, trackRect.y,
-                               skin.getWidth(), trackRect.height, null);
+		skin.paintSkin(g, trackRect.x + x, trackRect.y,
+			       skin.getWidth(), trackRect.height, null);
 	    } else {
 		int y = (trackRect.height - skin.getHeight()) / 2;
-                skin.paintSkin(g, trackRect.x, trackRect.y + y,
-                               trackRect.width, skin.getHeight(), null);
+		skin.paintSkin(g, trackRect.x, trackRect.y + y,
+			       trackRect.width, skin.getHeight(), null);
 	    }
 	} else {
 	    super.paintTrack(g);
@@ -63,7 +128,7 @@ public class WindowsSliderUI extends BasicSliderUI
     protected void paintMinorTickForHorizSlider( Graphics g, Rectangle tickBounds, int x ) {
 	XPStyle xp = XPStyle.getXP();
 	if (xp != null) {
-            g.setColor(xp.getColor(slider, Part.TKP_TICS, null, Prop.COLOR, Color.black));
+	    g.setColor(xp.getColor(slider, Part.TKP_TICS, null, Prop.COLOR, Color.black));
 	}
 	super.paintMinorTickForHorizSlider(g, tickBounds, x);
     }
@@ -71,7 +136,7 @@ public class WindowsSliderUI extends BasicSliderUI
     protected void paintMajorTickForHorizSlider( Graphics g, Rectangle tickBounds, int x ) {
 	XPStyle xp = XPStyle.getXP();
 	if (xp != null) {
-            g.setColor(xp.getColor(slider, Part.TKP_TICS, null, Prop.COLOR, Color.black));
+	    g.setColor(xp.getColor(slider, Part.TKP_TICS, null, Prop.COLOR, Color.black));
 	}
 	super.paintMajorTickForHorizSlider(g, tickBounds, x);
     }
@@ -79,7 +144,7 @@ public class WindowsSliderUI extends BasicSliderUI
     protected void paintMinorTickForVertSlider( Graphics g, Rectangle tickBounds, int y ) {
 	XPStyle xp = XPStyle.getXP();
 	if (xp != null) {
-            g.setColor(xp.getColor(slider, Part.TKP_TICSVERT, null, Prop.COLOR, Color.black));
+	    g.setColor(xp.getColor(slider, Part.TKP_TICSVERT, null, Prop.COLOR, Color.black));
 	}
 	super.paintMinorTickForVertSlider(g, tickBounds, y);
     }
@@ -87,7 +152,7 @@ public class WindowsSliderUI extends BasicSliderUI
     protected void paintMajorTickForVertSlider( Graphics g, Rectangle tickBounds, int y ) {
 	XPStyle xp = XPStyle.getXP();
 	if (xp != null) {
-            g.setColor(xp.getColor(slider, Part.TKP_TICSVERT, null, Prop.COLOR, Color.black));
+	    g.setColor(xp.getColor(slider, Part.TKP_TICSVERT, null, Prop.COLOR, Color.black));
 	}
 	super.paintMajorTickForVertSlider(g, tickBounds, y);
     }
@@ -96,10 +161,23 @@ public class WindowsSliderUI extends BasicSliderUI
     public void paintThumb(Graphics g)  {        
 	XPStyle xp = XPStyle.getXP();
 	if (xp != null) {
-	    // Pending: Implement all five states
-            Part part = getXPThumbPart();
-            State state = slider.isEnabled() ? State.NORMAL : State.DISABLED;
-            xp.getSkin(slider, part).paintSkin(g, thumbRect.x, thumbRect.y, state);
+	    Part part = getXPThumbPart();
+            State state = State.NORMAL;
+
+            if (slider.hasFocus()) {
+                state = State.FOCUSED;
+            }
+            if (rollover) {
+                state = State.HOT;
+            }
+            if (pressed) {
+                state = State.PRESSED;
+            }
+            if(!slider.isEnabled()) {
+                state = State.DISABLED;
+            }
+            
+	    xp.getSkin(slider, part).paintSkin(g, thumbRect.x, thumbRect.y, state);
 	} else {
 	    super.paintThumb(g);
 	}
@@ -120,21 +198,20 @@ public class WindowsSliderUI extends BasicSliderUI
 
     private Part getXPThumbPart() {
 	XPStyle xp = XPStyle.getXP();
-        Part part;
+	Part part;
         boolean vertical = (slider.getOrientation() == JSlider.VERTICAL);
 	boolean leftToRight = slider.getComponentOrientation().isLeftToRight();
 	Boolean paintThumbArrowShape =
 		(Boolean)slider.getClientProperty("Slider.paintThumbArrowShape");
 	if ((!slider.getPaintTicks() && paintThumbArrowShape == null) ||
             paintThumbArrowShape == Boolean.FALSE) {
-            part = vertical ? Part.TKP_THUMBVERT
-                : Part.TKP_THUMB;
+		part = vertical ? Part.TKP_THUMBVERT
+                                : Part.TKP_THUMB;
 	} else {
-            part = vertical 
-                ? (leftToRight ? Part.TKP_THUMBRIGHT : Part.TKP_THUMBLEFT)
-                : Part.TKP_THUMBBOTTOM;
+		part = vertical ? (leftToRight ? Part.TKP_THUMBRIGHT : Part.TKP_THUMBLEFT)
+                                : Part.TKP_THUMBBOTTOM;
 	}
-        return part;
+	return part;
     }
 }
 

@@ -1,8 +1,8 @@
 /*
- * @(#)HTML.java	1.41 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package javax.swing.text.html;
 
@@ -19,7 +19,7 @@ import javax.swing.text.StyleContext;
  * @author  Timothy Prinzing
  * @author  Sunita Mani
  *
- * @version 1.41 12/19/03
+ * @version %I% %G%
  */
 public class HTML {
 
@@ -109,6 +109,28 @@ public class HTML {
         public String toString() {
 	    return name;
 	}
+
+        /**
+         * Returns <code>true</code> if this tag is considered to be a paragraph
+         * in the internal HTML model. <code>false</code> - otherwise.
+         *
+         * @return <code>true</code> if this tag is considered to be a paragraph
+         *         in the internal HTML model. <code>false</code> - otherwise.
+         * @see javax.swing.text.html.HTMLDocument#HTMLReader#ParagraphAction
+         */
+        boolean isParagraph() {
+            return (
+                this == P 
+                   || this == IMPLIED
+                   || this == DT
+                   || this == H1
+                   || this == H2
+                   || this == H3
+                   || this == H4
+                   || this == H5
+                   || this == H6
+            );
+        }
 
 	boolean blockTag;
 	boolean breakTag;

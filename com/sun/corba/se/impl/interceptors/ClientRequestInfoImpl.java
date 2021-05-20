@@ -1,8 +1,8 @@
 /*
- * @(#)ClientRequestInfoImpl.java	1.45 04/06/21
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, 2012, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.corba.se.impl.interceptors;
@@ -56,6 +56,7 @@ import com.sun.corba.se.spi.ior.iiop.IIOPProfileTemplate;
 import com.sun.corba.se.spi.ior.iiop.GIOPVersion;
 import com.sun.corba.se.spi.orb.ORB;
 import com.sun.corba.se.spi.protocol.CorbaMessageMediator;
+import com.sun.corba.se.spi.protocol.RetryType;
 import com.sun.corba.se.spi.transport.CorbaContactInfo;
 import com.sun.corba.se.spi.transport.CorbaContactInfoList;
 import com.sun.corba.se.spi.transport.CorbaContactInfoListIterator;
@@ -92,7 +93,7 @@ public final class ClientRequestInfoImpl
     
     // The current retry request status.  True if this request is being 
     // retried and this info object is to be reused, or false otherwise.
-    private boolean retryRequest;
+    private RetryType retryRequest;
     
     // The number of times this info object has been (re)used.  This is
     // incremented every time a request is retried, and decremented every
@@ -145,7 +146,8 @@ public final class ClientRequestInfoImpl
 
 	// Please keep these in the same order that they're declared above.
         
-        retryRequest = false;
+        // 6763340
+        retryRequest = RetryType.NONE;
 
         // Do not reset entryCount because we need to know when to pop this
         // from the stack.
@@ -197,7 +199,7 @@ public final class ClientRequestInfoImpl
     
     // ClientRequestInfo validity table (see ptc/00-08-06 table 21-1).
     // Note: These must be in the same order as specified in contants.
-    protected static final boolean validCall[][] = {
+    private static final boolean validCall[][] = {
         // LEGEND:
         // s_req = send_request     r_rep = receive_reply
         // s_pol = send_poll        r_exc = receive_exception
@@ -806,14 +808,15 @@ public final class ClientRequestInfoImpl
     /**
      * Set or reset the retry request flag.  
      */
-    void setRetryRequest( boolean retryRequest ) {
+    void setRetryRequest( RetryType retryRequest ) {
         this.retryRequest = retryRequest;
     }
     
     /**
      * Retrieve the current retry request status.
      */
-    boolean getRetryRequest() {
+    RetryType getRetryRequest() {
+        // 6763340
         return this.retryRequest;
     }
     

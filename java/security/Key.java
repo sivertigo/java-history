@@ -1,8 +1,8 @@
 /*
- * @(#)Key.java	1.54 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.security;
@@ -65,7 +65,7 @@ package java.security;
  * <p> A Key should use KeyRep as its serialized representation.
  * Note that a serialized Key may contain sensitive information
  * which should not be exposed in untrusted environments.  See the
- * <a href="../../../guide/serialization/spec/security.html">
+ * <a href="../../../platform/serialization/spec/security.html">
  * Security Appendix</a>
  * of the Serialization Specification for more information.
  *
@@ -79,7 +79,7 @@ package java.security;
  * @see Identity
  * @see Signer
  *
- * @version 1.54 03/12/19
+ * @version %I% %E%
  * @author Benjamin Renaud
  */
 
@@ -98,7 +98,7 @@ public interface Key extends java.io.Serializable {
      * Returns the standard algorithm name for this key. For
      * example, "DSA" would indicate that this key is a DSA key.
      * See Appendix A in the <a href=
-     * "../../../guide/security/CryptoSpec.html#AppA">
+     * "../../../technotes/guides/security/crypto/CryptoSpec.html#AppA">
      * Java Cryptography Architecture API Specification &amp; Reference </a>
      * for information about standard algorithm names.
      *

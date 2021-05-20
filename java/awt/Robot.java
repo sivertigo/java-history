@@ -1,8 +1,8 @@
 /*
- * @(#)Robot.java	1.27 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.awt;
@@ -13,6 +13,7 @@ import java.awt.event.*;
 import java.lang.reflect.InvocationTargetException;
 import sun.awt.ComponentFactory;
 import sun.awt.SunToolkit;
+import sun.awt.image.CachingSurfaceManager;
 import sun.security.util.SecurityConstants;
 
 /**
@@ -38,7 +39,7 @@ import sun.security.util.SecurityConstants;
  * Applications that use Robot for purposes other than self-testing should 
  * handle these error conditions gracefully.
  *
- * @version 	1.27, 12/19/03
+ * @version 	%I%, %G%
  * @author 	Robi Khan
  * @since   	1.3
  */
@@ -51,6 +52,9 @@ public class Robot {
 					    InputEvent.BUTTON1_MASK|
 					    InputEvent.BUTTON2_MASK|
 					    InputEvent.BUTTON3_MASK;
+
+    // location of robot's GC, used in mouseMove(), getPixelColor() and captureScreenImage()
+    private Point gdLoc;
 
     private DirectColorModel screenCapCM = null;
     
@@ -109,9 +113,12 @@ public class Robot {
 
     private void init(GraphicsDevice screen) throws AWTException {
         checkRobotAllowed();
+        gdLoc = screen.getDefaultConfiguration().getBounds().getLocation();
         Toolkit toolkit = Toolkit.getDefaultToolkit();
         if (toolkit instanceof ComponentFactory) {
             peer = ((ComponentFactory)toolkit).createRobot(this, screen);
+	    disposer = new RobotDisposer(peer);
+	    sun.java2d.Disposer.addRecord(anchor, disposer);
         }
     }
 
@@ -130,14 +137,30 @@ public class Robot {
         }
     }
 
+    private transient Object anchor = new Object();
+
+    static class RobotDisposer implements sun.java2d.DisposerRecord {
+        private final RobotPeer peer;
+        public RobotDisposer(RobotPeer peer) {
+            this.peer = peer;
+        }
+        public void dispose() {
+            if (peer != null) {
+                peer.dispose();
+            }
+        }
+    }
+
+    private transient RobotDisposer disposer;
+
     /**
      * Moves mouse pointer to given screen coordinates.
      * @param x		X position
      * @param y		Y position
      */
     public synchronized void mouseMove(int x, int y) {
-	peer.mouseMove(x,y);
-	afterEvent();
+        peer.mouseMove(gdLoc.x + x, gdLoc.y + y);
+        afterEvent();
     }
 
     /**
@@ -257,8 +280,8 @@ public class Robot {
      * @return  Color of the pixel
      */
     public synchronized Color getPixelColor(int x, int y) {
-	Color color = new Color(peer.getRGBPixel(x,y));
-	return color;
+        Color color = new Color(peer.getRGBPixel(gdLoc.x + x, gdLoc.y + y));
+        return color;
     }
 
     /**
@@ -272,8 +295,12 @@ public class Robot {
      * @see 	AWTPermission
      */
     public synchronized BufferedImage createScreenCapture(Rectangle screenRect) {
-	checkScreenCaptureAllowed();
-	checkValidRect(screenRect);
+        checkScreenCaptureAllowed();
+
+        // according to the spec, screenRect is relative to robot's GD
+        Rectangle translatedRect = new Rectangle(screenRect);
+        translatedRect.translate(gdLoc.x, gdLoc.y);
+        checkValidRect(translatedRect);
 
 	BufferedImage image;
 	DataBufferInt buffer;
@@ -292,19 +319,24 @@ public class Robot {
                          /* blue mask */   0x000000FF);
     }
 
+        // need to sync the toolkit prior to grabbing the pixels since in some
+        // cases rendering to the screen may be delayed
+        Toolkit.getDefaultToolkit().sync();
+        
 	int pixels[];
-    int[] bandmasks = new int[3];
+        int[] bandmasks = new int[3];
 
-	pixels = peer.getRGBPixels(screenRect);
+	pixels = peer.getRGBPixels(translatedRect);
 	buffer = new DataBufferInt(pixels, pixels.length);
 
     bandmasks[0] = screenCapCM.getRedMask();
     bandmasks[1] = screenCapCM.getGreenMask();
     bandmasks[2] = screenCapCM.getBlueMask();
 
-	raster = Raster.createPackedRaster(buffer, screenRect.width, screenRect.height, screenRect.width, bandmasks, null);
+    raster = Raster.createPackedRaster(buffer, translatedRect.width, translatedRect.height, translatedRect.width, bandmasks, null);
 
 	image = new BufferedImage(screenCapCM, raster, false, null);
+        CachingSurfaceManager.restoreLocalAcceleration(image);
 
 	return image;
     }

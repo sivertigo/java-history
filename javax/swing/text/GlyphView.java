@@ -1,8 +1,8 @@
 /*
- * @(#)GlyphView.java	1.41 06/06/29
+ * %W% %E%
  *
- * Copyright 2006 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package javax.swing.text;
 
@@ -11,7 +11,8 @@ import java.text.BreakIterator;
 import javax.swing.event.*;
 import java.util.BitSet;
 
-import com.sun.java.swing.SwingUtilities2;
+import sun.swing.SwingUtilities2;
+import static sun.swing.SwingUtilities2.IMPLIED_CR;
 
 /**
  * A GlyphView is a styled chunk of text that represents a view
@@ -40,7 +41,7 @@ import com.sun.java.swing.SwingUtilities2;
  * @since 1.3
  *
  * @author  Timothy Prinzing
- * @version 1.41 06/29/06
+ * @version %I% %G%
  */
 public class GlyphView extends View implements TabableView, Cloneable {
 
@@ -481,7 +482,7 @@ public class GlyphView extends View implements TabableView, Cloneable {
 	    if ((parent != null) && (parent.getEndOffset() == p1)) {
 		// strip whitespace on end
 		Segment s = getText(p0, p1);
-		while ((s.count > 0) && (Character.isWhitespace(s.array[s.count-1]))) {
+		while (Character.isWhitespace(s.last())) {
 		    p1 -= 1;
 		    s.count -= 1;
 		}
@@ -495,17 +496,14 @@ public class GlyphView extends View implements TabableView, Cloneable {
 	    int x1 = x0 + (int) painter.getSpan(this, p0, p1, getTabExpander(), x0);
 
 	    // calculate y coordinate
-	    int d = (int) painter.getDescent(this);
 	    int y = alloc.y + alloc.height - (int) painter.getDescent(this);
 	    if (underline) {
-		int yTmp = y;
-		yTmp += 1;
+		int yTmp = y + 1;
 		g.drawLine(x0, yTmp, x1, yTmp);
 	    } 
 	    if (strike) {
-		int yTmp = y;
-		// move y coordinate above baseline
-		yTmp -= (int) (painter.getAscent(this) * 0.3f);
+                // move y coordinate above baseline
+		int yTmp = y - (int) (painter.getAscent(this) * 0.3f);
 		g.drawLine(x0, yTmp, x1, yTmp);
 	    }
 
@@ -534,7 +532,7 @@ public class GlyphView extends View implements TabableView, Cloneable {
 	    if (skipWidth) {
 		return 0;
 	    }
-	    return painter.getSpan(this, p0, p1, expander, this.x);
+            return painter.getSpan(this, p0, p1, expander, this.x); 
 	case View.Y_AXIS:
 	    float h = painter.getHeight(this);
 	    if (isSuperscript()) {
@@ -673,12 +671,7 @@ public class GlyphView extends View implements TabableView, Cloneable {
                 return View.ExcellentBreakWeight;
             }
 	    // Nothing good to break on.
-            // breaking on the View boundary is better than splitting it
-            if (p1 == getEndOffset()) {
-                return View.GoodBreakWeight;
-            } else {
-                return View.GoodBreakWeight - 1;
-            }
+            return View.GoodBreakWeight;
 	}
 	return super.getBreakWeight(axis, pos, len);
     }
@@ -799,7 +792,7 @@ public class GlyphView extends View implements TabableView, Cloneable {
         }
         else if (p1 + 1 == parent1) {
             // assert(s.count > 1)
-            breakPoint = breaker.next(s.offset + s.count - 2);
+            breakPoint = breaker.following(s.offset + s.count - 2);
             if (breakPoint >= s.count + s.offset) {
                 breakPoint = breaker.preceding(s.offset + s.count - 1);
             }
@@ -1064,7 +1057,6 @@ public class GlyphView extends View implements TabableView, Cloneable {
     int length;
     // if it is an implied newline character
     boolean impliedCR;
-    private static final String IMPLIED_CR = "CR";
     boolean skipWidth;
     
     /**

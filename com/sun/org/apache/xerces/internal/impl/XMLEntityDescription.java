@@ -21,10 +21,12 @@ import com.sun.org.apache.xerces.internal.xni.XMLResourceIdentifier;
 /**
  * <p>This interface describes the properties of entities--their
  * physical location and their name.</p>
+ * 
+ * @xerces.internal
  *
  * @author Michael Glavassevich, IBM
  * 
- * @version $Id: XMLEntityDescription.java,v 1.1.1.1 2004/05/04 10:21:47 vk112360 Exp $
+ * @version $Id: XMLEntityDescription.java,v 1.3 2007/07/19 04:38:24 ofung Exp $
  */
 public interface XMLEntityDescription extends XMLResourceIdentifier {
 	

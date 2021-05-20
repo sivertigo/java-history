@@ -1,8 +1,8 @@
 /*
- * @(#)DeclaredType.java	1.6 04/06/07
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc.  All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL.  Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL.  Use is subject to license terms.
  */
 
 package com.sun.mirror.type;
@@ -32,7 +32,7 @@ import com.sun.mirror.declaration.TypeDeclaration;
  *
  * @author Joseph D. Darcy
  * @author Scott Seligman
- * @version 1.6 04/06/07
+ * @version %I% %E%
  * @since 1.5
  */
 

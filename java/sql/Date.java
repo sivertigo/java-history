@@ -1,8 +1,8 @@
 /*
- * @(#)Date.java	1.33 04/05/18
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2009, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.sql;
@@ -33,7 +33,6 @@ public class Date extends java.util.Date {
      * @param day 1 to 31
      * @deprecated instead use the constructor <code>Date(long date)</code>
      */
-    @Deprecated
     public Date(int year, int month, int day) {
 	super(year, month, day);
     }
@@ -86,41 +85,64 @@ public class Date extends java.util.Date {
      *         JDBC date escape format (yyyy-mm-dd)
      */
     public static Date valueOf(String s) {
-	int year;
-	int month;
-	int day;
-	int firstDash;
-	int secondDash;
+        final int YEAR_LENGTH = 4;
+        final int MONTH_LENGTH = 2;
+        final int DAY_LENGTH = 2;
+        final int MAX_MONTH = 12;
+        final int MAX_DAY = 31;
+        int firstDash;
+        int secondDash;
+        Date d = null;
 
-	if (s == null) throw new java.lang.IllegalArgumentException();
+        if (s == null) {
+            throw new java.lang.IllegalArgumentException();
+        }
 
-	firstDash = s.indexOf('-');
-	secondDash = s.indexOf('-', firstDash+1);
-	if ((firstDash > 0) & (secondDash > 0) & (secondDash < s.length()-1)) {
-	    year = Integer.parseInt(s.substring(0, firstDash)) - 1900;
-	    month = Integer.parseInt(s.substring(firstDash+1, secondDash)) - 1;
-	    day = Integer.parseInt(s.substring(secondDash+1));	 
-	} else {
-	    throw new java.lang.IllegalArgumentException();
-	}
-			
-	return new Date(year, month, day);
+        firstDash = s.indexOf('-');
+        secondDash = s.indexOf('-', firstDash + 1);
+        if ((firstDash > 0) && (secondDash > 0) && (secondDash < s.length()-1)) {
+            String yyyy = s.substring(0, firstDash);
+            String mm = s.substring(firstDash + 1, secondDash);
+            String dd = s.substring(secondDash + 1);
+            if (yyyy.length() == YEAR_LENGTH && mm.length() == MONTH_LENGTH &&
+                dd.length() == DAY_LENGTH) {
+                int year = Integer.parseInt(yyyy);
+                int month = Integer.parseInt(mm);
+                int day = Integer.parseInt(dd);
+                if (month >= 1 && month <= MAX_MONTH) {
+                    int maxDays = MAX_DAY;
+                    switch (month) {
+                        // February determine if a leap year or not
+                        case 2:
+                            if((year % 4 == 0 && !(year % 100 == 0)) || (year % 400 == 0)) {
+                                maxDays = MAX_DAY-2; // leap year so 29 days in February
+                            } else {
+                                maxDays = MAX_DAY-3; //  not a leap year so 28 days in February 
+                            }
+                            break;
+                        // April, June, Sept, Nov 30 day months
+                        case 4:
+                        case 6:
+                        case 9:
+                        case 11:
+                            maxDays = MAX_DAY-1;
+                            break;
+                    }
+                    if (day >= 1 && day <= maxDays) {
+                        d = new Date(year - 1900, month - 1, day);
+                    }
+                }
+            }
+        }
+        if (d == null) {
+            throw new java.lang.IllegalArgumentException();
+        }
+        return d;
     }
 
     /**
      * Formats a date in the date escape format yyyy-mm-dd.  
      * <P>
-     * NOTE:  To specify a date format for the class
-     * <code>SimpleDateFormat</code>, use "yyyy.MM.dd" rather than
-     * "yyyy-mm-dd".  In the context of <code>SimpleDateFormat</code>,
-     * "mm" indicates minutes rather than the month.  
-     * For example:
-     * <PRE>
-     *
-     *  Format Pattern                         Result
-     *  --------------                         -------
-     *	"yyyy.MM.dd G 'at' hh:mm:ss z"    ->>  1996.07.10 AD at 15:08:56 PDT
-     * </PRE>
      * @return a String in yyyy-mm-dd format
      */
     public String toString () {
@@ -151,7 +173,6 @@ public class Date extends java.util.Date {
     * @exception java.lang.IllegalArgumentException if this method is invoked
     * @see #setHours
     */
-    @Deprecated
     public int getHours() {
 	throw new java.lang.IllegalArgumentException();
     }
@@ -164,7 +185,6 @@ public class Date extends java.util.Date {
     * @exception java.lang.IllegalArgumentException if this method is invoked
     * @see #setMinutes
     */
-    @Deprecated
     public int getMinutes() {
 	throw new java.lang.IllegalArgumentException();
     }
@@ -177,7 +197,6 @@ public class Date extends java.util.Date {
     * @exception java.lang.IllegalArgumentException if this method is invoked
     * @see #setSeconds
     */
-    @Deprecated
     public int getSeconds() {
 	throw new java.lang.IllegalArgumentException();
     }
@@ -190,7 +209,6 @@ public class Date extends java.util.Date {
     * @exception java.lang.IllegalArgumentException if this method is invoked
     * @see #getHours
     */
-    @Deprecated
     public void setHours(int i) {
 	throw new java.lang.IllegalArgumentException();
     }
@@ -203,7 +221,6 @@ public class Date extends java.util.Date {
     * @exception java.lang.IllegalArgumentException if this method is invoked
     * @see #getMinutes
     */
-    @Deprecated
     public void setMinutes(int i) {
 	throw new java.lang.IllegalArgumentException();
     }
@@ -216,7 +233,6 @@ public class Date extends java.util.Date {
     * @exception java.lang.IllegalArgumentException if this method is invoked
     * @see #getSeconds
     */
-    @Deprecated
     public void setSeconds(int i) {
 	throw new java.lang.IllegalArgumentException();
     }

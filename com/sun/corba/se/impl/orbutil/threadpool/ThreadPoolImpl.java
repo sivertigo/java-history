@@ -1,6 +1,6 @@
 /*
- * Copyright 2005 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2003, 2012, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.corba.se.impl.orbutil.threadpool;
@@ -14,39 +14,42 @@ import java.security.PrivilegedAction;
 import java.util.List ;
 import java.util.ArrayList ;
 
-import com.sun.corba.se.spi.orb.ORB;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.sun.corba.se.spi.orbutil.threadpool.NoSuchWorkQueueException;
 import com.sun.corba.se.spi.orbutil.threadpool.ThreadPool;
 import com.sun.corba.se.spi.orbutil.threadpool.Work;
 import com.sun.corba.se.spi.orbutil.threadpool.WorkQueue;
 
-import com.sun.corba.se.impl.logging.ORBUtilSystemException;
 import com.sun.corba.se.impl.orbutil.ORBConstants;
 import com.sun.corba.se.impl.orbutil.threadpool.WorkQueueImpl;
 
 import com.sun.corba.se.spi.monitoring.MonitoringConstants;
 import com.sun.corba.se.spi.monitoring.MonitoredObject;
 import com.sun.corba.se.spi.monitoring.MonitoringFactories;
+import com.sun.corba.se.spi.orb.ORB;
 import com.sun.corba.se.spi.monitoring.LongMonitoredAttributeBase;
 
 import com.sun.corba.se.impl.logging.ORBUtilSystemException ;
+import com.sun.corba.se.impl.orbutil.ORBConstants ;
 import com.sun.corba.se.spi.logging.CORBALogDomains ;
 
 public class ThreadPoolImpl implements ThreadPool
 {
-    private static int threadCounter = 0; // serial counter useful for debugging
-
+    // serial counter useful for debugging
+    private static AtomicInteger threadCounter = new AtomicInteger(0);
     private static final ORBUtilSystemException wrapper = 
 	ORBUtilSystemException.get( CORBALogDomains.RPC_TRANSPORT ) ;
 
+
     // Any time currentThreadCount and/or availableWorkerThreads is updated
-    // or accessed this ThreadPool's WorkQueue must be locked. And, it is 
+    // or accessed this ThreadPool's WorkQueue must be locked. And, it is
     // expected that this ThreadPool's WorkQueue is the only object that
     // updates and accesses these values directly and indirectly though a
     // call to a method in this ThreadPool. If any call to update or access
     // those values must synchronized on this ThreadPool's WorkQueue.
-    final private WorkQueue workQueue;
+    private WorkQueue workQueue;
     
     // Stores the number of available worker threads
     private int availableWorkerThreads = 0;
@@ -61,7 +64,7 @@ public class ThreadPoolImpl implements ThreadPool
     private int maxWorkerThreads = 0;
     
     // Inactivity timeout value for worker threads to exit and stop running
-    private long inactivityTimeout = ORBConstants.DEFAULT_INACTIVITY_TIMEOUT ;
+    private long inactivityTimeout;
     
     // Indicates if the threadpool is bounded or unbounded
     private boolean boundedThreadPool = false;
@@ -69,11 +72,11 @@ public class ThreadPoolImpl implements ThreadPool
     // Running count of the work items processed
     // Set the value to 1 so that divide by zero is avoided in 
     // averageWorkCompletionTime()
-    private long processedCount = 1;
+    private AtomicLong processedCount = new AtomicLong(1);
     
     // Running aggregate of the time taken in millis to execute work items
     // processed by the threads in the threadpool
-    private long totalTimeTaken = 0;
+    private AtomicLong totalTimeTaken = new AtomicLong(0) ;
 
     // Name of the ThreadPool
     private String name;
@@ -84,13 +87,14 @@ public class ThreadPoolImpl implements ThreadPool
     // ThreadGroup in which threads should be created
     private ThreadGroup threadGroup ;
 
-    private Object workersLock = new Object() ;
-    private List<WorkerThread> workers = new ArrayList<WorkerThread>() ;
+    Object workersLock = new Object() ;
+    List<WorkerThread> workers = new ArrayList<WorkerThread>() ;
 
     /**
      * This constructor is used to create an unbounded threadpool
      */
     public ThreadPoolImpl(ThreadGroup tg, String threadpoolName) {
+        inactivityTimeout = ORBConstants.DEFAULT_INACTIVITY_TIMEOUT;
         maxWorkerThreads = Integer.MAX_VALUE;
         workQueue = new WorkQueueImpl(this);
 	threadGroup = tg ;
@@ -112,12 +116,11 @@ public class ThreadPoolImpl implements ThreadPool
     public ThreadPoolImpl(int minSize, int maxSize, long timeout, 
 					    String threadpoolName) 
     {
-        inactivityTimeout = timeout;
         minWorkerThreads = minSize;
         maxWorkerThreads = maxSize;
+        inactivityTimeout = timeout;
         boundedThreadPool = true;
         workQueue = new WorkQueueImpl(this);
-	threadGroup = Thread.currentThread().getThreadGroup() ;
 	name = threadpoolName;
         for (int i = 0; i < minWorkerThreads; i++) {
             createWorkerThread();
@@ -127,7 +130,6 @@ public class ThreadPoolImpl implements ThreadPool
 
     // Note that this method should not return until AFTER all threads have died.
     public void close() throws IOException {
-
 
         // Copy to avoid concurrent modification problems.
         List<WorkerThread> copy = null ;
@@ -149,6 +151,7 @@ public class ThreadPoolImpl implements ThreadPool
 
         threadGroup = null ;
     }
+
 
     // Setup monitoring for this threadpool
     private void initializeMonitoring() {
@@ -246,14 +249,15 @@ public class ThreadPoolImpl implements ThreadPool
      * or notify waiting threads on the queue for available work
      */
     void notifyForAvailableWork(WorkQueue aWorkQueue) {
-	synchronized (workQueue) {
-	    if (availableWorkerThreads == 0) {
+	synchronized (aWorkQueue) {
+	    if (availableWorkerThreads < aWorkQueue.workItemsInQueue() ) {
 		createWorkerThread();
 	    } else {
 		aWorkQueue.notify();
 	    }
 	}
     }
+    
 
     private Thread createWorkerThreadHelper( String name ) { 
         // Thread creation needs to be in a doPrivileged block
@@ -311,6 +315,7 @@ public class ThreadPoolImpl implements ThreadPool
         return null ;
     }
 
+
     /**
      * To be called from the workqueue to create worker threads when none
      * available.
@@ -341,7 +346,7 @@ public class ThreadPoolImpl implements ThreadPool
             }
         }
     }
-
+    
     public int minimumNumberOfThreads() {
         return minWorkerThreads;
     }
@@ -371,7 +376,6 @@ public class ThreadPoolImpl implements ThreadPool
             currentThreadCount++;
         }
     }
-
     
     public int numberOfAvailableThreads() {
 	synchronized (workQueue) {
@@ -387,13 +391,13 @@ public class ThreadPoolImpl implements ThreadPool
     
     public long averageWorkCompletionTime() {
 	synchronized (workQueue) {
-	    return (totalTimeTaken / processedCount);
+	    return (totalTimeTaken.get() / processedCount.get() );
 	}
     }
     
     public long currentProcessedCount() {
 	synchronized (workQueue) {
-	    return processedCount;
+	    return processedCount.get();
 	}
     }
 
@@ -410,25 +414,25 @@ public class ThreadPoolImpl implements ThreadPool
 
 
     private static synchronized int getUniqueThreadId() {
-        return ThreadPoolImpl.threadCounter++;
+        return ThreadPoolImpl.threadCounter.incrementAndGet();
     }
 
-    /** 
+    /**
      * This method will decrement the number of available threads
-     * in the threadpool which are waiting for work. Called from 
+     * in the threadpool which are waiting for work. Called from
      * WorkQueueImpl.requestWork()
-     */ 
+     */
     void decrementNumberOfAvailableThreads() {
         synchronized (workQueue) {
             availableWorkerThreads--;
         }
     }
-    
-    /** 
+
+    /**
      * This method will increment the number of available threads
-     * in the threadpool which are waiting for work. Called from 
+     * in the threadpool which are waiting for work. Called from
      * WorkQueueImpl.requestWork()
-     */ 
+     */
     void incrementNumberOfAvailableThreads() {
         synchronized (workQueue) {
             availableWorkerThreads++;
@@ -439,11 +443,11 @@ public class ThreadPoolImpl implements ThreadPool
     private class WorkerThread extends Thread implements Closeable
     {
         private Work currentWork;
-	private int threadId = 0; // unique id for the thread
+        private int threadId = 0; // unique id for the thread
 	private volatile boolean closeCalled = false ;
         private String threadPoolName;
-        // name seen by Thread.getName()
-        private StringBuffer workerThreadName = new StringBuffer();
+	// name seen by Thread.getName()
+	private StringBuffer workerThreadName = new StringBuffer();
 
         WorkerThread(ThreadGroup tg, String threadPoolName) {
 	    super(tg, "Idle");
@@ -455,6 +459,10 @@ public class ThreadPoolImpl implements ThreadPool
         public synchronized void close() {
             closeCalled = true ;
             interrupt() ;
+        }
+
+	private void resetClassLoader() {
+
 	}
 
         private void performWork() {
@@ -464,17 +472,14 @@ public class ThreadPoolImpl implements ThreadPool
             } catch (Throwable t) {
                 wrapper.workerThreadDoWorkThrowable(this, t);
             }
-	    synchronized(workQueue) {
-                long elapsedTime = System.currentTimeMillis() - start;
-                totalTimeTaken+=elapsedTime;
-                processedCount++;
-	    }
+            long elapsedTime = System.currentTimeMillis() - start;
+            totalTimeTaken.addAndGet(elapsedTime);
+            processedCount.incrementAndGet();
         }
 
         public void run() {
             try  {
                 while (!closeCalled) {
-
                     try {
                         currentWork = ((WorkQueueImpl)workQueue).requestWork(
                             inactivityTimeout);
@@ -482,11 +487,11 @@ public class ThreadPoolImpl implements ThreadPool
                             continue;
                     } catch (InterruptedException exc) {
                         wrapper.workQueueThreadInterrupted( exc, getName(), 
-                            Boolean.valueOf( closeCalled ) ) ;
+                           Boolean.valueOf( closeCalled ) ) ;
 
                         continue ;
                     } catch (Throwable t) {
-                        wrapper.workerThreadThrowableFromRequestWork(this, t,
+                         wrapper.workerThreadThrowableFromRequestWork(this, t,
                                 workQueue.getName());
                         
                         continue;
@@ -498,6 +503,7 @@ public class ThreadPoolImpl implements ThreadPool
                     // garbage collected without waiting for the next work item.
                     currentWork = null;
 
+                    resetClassLoader() ;
                 }
             } catch (Throwable e) {
                 // This should not be possible

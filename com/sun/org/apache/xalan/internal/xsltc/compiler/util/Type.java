@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /*
- * $Id: Type.java,v 1.15 2004/02/16 22:26:44 minchau Exp $
+ * $Id: Type.java,v 1.8 2007/03/28 16:51:19 joehw Exp $
  */
 
 package com.sun.org.apache.xalan.internal.xsltc.compiler.util;
@@ -38,7 +38,7 @@ public abstract class Type implements Constants {
     public static final Type String     = new StringType();
     public static final Type ResultTree = new ResultTreeType();
     public static final Type Reference  = new ReferenceType();
-    public static final Type Void       = new VoidType();
+    public static final Type Void       = new VoidType();    
     
     public static final Type Object       = new ObjectType(java.lang.Object.class);
     public static final Type ObjectString = new ObjectType(java.lang.String.class);
@@ -61,12 +61,11 @@ public abstract class Type implements Constants {
         }
         else if (javaClassName == "java.lang.String") {
             return Type.ObjectString;
-        }
+        } 
         else {
             //
             java.security.AccessControlContext acc = java.security.AccessController.getContext();
             acc.checkPermission(new RuntimePermission("getContextClassLoader"));
-
             return new ObjectType(javaClassName);
         }
     }

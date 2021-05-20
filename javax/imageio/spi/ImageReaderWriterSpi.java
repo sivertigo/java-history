@@ -1,8 +1,8 @@
 /*
- * @(#)ImageReaderWriterSpi.java	1.20 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.imageio.spi;
@@ -572,8 +572,8 @@ public abstract class ImageReaderWriterSpi extends IIOServiceProvider {
         try {
             Class cls = Class.forName(formatClassName, true,
                                       ClassLoader.getSystemClassLoader());
-            Method meth = cls.getMethod("getInstance", null);
-            return (IIOMetadataFormat) meth.invoke(null, null);
+            Method meth = cls.getMethod("getInstance");
+            return (IIOMetadataFormat) meth.invoke(null);
         } catch (Exception e) {
             RuntimeException ex = 
                 new IllegalStateException ("Can't obtain format");

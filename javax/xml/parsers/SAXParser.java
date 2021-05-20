@@ -1,9 +1,28 @@
-// $Id: SAXParser.java,v 1.28.12.1.2.1 2004/05/02 04:30:56 jsuttor Exp $
 /*
- * @(#)SAXParser.java	1.19 04/07/26
- * 
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * The contents of this file are subject to the terms
+ * of the Common Development and Distribution License
+ * (the "License").  You may not use this file except
+ * in compliance with the License.
+ *
+ * You can obtain a copy of the license at
+ * https://jaxp.dev.java.net/CDDLv1.0.html.
+ * See the License for the specific language governing
+ * permissions and limitations under the License.
+ *
+ * When distributing Covered Code, include this CDDL
+ * HEADER in each file and include the License file at
+ * https://jaxp.dev.java.net/CDDLv1.0.html
+ * If applicable add the following below this CDDL HEADER
+ * with the fields enclosed by brackets "[]" replaced with
+ * your own identifying information: Portions Copyright
+ * [year] [name of copyright owner]
+ */
+
+/*
+ * $Id: SAXParser.java,v 1.4 2005/11/03 19:34:15 jeffsuttor Exp $
+ * @(#)SAXParser.java	1.28 05/11/30
+ *
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
  */
 
 package javax.xml.parsers;
@@ -54,11 +73,11 @@ import org.xml.sax.helpers.DefaultHandler;
  *
  * Implementors of this class which wrap an underlaying implementation
  * can consider using the {@link org.xml.sax.helpers.ParserAdapter}
- * class to initially adapt their SAX1 impelemntation to work under
+ * class to initially adapt their SAX1 implementation to work under
  * this revised class.
  *
  * @author <a href="mailto:Jeff.Suttor@Sun.com">Jeff Suttor</a>
- * @version $Revision: 1.28.12.1.2.1 $, $Date: 2004/05/02 04:30:56 $
+ * @version $Revision: 1.7 $, $Date: 2007/07/19 04:34:31 $
  */
 public abstract class SAXParser {
         
@@ -81,6 +100,9 @@ public abstract class SAXParser {
 	 * <p>The reset <code>SAXParser</code> is not guaranteed to have the same {@link Schema}
 	 * <code>Object</code>, e.g. {@link Object#equals(Object obj)}.  It is guaranteed to have a functionally equal
 	 * <code>Schema</code>.</p>
+     *
+     * @throws UnsupportedOperationException When Implementations do not
+     *   override this method
 	 * 
 	 * @since 1.5
 	 */
@@ -276,11 +298,10 @@ public abstract class SAXParser {
             throw new IllegalArgumentException("File cannot be null");
         }
 
-        String uri = "file:" + f.getAbsolutePath();
-        if (File.separatorChar == '\\') {
-            uri = uri.replace('\\', '/');
-        }
-        InputSource input = new InputSource(uri);
+        //convert file to appropriate URI, f.toURI().toASCIIString() 
+        //converts the URI to string as per rule specified in
+        //RFC 2396,
+        InputSource input = new InputSource(f.toURI().toASCIIString());   
         this.parse(input, hb);
     }
     
@@ -303,11 +324,10 @@ public abstract class SAXParser {
             throw new IllegalArgumentException("File cannot be null");
         }
 
-        String uri = "file:" + f.getAbsolutePath();
-        if (File.separatorChar == '\\') {
-            uri = uri.replace('\\', '/');
-        }
-        InputSource input = new InputSource(uri);
+        //convert file to appropriate URI, f.toURI().toASCIIString() 
+        //converts the URI to string as per rule specified in
+        //RFC 2396,
+        InputSource input = new InputSource(f.toURI().toASCIIString());   
         this.parse(input, dh);
     }
     
@@ -473,10 +493,8 @@ public abstract class SAXParser {
      * @return {@link Schema} being used or <code>null</code>
      *  if none in use
      * 
-     * @throws UnsupportedOperationException
-     *      For backward compatibility, when implementations for
-     *      earlier versions of JAXP is used, this exception will be
-     *      thrown.
+     * @throws UnsupportedOperationException When implementation does not
+     *   override this method
      * 
      * @since 1.5
      */
@@ -498,10 +516,8 @@ public abstract class SAXParser {
      *      the {@link SAXParserFactory#isXIncludeAware()}
      *      when this parser was created from factory.
      * 
-     * @throws UnsupportedOperationException
-     *      For backward compatibility, when implementations for
-     *      earlier versions of JAXP is used, this exception will be
-     *      thrown.
+     * @throws UnsupportedOperationException When implementation does not
+     *   override this method
      * 
      * @since 1.5
      * 

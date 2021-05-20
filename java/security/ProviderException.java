@@ -1,8 +1,8 @@
 /*
- * @(#)ProviderException.java	1.16 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.security;
@@ -13,7 +13,7 @@ package java.security;
  * which may be subclassed by Providers to
  * throw specialized, provider-specific runtime errors.
  *
- * @version 1.16, 12/19/03
+ * @version %I%, %G%
  * @author Benjamin Renaud
  */
 public class ProviderException extends RuntimeException {

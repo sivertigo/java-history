@@ -1,8 +1,8 @@
 /*
- * @(#)ZipEntry.java	1.38 05/08/09
+ * %W% %E%
  *
- * Copyright 2005 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.util.zip;
@@ -12,7 +12,7 @@ import java.util.Date;
 /**
  * This class is used to represent a ZIP file entry.
  *
- * @version	1.38, 08/09/05
+ * @version	%I%, %G%
  * @author	David Connelly
  */
 public
@@ -23,12 +23,8 @@ class ZipEntry implements ZipConstants, Cloneable {
     long size = -1;	// uncompressed size of entry data
     long csize = -1;   	// compressed size of entry data
     int method = -1;	// compression method
-    byte[] extra;	// optional extra field data for entry
-    String comment;	// optional comment string for entry
-    // The following flags are used only by Zip{Input,Output}Stream
-    int flag;		// bit flags
-    int version;	// version needed to extract
-    long offset;	// offset of loc header
+    byte[] extra;       // optional extra field data for entry
+    String comment;     // optional comment string for entry
 
     /**
      * Compression method for uncompressed entries.
@@ -115,7 +111,13 @@ class ZipEntry implements ZipConstants, Cloneable {
      * @see #getTime()
      */
     public void setTime(long time) {
-	this.time = javaToDosTime(time);
+        // fix for bug 6625963: we bypass time calculations while Kernel is
+        // downloading bundles, since they aren't necessary and would cause
+        // the Kernel core to depend upon the (very large) time zone data
+        if (sun.jkernel.DownloadManager.isCurrentThreadDownloading())
+            this.time = sun.jkernel.DownloadManager.KERNEL_STATIC_MODTIME;
+        else
+	    this.time = javaToDosTime(time);
     }
 
     /**
@@ -175,7 +177,7 @@ class ZipEntry implements ZipConstants, Cloneable {
      * @param crc the CRC-32 value
      * @exception IllegalArgumentException if the specified CRC-32 value is
      *		  less than 0 or greater than 0xFFFFFFFF
-     * @see #setCrc(long)
+     * @see #getCrc()
      */
     public void setCrc(long crc) {
 	if (crc < 0 || crc > 0xFFFFFFFFL) {
@@ -189,7 +191,7 @@ class ZipEntry implements ZipConstants, Cloneable {
      * not known.
      * @return the CRC-32 checksum of the uncompressed entry data, or -1 if
      * not known
-     * @see #getCrc()
+     * @see #setCrc(long)
      */
     public long getCrc() {
 	return crc;
@@ -249,7 +251,7 @@ class ZipEntry implements ZipConstants, Cloneable {
      * @see #getComment()
      */
     public void setComment(String comment) {
-	if (comment != null && comment.length() > 0xffff/3 
+	if (comment != null && comment.length() > 0xffff/3
                     && ZipOutputStream.getUTF8Length(comment) > 0xffff) {
 	    throw new IllegalArgumentException("invalid entry comment length");
 	}

@@ -1,8 +1,8 @@
 /*
- * @(#)JScrollPane.java	1.100 04/04/15
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing;
@@ -14,15 +14,12 @@ import javax.accessibility.*;
 
 import java.awt.Component;
 import java.awt.ComponentOrientation;
-import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.Insets;
-import java.awt.Color;
 import java.awt.LayoutManager;
 import java.awt.Point;
 
 import java.io.ObjectOutputStream;
-import java.io.ObjectInputStream;
 import java.io.IOException;
 
 import java.beans.*;
@@ -67,13 +64,31 @@ import java.beans.*;
  * (It never scrolls vertically, however.)
  * The row header acts in a similar fashion.
  * <p>
- * By default, the corners are empty.
- * You can put a component into a corner using 
- * <code>setCorner</code>,
- * in case you there is some function or decoration you
- * would like to add to the scroll pane. The size of corner components is
- * entirely determined by the size of the headers and scroll bars that
- * surround them.
+ * Where two scroll bars meet, the row header meets the column header,
+ * or a scroll bar meets one of the headers, both components stop short
+ * of the corner, leaving a rectangular space which is, by default, empty.
+ * These spaces can potentially exist in any number of the four corners.
+ * In the previous diagram, the top right space is present and identified
+ * by the label "corner component".
+ * <p>
+ * Any number of these empty spaces can be replaced by using the
+ * <code>setCorner</code> method to add a component to a particular corner.
+ * (Note: The same component cannot be added to multiple corners.)
+ * This is useful if there's
+ * some extra decoration or function you'd like to add to the scroll pane.
+ * The size of each corner component is entirely determined by the size of the
+ * headers and/or scroll bars that surround it.
+ * <p>
+ * A corner component will only be visible if there is an empty space in that
+ * corner for it to exist in. For example, consider a component set into the
+ * top right corner of a scroll pane with a column header. If the scroll pane's
+ * vertical scrollbar is not present, perhaps because the view component hasn't
+ * grown large enough to require it, then the corner component will not be
+ * shown (since there is no empty space in that corner created by the meeting
+ * of the header and vertical scroll bar). Forcing the scroll bar to always be
+ * shown, using
+ * <code>setVerticalScrollBarPolicy(VERTICAL_SCROLLBAR_ALWAYS)</code>,
+ * will ensure that the space for the corner component always exists.
  * <p>
  * To add a border around the main viewport,
  * you can use <code>setViewportBorder</code>. 
@@ -102,6 +117,11 @@ import java.beans.*;
  *   <li><code>getPreferredSize</code> is used.
  * </ol>
  * <p>
+ * <strong>Warning:</strong> Swing is not thread safe. For more
+ * information see <a
+ * href="package-summary.html#threading">Swing's Threading
+ * Policy</a>.
+ * <p>
  * <strong>Warning:</strong>
  * Serialized objects of this class will not be compatible with
  * future Swing releases. The current serialization support is
@@ -127,7 +147,7 @@ import java.beans.*;
  *     attribute: containerDelegate getViewport
  *   description: A specialized container that manages a viewport, optional scrollbars and headers
  *
- * @version 1.100 @(#)JScrollPane.java	1.100
+ * @version %I% %W%
  * @author Hans Muller
  */
 public class JScrollPane extends JComponent implements ScrollPaneConstants, Accessible
@@ -263,7 +283,7 @@ public class JScrollPane extends JComponent implements ScrollPaneConstants, Acce
 	if (view != null) {
 	    setViewportView(view);
 	}
-	setOpaque(true);
+        setUIProperty("opaque",true);
         updateUI();
 
 	if (!this.getComponentOrientation().isLeftToRight()) {
@@ -672,21 +692,25 @@ public class JScrollPane extends JComponent implements ScrollPaneConstants, Acce
          *
          * @param orientation  an integer specifying one of the legal
  	 * 	orientation values shown above
+	 * @since 1.4
          */
         public ScrollBar(int orientation) {
             super(orientation);
+            this.putClientProperty("JScrollBar.fastWheelScrolling",
+                                   Boolean.TRUE);
         }
 
-	/**
-	 * Messages super to set the value, and resets the
-	 * <code>unitIncrementSet</code> instance variable to true.
-  	 *
-   	 * @param unitIncrement the new unit increment value, in pixels
-	 */
-	public void setUnitIncrement(int unitIncrement) { 
-	    unitIncrementSet = true;
-	    super.setUnitIncrement(unitIncrement);
-	}
+        /**
+         * Messages super to set the value, and resets the
+         * <code>unitIncrementSet</code> instance variable to true.
+         *
+         * @param unitIncrement the new unit increment value, in pixels
+         */
+        public void setUnitIncrement(int unitIncrement) { 
+            unitIncrementSet = true;
+            this.putClientProperty("JScrollBar.fastWheelScrolling", null);
+            super.setUnitIncrement(unitIncrement);
+        }
 
         /**
          * Computes the unit increment for scrolling if the viewport's
@@ -711,16 +735,17 @@ public class JScrollPane extends JComponent implements ScrollPaneConstants, Acce
             }
         }
 
-	/**
-	 * Messages super to set the value, and resets the
-	 * <code>blockIncrementSet</code> instance variable to true.
-	 *
-	 * @param blockIncrement the new block increment value, in pixels
-	 */
-	public void setBlockIncrement(int blockIncrement) { 
-	    blockIncrementSet = true;
-	    super.setBlockIncrement(blockIncrement);
-	}
+        /**
+         * Messages super to set the value, and resets the
+         * <code>blockIncrementSet</code> instance variable to true.
+         *
+         * @param blockIncrement the new block increment value, in pixels
+         */
+        public void setBlockIncrement(int blockIncrement) {
+            blockIncrementSet = true;
+            this.putClientProperty("JScrollBar.fastWheelScrolling", null);
+            super.setBlockIncrement(blockIncrement);
+        }
 
         /**
  	 * Computes the block increment for scrolling if the viewport's
@@ -973,14 +998,14 @@ public class JScrollPane extends JComponent implements ScrollPaneConstants, Acce
 
 
     /**
-     * Removes the old rowHeader, if it exists.  If the new rowHeader
+     * Removes the old rowHeader, if it exists; if the new rowHeader
      * isn't <code>null</code>, syncs the y coordinate of its
      * viewPosition with
-     * the viewport (if there is one) and then adds it to the scrollpane.
+     * the viewport (if there is one) and then adds it to the scroll pane.
      * <p>
      * Most applications will find it more convenient to use 
      * <code>setRowHeaderView</code>
-     * to add a row header component and its viewport to the scrollpane.
+     * to add a row header component and its viewport to the scroll pane.
      * 
      * @param rowHeader the new row header to be used; if <code>null</code>
      *		the old row header is still removed and the new rowHeader
@@ -1042,13 +1067,13 @@ public class JScrollPane extends JComponent implements ScrollPaneConstants, Acce
 
 
     /**
-     * Removes the old columnHeader, if it exists.  If the new columnHeader
-     * isn't <code>null</code>, sync the x coordinate of the its viewPosition 
-     * with the viewport (if there is one) and then add it to the scrollpane.
+     * Removes the old columnHeader, if it exists; if the new columnHeader
+     * isn't <code>null</code>, syncs the x coordinate of its viewPosition 
+     * with the viewport (if there is one) and then adds it to the scroll pane.
      * <p>
      * Most applications will find it more convenient to use 
-     * <code>setRowHeaderView</code>
-     * to add a row header component and its viewport to the scrollpane.
+     * <code>setColumnHeaderView</code>
+     * to add a column header component and its viewport to the scroll pane.
      * 
      * @see #getColumnHeader
      * @see #setColumnHeaderView
@@ -1102,25 +1127,20 @@ public class JScrollPane extends JComponent implements ScrollPaneConstants, Acce
      * Returns the component at the specified corner. The
      * <code>key</code> value specifying the corner is one of:
      * <ul>
-     * <li>JScrollPane.LOWER_LEFT_CORNER
-     * <li>JScrollPane.LOWER_RIGHT_CORNER
-     * <li>JScrollPane.UPPER_LEFT_CORNER
-     * <li>JScrollPane.UPPER_RIGHT_CORNER
-     * <li>JScrollPane.LOWER_LEADING_CORNER
-     * <li>JScrollPane.LOWER_TRAILING_CORNER
-     * <li>JScrollPane.UPPER_LEADING_CORNER
-     * <li>JScrollPane.UPPER_TRAILING_CORNER
+     * <li>ScrollPaneConstants.LOWER_LEFT_CORNER
+     * <li>ScrollPaneConstants.LOWER_RIGHT_CORNER
+     * <li>ScrollPaneConstants.UPPER_LEFT_CORNER
+     * <li>ScrollPaneConstants.UPPER_RIGHT_CORNER
+     * <li>ScrollPaneConstants.LOWER_LEADING_CORNER
+     * <li>ScrollPaneConstants.LOWER_TRAILING_CORNER
+     * <li>ScrollPaneConstants.UPPER_LEADING_CORNER
+     * <li>ScrollPaneConstants.UPPER_TRAILING_CORNER
      * </ul>
      *
      * @param key one of the values as shown above
-     * @return one of the components listed below or <code>null</code>
-     *		if <code>key</code> is invalid:
-     * <ul>
-     * <li>lowerLeft
-     * <li>lowerRight
-     * <li>upperLeft
-     * <li>upperRight
-     * </ul>
+     * @return the corner component (which may be <code>null</code>)
+     *         identified by the given key, or <code>null</code>
+     *         if the key is invalid
      * @see #setCorner
      */
     public Component getCorner(String key) {
@@ -1160,14 +1180,14 @@ public class JScrollPane extends JComponent implements ScrollPaneConstants, Acce
      * between ends of the two scrollbars. Legal values for 
      * the <b>key</b> are:
      * <ul>
-     * <li>JScrollPane.LOWER_LEFT_CORNER
-     * <li>JScrollPane.LOWER_RIGHT_CORNER
-     * <li>JScrollPane.UPPER_LEFT_CORNER
-     * <li>JScrollPane.UPPER_RIGHT_CORNER
-     * <li>JScrollPane.LOWER_LEADING_CORNER
-     * <li>JScrollPane.LOWER_TRAILING_CORNER
-     * <li>JScrollPane.UPPER_LEADING_CORNER
-     * <li>JScrollPane.UPPER_TRAILING_CORNER
+     * <li>ScrollPaneConstants.LOWER_LEFT_CORNER
+     * <li>ScrollPaneConstants.LOWER_RIGHT_CORNER
+     * <li>ScrollPaneConstants.UPPER_LEFT_CORNER
+     * <li>ScrollPaneConstants.UPPER_RIGHT_CORNER
+     * <li>ScrollPaneConstants.LOWER_LEADING_CORNER
+     * <li>ScrollPaneConstants.LOWER_TRAILING_CORNER
+     * <li>ScrollPaneConstants.UPPER_LEADING_CORNER
+     * <li>ScrollPaneConstants.UPPER_TRAILING_CORNER
      * </ul>
      * <p>
      * Although "corner" doesn't match any beans property
@@ -1466,7 +1486,7 @@ public class JScrollPane extends JComponent implements ScrollPaneConstants, Acce
 
 	/**
 	 * This method gets called when a bound property is changed.
-	 * @param evt A <code>PropertyChangeEvent</code> object describing
+	 * @param e A <code>PropertyChangeEvent</code> object describing
 	 * the event source and the property that has changed. Must not be null.
 	 *
 	 * @throws NullPointerException if the parameter is null.

@@ -1,8 +1,8 @@
 /*
- * @(#)FlavorTable.java	1.5 04/05/05
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.awt.datatransfer;
@@ -17,7 +17,7 @@ import java.util.List;
  * symmetric, but typically are.
  *
  * @author David Mendenhall
- * @version 1.5, 05/05/04
+ * @version %I%, %G%
  *
  * @since 1.4
  */

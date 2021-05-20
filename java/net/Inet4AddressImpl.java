@@ -1,8 +1,8 @@
 /*
- * @(#)Inet4AddressImpl.java	1.4 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package java.net;
 import java.io.IOException;
@@ -14,7 +14,7 @@ import java.io.IOException;
  */
 class Inet4AddressImpl implements InetAddressImpl {
     public native String getLocalHostName() throws UnknownHostException;
-    public native byte[][]
+    public native InetAddress[]
         lookupAllHostAddr(String hostname) throws UnknownHostException;
     public native String getHostByAddr(byte[] addr) throws UnknownHostException;
     private native boolean isReachable0(byte[] addr, int timeout, byte[] ifaddr, int ttl) throws IOException;
@@ -22,7 +22,7 @@ class Inet4AddressImpl implements InetAddressImpl {
     public synchronized InetAddress anyLocalAddress() {
         if (anyLocalAddress == null) {
             anyLocalAddress = new Inet4Address(); // {0x00,0x00,0x00,0x00}
-            anyLocalAddress.hostName = "0.0.0.0";
+            anyLocalAddress.holder().hostName = "0.0.0.0";
         }
         return anyLocalAddress;
     }

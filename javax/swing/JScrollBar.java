@@ -1,8 +1,8 @@
 /*
- * @(#)JScrollBar.java	1.78 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing;
@@ -39,6 +39,11 @@ import java.io.IOException;
  * a corresponding change is made to the position of the JViewport on
  * the underlying view, changing the contents of the JViewport.
  * <p>
+ * <strong>Warning:</strong> Swing is not thread safe. For more
+ * information see <a
+ * href="package-summary.html#threading">Swing's Threading
+ * Policy</a>.
+ * <p>
  * <strong>Warning:</strong>
  * Serialized objects of this class will not be compatible with
  * future Swing releases. The current serialization support is
@@ -53,7 +58,7 @@ import java.io.IOException;
  *      attribute: isContainer false
  *    description: A component that helps determine the visible content range of an area.
  *
- * @version 1.78 12/19/03
+ * @version %I% %G%
  * @author David Kloba
  */
 public class JScrollBar extends JComponent implements Adjustable, Accessible
@@ -642,7 +647,7 @@ public class JScrollBar extends JComponent implements Adjustable, Accessible
     }
 
 
-    /*
+    /**
      * Notify listeners that the scrollbar's model has changed.
      * 
      * @see #addAdjustmentListener
@@ -652,7 +657,7 @@ public class JScrollBar extends JComponent implements Adjustable, Accessible
 	fireAdjustmentValueChanged(id, type, value, getValueIsAdjusting());
     }   
     
-    /*
+    /**
      * Notify listeners that the scrollbar's model has changed.
      * 
      * @see #addAdjustmentListener

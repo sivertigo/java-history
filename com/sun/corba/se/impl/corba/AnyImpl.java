@@ -1,8 +1,6 @@
 /*
- * @(#)AnyImpl.java	1.66 06/10/09
- *
- * Copyright 2006 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 1997, 2012, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 /*
  * Licensed Materials - Property of IBM
@@ -556,7 +554,7 @@ public class AnyImpl extends Any
 	    java.lang.Object[] objholder = new java.lang.Object[1];
 	    objholder[0] = object;
 	    long[] longholder = new long[1];
-	    TCUtility.unmarshalIn(in, realType(), longholder, objholder);
+	    TCUtility.unmarshalIn(in, typeCode, longholder, objholder);
 	    value = longholder[0];
 	    object = objholder[0];
 	    stream = null;
@@ -1202,7 +1200,7 @@ public class AnyImpl extends Any
 	// See bug 4391648 for more info about the tcORB in this
 	// case.
 	RepositoryIdStrings repStrs 
-	    = RepositoryIdFactory.getRepIdStringsFactory(tcORB);
+	    = RepositoryIdFactory.getRepIdStringsFactory();
 
 
 	// Assertion: c instanceof Serializable?
@@ -1235,7 +1233,7 @@ public class AnyImpl extends Any
 	// Anything else
 	// We know that this is a TypeCodeImpl since it is our ORB
 	classTC = (TypeCodeImpl)ValueUtility.createTypeCodeForClass(
-	    tcORB, c, ORBUtility.createValueHandler(tcORB));
+	    tcORB, c, ORBUtility.createValueHandler());
 	// Intruct classTC to store its buffer
 	classTC.setCaching(true);
 	// Update the cache

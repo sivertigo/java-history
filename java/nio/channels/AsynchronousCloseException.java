@@ -1,9 +1,9 @@
 /*
- * @(#)AsynchronousCloseException.java	1.9 01/11/19
+ * @(#)AsynchronousCloseException.java	%I% %E%
  *
- * Copyright 2000 by Sun Microsystems, Inc.  All Rights Reserved.
+ * Copyright (c) 2000, Oracle and/or its affiliates. All rights reserved.
  * 
- * This software is the proprietary information of Sun Microsystems, Inc.  
+ * This software is the proprietary information of Oracle.
  * Use is subject to license terms.
  */
 
@@ -17,7 +17,7 @@ package java.nio.channels;
  * channel or the part of the channel upon which it is blocked in an I/O
  * operation.
  *
- * @version 1.9, 01/11/19
+ * @version %I%, %E%
  * @since 1.4
  */
 

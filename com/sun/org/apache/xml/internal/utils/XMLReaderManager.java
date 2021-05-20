@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 /*
- * $Id: XMLReaderManager.java,v 1.2 2004/02/17 04:21:14 minchau Exp $
+ * $Id: XMLReaderManager.java,v 1.7 2007/04/03 21:21:21 joehw Exp $
  */
 package com.sun.org.apache.xml.internal.utils;
 
+import com.sun.org.apache.xalan.internal.utils.FactoryImpl;
+import com.sun.org.apache.xalan.internal.utils.SecuritySupport;
 import java.util.Hashtable;
 
 import javax.xml.parsers.FactoryConfigurationError;
@@ -40,9 +42,7 @@ public class XMLReaderManager {
                              "http://xml.org/sax/features/namespace-prefixes";
     private static final XMLReaderManager m_singletonManager =
                                                      new XMLReaderManager();
-
     private static final String property = "org.xml.sax.driver";
-
     /**
      * Parser factory to be used to construct XMLReader objects
      */
@@ -58,6 +58,7 @@ public class XMLReaderManager {
      */
     private Hashtable m_inUse;
 
+    private boolean m_useServicesMechanism = true;
     /**
      * Hidden constructor
      */
@@ -67,15 +68,15 @@ public class XMLReaderManager {
     /**
      * Retrieves the singleton reader manager
      */
-    public static XMLReaderManager getInstance() {
+    public static XMLReaderManager getInstance(boolean useServicesMechanism) {
+        m_singletonManager.setServicesMechnism(useServicesMechanism);
         return m_singletonManager;
     }
-
     /**
      * Retrieves a cached XMLReader for this thread, or creates a new
      * XMLReader, if the existing reader is in use.  When the caller no
      * longer needs the reader, it must release it with a call to
-     * {@link releaseXMLReader}.
+     * {@link #releaseXMLReader}.
      */
     public synchronized XMLReader getXMLReader() throws SAXException {
         XMLReader reader;
@@ -92,13 +93,13 @@ public class XMLReaderManager {
         }
 
         // If the cached reader for this thread is in use, construct a new
-        // one; otherwise, return the cached reader unless it isn't an
+        // one; otherwise, return the cached reader unless it isn't an 
         // instance of the class set in the 'org.xml.sax.driver' property
         reader = (XMLReader) m_readers.get();
         boolean threadHasReader = (reader != null);
-        String factory = SecuritySupport.getInstance().getSystemProperty(property);
+        String factory = SecuritySupport.getSystemProperty(property);
         if (threadHasReader && m_inUse.get(reader) != Boolean.TRUE &&
-              ( factory == null || reader.getClass().getName().equals(factory))) {
+                ( factory == null || reader.getClass().getName().equals(factory))) {
             m_inUse.put(reader, Boolean.TRUE);
         } else {
             try {
@@ -114,7 +115,7 @@ public class XMLReaderManager {
                         // If unable to create an instance, let's try to use
                         // the XMLReader from JAXP
                         if (m_parserFactory == null) {
-                            m_parserFactory = SAXParserFactory.newInstance();
+                            m_parserFactory = FactoryImpl.getSAXFactory(m_useServicesMechanism);
                             m_parserFactory.setNamespaceAware(true);
                         }
 
@@ -144,7 +145,7 @@ public class XMLReaderManager {
                 m_readers.set(reader);
                 m_inUse.put(reader, Boolean.TRUE);
             }
-        }
+        } 
 
         return reader;
     }
@@ -162,4 +163,18 @@ public class XMLReaderManager {
             m_inUse.remove(reader);
         }
     }
+    /**
+     * Return the state of the services mechanism feature.
+     */
+    public boolean useServicesMechnism() {
+        return m_useServicesMechanism;
+    }
+
+    /**
+     * Set the state of the services mechanism feature.
+     */
+    public void setServicesMechnism(boolean flag) {
+        m_useServicesMechanism = flag;
+    }
+
 }

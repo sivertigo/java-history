@@ -1,8 +1,8 @@
 /*
- * @(#)StartTlsRequest.java	1.16 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.naming.ldap;
@@ -221,7 +221,7 @@ public class StartTlsRequest implements ExtendedRequest {
 	Boolean answer = (Boolean) AccessController.doPrivileged(
 	    new PrivilegedAction() {
 	    public Object run() {
-		return new Boolean(iter.hasNext());
+		return Boolean.valueOf(iter.hasNext());
 	    }
 	});
 	return answer.booleanValue();

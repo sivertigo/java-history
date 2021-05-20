@@ -1,8 +1,8 @@
 /*
- * @(#)NamedWeakReference.java	1.4 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.naming.internal;
@@ -12,7 +12,7 @@ package com.sun.naming.internal;
  * A NamedWeakReference is a WeakReference with an immutable string name.
  *
  * @author Scott Seligman
- * @version 1.4 03/12/19
+ * @version %I% %E%
  */
 
 

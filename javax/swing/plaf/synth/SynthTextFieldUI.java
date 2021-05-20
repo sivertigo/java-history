@@ -1,8 +1,8 @@
 /*
- * @(#)SynthTextFieldUI.java	1.10 04/06/24
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing.plaf.synth;
@@ -13,6 +13,8 @@ import javax.swing.event.*;
 import javax.swing.plaf.*;
 import javax.swing.plaf.basic.BasicTextFieldUI;
 import java.awt.*;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.beans.PropertyChangeEvent;
 
 import sun.swing.plaf.synth.SynthUI;
@@ -31,9 +33,12 @@ import sun.swing.plaf.synth.SynthUI;
  * Please see {@link java.beans.XMLEncoder}.
  *
  * @author  Shannon Hickey
- * @version 1.10 06/24/04
+ * @version %I% %G%
  */
-class SynthTextFieldUI extends BasicTextFieldUI implements SynthUI {
+class SynthTextFieldUI
+    extends BasicTextFieldUI
+    implements SynthUI, FocusListener
+{
     private SynthStyle style;
 
     /**
@@ -199,14 +204,26 @@ class SynthTextFieldUI extends BasicTextFieldUI implements SynthUI {
         super.propertyChange(evt);
     }
 
+    public void focusGained(FocusEvent e) {
+        getComponent().repaint();
+    }
+
+    public void focusLost(FocusEvent e) {
+        getComponent().repaint();
+    }
+
     protected void installDefaults() {
+        // Installs the text cursor on the component
+        super.installDefaults();
         updateStyle((JTextComponent)getComponent());
+        getComponent().addFocusListener(this);
     }
 
     protected void uninstallDefaults() {
         SynthContext context = getContext(getComponent(), ENABLED);
 
         getComponent().putClientProperty("caretAspectRatio", null);
+        getComponent().removeFocusListener(this);
 
         style.uninstallDefaults(context);
         context.dispose();

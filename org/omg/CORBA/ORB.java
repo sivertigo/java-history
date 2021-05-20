@@ -1,8 +1,8 @@
 /*
- * @(#)ORB.java	1.132 04/05/18
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package org.omg.CORBA;
@@ -272,7 +272,7 @@ abstract public class ORB {
      *
      * @return the singleton ORB
      */
-    public static ORB init() {
+    public static synchronized ORB init() {
         if (singleton == null) {
             String className = getSystemProperty(ORBSingletonClassKey);
             if (className == null)

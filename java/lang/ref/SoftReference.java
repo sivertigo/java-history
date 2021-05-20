@@ -1,8 +1,8 @@
 /*
- * @(#)SoftReference.java	1.34 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang.ref;
@@ -39,7 +39,7 @@ package java.lang.ref;
  * strong referents to those entries, leaving the remaining entries to be
  * discarded at the discretion of the garbage collector.
  *
- * @version  1.34, 12/19/03
+ * @version  %I%, %G%
  * @author   Mark Reinhold
  * @since    1.2
  */
@@ -91,7 +91,8 @@ public class SoftReference<T> extends Reference<T> {
      */
     public T get() {
 	T o = super.get();
-	if (o != null) this.timestamp = clock;
+	if (o != null && this.timestamp != clock) 
+            this.timestamp = clock;
 	return o;
     }
 

@@ -1,8 +1,8 @@
 /*
- * @(#)HierarchyEvent.java	1.12 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.awt.event;
@@ -52,13 +52,17 @@ import java.awt.Container;
  * </code> when the event occurs.
  *
  * @author	David Mendenhall
- * @version	1.12, 12/19/03
+ * @version	%I%, %G%
  * @see		HierarchyListener
  * @see		HierarchyBoundsAdapter
  * @see		HierarchyBoundsListener
  * @since 	1.3
  */
 public class HierarchyEvent extends AWTEvent {
+    /*
+     * serialVersionUID
+     */
+    private static final long serialVersionUID = -5337576970038043990L;
 
     /**
      * Marks the first integer id for the range of hierarchy event ids.

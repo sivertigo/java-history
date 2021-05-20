@@ -1,8 +1,8 @@
 /*
- * @(#)FocusEvent.java	1.30 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.awt.event;
@@ -38,11 +38,10 @@ import sun.awt.SunToolkit;
  * @see FocusAdapter
  * @see FocusListener
  * @see <a href="http://java.sun.com/docs/books/tutorial/post1.0/ui/focuslistener.html">Tutorial: Writing a Focus Listener</a>
- * @see <a href="http://www.awl.com/cp/javaseries/jcl1_2.html">Reference: The Java Class Libraries (update file)</a>
  *
  * @author Carl Quinn
  * @author Amy Fowler
- * @version 1.30 12/19/03
+ * @version %I% %G%
  * @since 1.1
  */
 public class FocusEvent extends ComponentEvent {
@@ -119,6 +118,7 @@ public class FocusEvent extends ComponentEvent {
      * @param opposite   the other Component involved in the focus change,
      *                   or <code>null</code>
      * @throws IllegalArgumentException if <code>source</code> is null
+     * @since 1.4
      */
     public FocusEvent(Component source, int id, boolean temporary,
                       Component opposite) {

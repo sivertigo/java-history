@@ -1,8 +1,8 @@
 /*
- * @(#)FileCacheImageOutputStream.java	1.25 09/05/07
+ * %W% %E%
  *
- * Copyright 2005 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.imageio.stream;
@@ -69,13 +69,15 @@ public class FileCacheImageOutputStream extends ImageOutputStreamImpl {
         }
         this.stream = stream;
         this.cacheFile =
-            File.createTempFile("imageio", ".tmp", cacheDir);
+            sun.misc.IOUtils.createTempFile("imageio", ".tmp", cacheDir);
         this.cache = new RandomAccessFile(cacheFile, "rw");
+
         this.closeAction = StreamCloser.createCloseAction(this);
         StreamCloser.addToQueue(closeAction);
     }
 
     public int read() throws IOException {
+        checkClosed();
         bitOffset = 0;
         int val =  cache.read();
         if (val != -1) {
@@ -85,7 +87,22 @@ public class FileCacheImageOutputStream extends ImageOutputStreamImpl {
     }
 
     public int read(byte[] b, int off, int len) throws IOException {
+        checkClosed();
+
+        if (b == null) {
+            throw new NullPointerException("b == null!");
+        }
+        if (off < 0 || len < 0 || off + len > b.length || off + len < 0) {
+            throw new IndexOutOfBoundsException
+                ("off < 0 || len < 0 || off+len > b.length || off+len < 0!");
+        }
+
         bitOffset = 0;
+
+        if (len == 0) {
+            return 0;
+        }
+
         int nbytes = cache.read(b, off, len);
         if (nbytes != -1) {
             streamPos += nbytes;
@@ -94,14 +111,14 @@ public class FileCacheImageOutputStream extends ImageOutputStreamImpl {
     }
 
     public void write(int b) throws IOException {
-        flushBits();
+        flushBits(); // this will call checkClosed() for us
         cache.write(b);
         ++streamPos;
         maxStreamPos = Math.max(maxStreamPos, streamPos);
     }
 
     public void write(byte[] b, int off, int len) throws IOException {
-        flushBits();
+        flushBits(); // this will call checkClosed() for us
         cache.write(b, off, len);
         streamPos += len;
         maxStreamPos = Math.max(maxStreamPos, streamPos);
@@ -109,6 +126,7 @@ public class FileCacheImageOutputStream extends ImageOutputStreamImpl {
 
     public long length() {
         try {
+            checkClosed();
             return cache.length();
         } catch (IOException e) {
             return -1L;
@@ -195,15 +213,17 @@ public class FileCacheImageOutputStream extends ImageOutputStreamImpl {
         flushBefore(maxStreamPos);
         super.close();
         cache.close();
+        cache = null;
         cacheFile.delete();
+        cacheFile = null;
         stream.flush();
         stream = null;
-	StreamCloser.removeFromQueue(closeAction);
+        StreamCloser.removeFromQueue(closeAction);
     }
 
     public void flushBefore(long pos) throws IOException {
         long oFlushedPos = flushedPos;
-        super.flushBefore(pos);
+        super.flushBefore(pos); // this will call checkClosed() for us
 
         long flushBytes = flushedPos - oFlushedPos;
         if (flushBytes > 0) {

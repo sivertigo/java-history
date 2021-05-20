@@ -1,8 +1,8 @@
 /*
- * @(#)AudioFormat.java	1.35 04/03/15
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.sound.sampled;
@@ -97,7 +97,7 @@ import java.util.Map;
  *
  * @author Kara Kytle
  * @author Florian Bomers
- * @version 1.35 04/03/15
+ * @version %I% %E%
  * @see DataLine#getFormat
  * @see AudioInputStream#getFormat
  * @see AudioFileFormat
@@ -555,7 +555,7 @@ public class AudioFormat {
      * @see javax.sound.sampled.spi.FormatConversionProvider
      *
      * @author Kara Kytle
-     * @version 1.35 04/03/15
+     * @version %I% %E%
      * @since 1.3
      */
     public static class Encoding {

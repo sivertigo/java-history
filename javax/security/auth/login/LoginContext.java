@@ -1,8 +1,8 @@
 /*
- * @(#)LoginContext.java	1.98 04/06/28
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.security.auth.login;
@@ -171,11 +171,11 @@ import sun.security.util.ResourcesMgr;
  * can be set programmatically via the
  * <code>java.security.Security</code> class,
  * or statically in the Java security properties file located in the
- * file named &lt;JAVA_HOME&gt;/lib/security/java.security,
- * where &lt;JAVA_HOME&gt; refers to the directory where the JDK
- * was installed.
+ * file named &lt;JAVA_HOME&gt;/lib/security/java.security.
+ * &lt;JAVA_HOME&gt; refers to the value of the java.home system property,
+ * and specifies the directory where the JRE is installed.
  * 
- * @version 1.98, 06/28/04
+ * @version %I%, %G%
  * @see java.security.Security
  * @see javax.security.auth.AuthPermission
  * @see javax.security.auth.Subject

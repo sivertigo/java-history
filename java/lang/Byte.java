@@ -1,8 +1,8 @@
 /*
- * @(#)Byte.java	1.40 04/05/11
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang;
@@ -22,7 +22,7 @@ package java.lang;
  * useful when dealing with a <code>byte</code>.
  *
  * @author  Nakul Saraiya
- * @version 1.40, 05/11/04
+ * @version %I%, %G%
  * @see     java.lang.Number
  * @since   JDK1.1
  */

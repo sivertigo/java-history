@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /*
- * $Id: TemplatesImpl.java,v 1.1.2.1 2006/09/19 01:07:39 jeffsuttor Exp $
+ * $Id: TemplatesImpl.java,v 1.8 2007/03/26 20:12:27 spericas Exp $
  */
 
 package com.sun.org.apache.xalan.internal.xsltc.trax;
@@ -26,8 +26,8 @@ import java.io.Serializable;
 import java.util.Properties;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import javax.xml.XMLConstants;
 
+import javax.xml.XMLConstants;
 import javax.xml.transform.Templates;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
@@ -38,6 +38,8 @@ import com.sun.org.apache.xalan.internal.xsltc.Translet;
 import com.sun.org.apache.xalan.internal.xsltc.compiler.util.ErrorMsg;
 import com.sun.org.apache.xalan.internal.xsltc.runtime.AbstractTranslet;
 import com.sun.org.apache.xalan.internal.xsltc.runtime.Hashtable;
+import com.sun.org.apache.xalan.internal.utils.ObjectFactory;
+import com.sun.org.apache.xalan.internal.utils.SecuritySupport;
 
 /**
  * @author Morten Jorgensen
@@ -46,6 +48,8 @@ import com.sun.org.apache.xalan.internal.xsltc.runtime.Hashtable;
  * @author Santiago Pericas-Geertsen 
  */
 public final class TemplatesImpl implements Templates, Serializable {
+    static final long serialVersionUID = 673094361519270707L;
+    public final static String DESERIALIZE_TRANSLET = "jdk.xml.enableTemplatesImplDeserialization";    
 
     /**
      * Name of the superclass of all translets. This is needed to
@@ -114,6 +118,8 @@ public final class TemplatesImpl implements Templates, Serializable {
      */
     private transient TransformerFactoryImpl _tfactory = null;
 
+    private boolean _useServicesMechanism;
+
     static final class TransletClassLoader extends ClassLoader {
 	TransletClassLoader(ClassLoader parent) {
 	    super(parent);
@@ -138,10 +144,7 @@ public final class TemplatesImpl implements Templates, Serializable {
 	TransformerFactoryImpl tfactory) 
     {
 	_bytecodes = bytecodes;
-	_name      = transletName;
-	_outputProperties = outputProperties;
-	_indentNumber = indentNumber;
-	_tfactory = tfactory;
+        init(transletName, outputProperties, indentNumber, tfactory);
     }
     
     /**
@@ -152,14 +155,19 @@ public final class TemplatesImpl implements Templates, Serializable {
 	TransformerFactoryImpl tfactory) 
     {
 	_class     = transletClasses;
-	_name      = transletName;
 	_transletIndex = 0;
+        init(transletName, outputProperties, indentNumber, tfactory);
+    }
+    
+    private void init(String transletName,
+	Properties outputProperties, int indentNumber,
+	TransformerFactoryImpl tfactory) {
+	_name      = transletName;
 	_outputProperties = outputProperties;
 	_indentNumber = indentNumber;
 	_tfactory = tfactory;
+        _useServicesMechanism = tfactory.useServicesMechnism();
     }
-    
-
     /**
      * Need for de-serialization, see readObject().
      */
@@ -177,6 +185,15 @@ public final class TemplatesImpl implements Templates, Serializable {
     private void  readObject(ObjectInputStream is) 
       throws IOException, ClassNotFoundException 
     {
+        SecurityManager security = System.getSecurityManager();
+        if (security != null){
+            String temp = SecuritySupport.getSystemProperty(DESERIALIZE_TRANSLET);
+            if (temp == null || !(temp.length()==0 || temp.equalsIgnoreCase("true"))) {
+            	ErrorMsg err = new ErrorMsg(ErrorMsg.DESERIALIZE_TRANSLET_ERR);
+            	throw new UnsupportedOperationException(err.toString());                
+            }
+        }           
+
 	is.defaultReadObject();
         if (is.readBoolean()) {
             _uriResolver = (URIResolver) is.readObject();
@@ -203,6 +220,12 @@ public final class TemplatesImpl implements Templates, Serializable {
         }
     }
 
+    /**
+     * Return the state of the services mechanism feature.
+     */
+    public boolean useServicesMechnism() {
+        return _useServicesMechanism;
+    }
 
      /**
      * Store URIResolver needed for Transformers.
@@ -215,8 +238,8 @@ public final class TemplatesImpl implements Templates, Serializable {
      * The TransformerFactory must pass us the translet bytecodes using this
      * method before we can create any translet instances
      *
-     * * Note: This method is private for security reasons. See
-     * CR 6537898. When merging with Apache, we must ensure
+     * Note: This method is private for security reasons. See
+     * CR 6537898. When merging with Apache, we must ensure 
      * that the privateness of this method is maintained (that
      * is why it wasn't removed).
      */
@@ -228,7 +251,7 @@ public final class TemplatesImpl implements Templates, Serializable {
      * Returns the translet bytecodes stored in this template
      *
      * Note: This method is private for security reasons. See
-     * CR 6537898. When merging with Apache, we must ensure
+     * CR 6537898. When merging with Apache, we must ensure 
      * that the privateness of this method is maintained (that
      * is why it wasn't removed).
      */
@@ -240,7 +263,7 @@ public final class TemplatesImpl implements Templates, Serializable {
      * Returns the translet bytecodes stored in this template
      *
      * Note: This method is private for security reasons. See
-     * CR 6537898. When merging with Apache, we must ensure
+     * CR 6537898. When merging with Apache, we must ensure 
      * that the privateness of this method is maintained (that
      * is why it wasn't removed).
      */
@@ -353,6 +376,7 @@ public final class TemplatesImpl implements Templates, Serializable {
 	    AbstractTranslet translet = (AbstractTranslet) _class[_transletIndex].newInstance();
             translet.postInitialization();
 	    translet.setTemplates(this);
+            translet.setServicesMechnism(_useServicesMechanism);
 	    if (_auxClasses != null) {
 	        translet.setAuxiliaryClasses(_auxClasses);
 	    }
@@ -385,11 +409,10 @@ public final class TemplatesImpl implements Templates, Serializable {
 	if (_uriResolver != null) {
 	    transformer.setURIResolver(_uriResolver);
 	}
-        
-        if (_tfactory.getFeature(XMLConstants.FEATURE_SECURE_PROCESSING)) {
-            transformer.setSecureProcessing(true);
-        }
-
+	
+	if (_tfactory.getFeature(XMLConstants.FEATURE_SECURE_PROCESSING)) {
+	    transformer.setSecureProcessing(true);
+	}
 	return transformer;
     }
 

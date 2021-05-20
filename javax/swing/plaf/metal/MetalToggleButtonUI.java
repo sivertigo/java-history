@@ -1,13 +1,13 @@
 /*
- * @(#)MetalToggleButtonUI.java	1.29 09/07/30
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
  
 package javax.swing.plaf.metal;
 
-import com.sun.java.swing.SwingUtilities2;
+import sun.swing.SwingUtilities2;
 import sun.awt.AppContext;
 
 import java.awt.*;
@@ -35,7 +35,7 @@ import java.io.Serializable;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
- * @version 1.29 07/30/09
+ * @version %I% %G%
  * @author Tom Santos
  */
 public class MetalToggleButtonUI extends BasicToggleButtonUI {
@@ -59,7 +59,7 @@ public class MetalToggleButtonUI extends BasicToggleButtonUI {
             metalToggleButtonUI = new MetalToggleButtonUI();
             appContext.put(METAL_TOGGLE_BUTTON_UI_KEY, metalToggleButtonUI);
         }
-	return metalToggleButtonUI;
+        return metalToggleButtonUI;
     }
 
     // ********************************

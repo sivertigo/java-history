@@ -1,8 +1,8 @@
 /*
- * @(#)BufferCapabilities.java	1.8 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.awt;
@@ -127,6 +127,7 @@ public class BufferCapabilities implements Cloneable {
     /**
      * A type-safe enumeration of the possible back buffer contents after
      * page-flipping
+     * @since 1.4
      */
     public static final class FlipContents extends AttributeValue {
         

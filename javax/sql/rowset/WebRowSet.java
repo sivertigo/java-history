@@ -1,8 +1,8 @@
 /*
- * @(#)WebRowSet.java	1.5 04/03/11
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.sql.rowset;
@@ -245,7 +245,7 @@ import org.xml.sax.*;
  * &lt;<font color=red>/data</font>&gt;
  * </PRE>
  * <h4>2.3 State 3 - Inserting a Row</h4>
- * A <codeWebRowSet</code> object can insert a new row by moving to the insert row,
+ * A <code>WebRowSet</code> object can insert a new row by moving to the insert row,
  * calling the appropriate updater methods for each column in the row, and then
  * calling the method <code>insertRow</code>.
  * <PRE>

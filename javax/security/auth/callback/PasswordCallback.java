@@ -1,8 +1,8 @@
 /*
- * @(#)PasswordCallback.java	1.18 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.security.auth.callback;
@@ -12,7 +12,7 @@ package javax.security.auth.callback;
  * <code>PasswordCallback</code> to the <code>handle</code>
  * method of a <code>CallbackHandler</code> to retrieve password information.
  *
- * @version 1.18, 12/19/03
+ * @version %I%, %G%
  * @see javax.security.auth.callback.CallbackHandler
  */
 public class PasswordCallback implements Callback, java.io.Serializable {

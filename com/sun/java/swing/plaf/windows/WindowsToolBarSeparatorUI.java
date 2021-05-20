@@ -1,8 +1,8 @@
 /*
- * @(#)WindowsToolBarSeparatorUI.java	1.18 06/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.java.swing.plaf.windows;
@@ -13,15 +13,15 @@ import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.basic.*;
 import javax.swing.*;
 
-import com.sun.java.swing.plaf.windows.TMSchema.Part;
-import com.sun.java.swing.plaf.windows.XPStyle.Skin;
+import static com.sun.java.swing.plaf.windows.TMSchema.Part;
+import static com.sun.java.swing.plaf.windows.XPStyle.Skin;
 
 
 /**
  * Draws Windows toolbar separators.
  * <p>
  *
- * @version 1.18 12/19/06
+ * @version %I% %G%
  * @author Mark Davidson
  */
 public class WindowsToolBarSeparatorUI extends BasicToolBarSeparatorUI {
@@ -40,8 +40,8 @@ public class WindowsToolBarSeparatorUI extends BasicToolBarSeparatorUI {
 	    XPStyle xp = XPStyle.getXP();
 	    if (xp != null) {
 		boolean vertical = ((JSeparator)c).getOrientation() == SwingConstants.VERTICAL;
-                Part part = vertical ? Part.TP_SEPARATOR : Part.TP_SEPARATORVERT;
-                Skin skin = xp.getSkin(c, part);
+		Part part = vertical ? Part.TP_SEPARATOR : Part.TP_SEPARATORVERT;
+		Skin skin = xp.getSkin(c, part);
 		size.width = skin.getWidth();
 		size.height = skin.getHeight();
 	    }
@@ -70,14 +70,14 @@ public class WindowsToolBarSeparatorUI extends BasicToolBarSeparatorUI {
 
 	XPStyle xp = XPStyle.getXP();
 	if (xp != null) {
-            Part part = vertical ? Part.TP_SEPARATOR : Part.TP_SEPARATORVERT;
-            Skin skin = xp.getSkin(c, part);
+	    Part part = vertical ? Part.TP_SEPARATOR : Part.TP_SEPARATORVERT;
+	    Skin skin = xp.getSkin(c, part);
 
 	    int dx = vertical ? (size.width - skin.getWidth()) / 2 : 0;
 	    int dy = vertical ? 0 : (size.height - skin.getHeight()) / 2;
 	    int dw = vertical ? skin.getWidth() : size.width;
 	    int dh = vertical ? size.height : skin.getHeight();
-            skin.paintSkin(g, dx, dy, dw, dh, null);
+	    skin.paintSkin(g, dx, dy, dw, dh, null);
 	} else {
 
 	Color temp = g.getColor();

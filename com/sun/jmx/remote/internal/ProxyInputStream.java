@@ -1,8 +1,8 @@
 /* 
- * @(#)ProxyInputStream.java	1.3 04/01/26
+ * %W% %E%
  * 
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */ 
 
 package com.sun.jmx.remote.internal;

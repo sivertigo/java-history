@@ -1,8 +1,8 @@
 /*
- * @(#)WriteAbortedException.java	1.18 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.io;
@@ -23,11 +23,11 @@ package java.io;
  * method, as well as the aforementioned "legacy field."
  *
  * @author  unascribed
- * @version 1.18, 12/19/03
+ * @version %I%, %G%
  * @since   JDK1.1
  */
 public class WriteAbortedException extends ObjectStreamException {
-    static final long serialVersionUID = -3326426625597282442L;
+    private static final long serialVersionUID = -3326426625597282442L;
 
     /**
      * Exception that was caught while writing the ObjectStream.

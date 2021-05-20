@@ -1,8 +1,8 @@
 /*
- * @(#)JPEGImageWriterResources.java	1.6 05/08/23
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.imageio.plugins.jpeg;
@@ -57,7 +57,7 @@ public class JPEGImageWriterResources extends ListResourceBundle {
         {Integer.toString(JPEGImageWriter.WARNING_NO_RGB_THUMB_AS_INDEXED ),
          "RGB thumbnail can't be written as indexed.  Written as RGB"},
         {Integer.toString(JPEGImageWriter.WARNING_NO_GRAY_THUMB_AS_INDEXED),
-       "Grayscale thumbnail can't be written as indexed.  Written as JPEG"},
+         "Grayscale thumbnail can't be written as indexed.  Written as JPEG"},
 
        };
     }

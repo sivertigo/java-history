@@ -1,8 +1,8 @@
 /*
- * @(#)RowMapper.java	1.13 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing.tree;
@@ -13,7 +13,7 @@ import javax.swing.tree.TreePath;
  * Defines the requirements for an object that translates paths in
  * the tree into display rows.
  *
- * @version 1.13 12/19/03
+ * @version %I% %G%
  * @author Scott Violet
  */
 public interface RowMapper

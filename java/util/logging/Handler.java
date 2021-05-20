@@ -1,13 +1,12 @@
 /*
- * @(#)Handler.java	1.17 04/01/12
- *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, 2012, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 
 package java.util.logging;
 
+import java.io.UnsupportedEncodingException;
 /**
  * A <tt>Handler</tt> object takes log messages from a <tt>Logger</tt> and
  * exports them.  It might for example, write them to a console
@@ -23,7 +22,7 @@ package java.util.logging;
  * <tt>Handler</tt> class.
  *
  *
- * @version 1.17, 01/12/04
+ * @version %I%, %G%
  * @since 1.4
  */
 
@@ -93,7 +92,7 @@ public abstract class Handler {
      *             the caller does not have <tt>LoggingPermission("control")</tt>.
      */
     public void setFormatter(Formatter newFormatter) throws SecurityException {
-	checkAccess();
+	checkPermission();
 	// Check for a null pointer:
 	newFormatter.getClass();
 	formatter = newFormatter;
@@ -122,10 +121,15 @@ public abstract class Handler {
      */
     public void setEncoding(String encoding) 
 			throws SecurityException, java.io.UnsupportedEncodingException {
-	checkAccess();
+	checkPermission();
 	if (encoding != null) {
-	    // Check the encoding exists.
-	    sun.io.CharToByteConverter.getConverter(encoding);
+	    try {
+	        if(!java.nio.charset.Charset.isSupported(encoding)) {
+	            throw new UnsupportedEncodingException(encoding);
+	        }	 	
+	    } catch (java.nio.charset.IllegalCharsetNameException e) {
+	        throw new UnsupportedEncodingException(encoding);
+	    }
 	}
 	this.encoding = encoding;
     }
@@ -152,14 +156,14 @@ public abstract class Handler {
      *             the caller does not have <tt>LoggingPermission("control")</tt>.
      */
     public void setFilter(Filter newFilter) throws SecurityException {
-	checkAccess();
+	checkPermission();
 	filter = newFilter;
     }
 
     /**
      * Get the current <tt>Filter</tt> for this <tt>Handler</tt>.
      *
-     * @return  a </tt>Filter</tt> object (may be null)
+     * @return  a <tt>Filter</tt> object (may be null)
      */
     public Filter getFilter() {
 	return filter;
@@ -176,7 +180,7 @@ public abstract class Handler {
      *             the caller does not have <tt>LoggingPermission("control")</tt>.
      */
     public void setErrorManager(ErrorManager em) {
-	checkAccess();
+	checkPermission();
 	if (em == null) {
 	   throw new NullPointerException();
 	}
@@ -190,7 +194,7 @@ public abstract class Handler {
      *             the caller does not have <tt>LoggingPermission("control")</tt>.
      */
     public ErrorManager getErrorManager() {
-	checkAccess();
+	checkPermission();
 	return errorManager;
     }
 
@@ -230,7 +234,7 @@ public abstract class Handler {
 	if (newLevel == null) {
 	    throw new NullPointerException();
 	}
-	checkAccess();
+	checkPermission();
 	logLevel = newLevel;
     }
 
@@ -273,9 +277,9 @@ public abstract class Handler {
     // If "sealed" is true, we check that the caller has
     // appropriate security privileges to update Handler
     // state and if not throw a SecurityException.
-    void checkAccess() throws SecurityException {
+    void checkPermission() throws SecurityException {
 	if (sealed) {
-	    manager.checkAccess();
+	    manager.checkPermission();
 	}
     }
 }

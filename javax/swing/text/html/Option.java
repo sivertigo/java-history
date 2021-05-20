@@ -1,13 +1,12 @@
 /*
- * @(#)Option.java	1.10 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package javax.swing.text.html;
 
-import java.awt.*;
-import javax.swing.*;
+import java.io.Serializable;
 import javax.swing.text.*;
 
 /**
@@ -15,11 +14,20 @@ import javax.swing.text.*;
  * &lt;option&gt; elements.  This is the object
  * installed as items of the DefaultComboBoxModel
  * used to represent the &lt;select&gt; element.
+ * <p>
+ * <strong>Warning:</strong>
+ * Serialized objects of this class will not be compatible with
+ * future Swing releases. The current serialization support is
+ * appropriate for short term storage or RMI between applications running
+ * the same version of Swing.  As of 1.4, support for long term storage
+ * of all JavaBeans<sup><font size="-2">TM</font></sup>
+ * has been added to the <code>java.beans</code> package.
+ * Please see {@link java.beans.XMLEncoder}.
  *
  * @author  Timothy Prinzing
- * @version 1.10 12/19/03
+ * @version %I% %G%
  */
-public class Option  {
+public class Option implements Serializable {
 
     /**
      * Creates a new Option object.

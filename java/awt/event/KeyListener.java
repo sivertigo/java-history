@@ -1,8 +1,8 @@
 /*
- * @(#)KeyListener.java	1.18 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.awt.event;
@@ -23,12 +23,11 @@ import java.util.EventListener;
  * object is then invoked, and the <code>KeyEvent</code> is passed to it.
  *
  * @author Carl Quinn
- * @version 1.18 12/19/03
+ * @version %I% %G%
  *
  * @see KeyAdapter
  * @see KeyEvent
  * @see <a href="http://java.sun.com/docs/books/tutorial/post1.0/ui/keylistener.html">Tutorial: Writing a Key Listener</a>
- * @see <a href="http://www.awl.com/cp/javaseries/jcl1_2.html">Reference: The Java Class Libraries (update file)</a>
  *
  * @since 1.1
  */

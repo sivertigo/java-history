@@ -1,8 +1,8 @@
 /*
- * @(#)AlreadyBoundException.java	1.12 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package java.rmi;
 
@@ -11,7 +11,7 @@ package java.rmi;
  * is made to bind an object in the registry to a name that already
  * has an associated binding.
  * 
- * @version 1.12, 12/19/03
+ * @version %I%, %G%
  * @since   JDK1.1
  * @author  Ann Wollrath
  * @author  Roger Riggs

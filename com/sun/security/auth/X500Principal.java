@@ -1,8 +1,8 @@
 /*
- * @(#)X500Principal.java	1.12 04/05/18
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.security.auth;
@@ -23,10 +23,10 @@ import sun.security.x509.X500Name;
  * on how to achieve this.  Authorization decisions can then be based upon 
  * the Principals associated with a <code>Subject</code>.
  * 
- * @version 1.12, 05/18/04
+ * @version %I%, %G%
  * @see java.security.Principal
  * @see javax.security.auth.Subject
- * @deprecated A new X500Principal class is available in the Java 2 platform.
+ * @deprecated A new X500Principal class is available in the Java platform.
  *             This X500Principal classs is entirely deprecated and
  *             is here to allow for a smooth transition to the new
  *             class.

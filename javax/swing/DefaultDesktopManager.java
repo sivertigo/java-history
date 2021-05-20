@@ -1,12 +1,14 @@
 /*
- * @(#)DefaultDesktopManager.java	1.52 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 
 package javax.swing;
+
+import com.sun.awt.AWTUtilities;
 
 import java.awt.*;
 import java.beans.PropertyVetoException;
@@ -15,6 +17,9 @@ import javax.swing.border.Border;
 import java.awt.event.ComponentListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+
+import sun.awt.AWTAccessor;
+import sun.awt.SunToolkit;
 
 /** This is an implementation of the <code>DesktopManager</code>.
   * It currently implements the basic behaviors for managing
@@ -27,7 +32,7 @@ import java.awt.event.ComponentEvent;
   * methods will call into the DesktopManager.</p>
   * @see JDesktopPane
   * @see JInternalFrame
-  * @version 1.52 12/19/03
+  * @version %I% %G%
   * @author David Kloba
   * @author Steve Wilson
   */
@@ -45,6 +50,12 @@ public class DefaultDesktopManager implements DesktopManager, java.io.Serializab
     private transient Rectangle desktopBounds = null;   
     private transient Rectangle[] floatingItems = {};
 
+    /**
+     * Set to true when the user actually drags a frame vs clicks on it
+     * to start the drag operation.  This is only used when dragging with
+     * FASTER_DRAG_MODE.
+     */
+    private transient boolean didDrag;
 
     /** Normally this method will not be called. If it is, it
       * try to determine the appropriate parent from the desktopIcon of the frame.
@@ -63,12 +74,19 @@ public class DefaultDesktopManager implements DesktopManager, java.io.Serializab
      * @param f the <code>JInternalFrame</code> to be removed
      */
     public void closeFrame(JInternalFrame f) {
+        JDesktopPane d = f.getDesktopPane();
+        if (d == null) {
+            return;
+        }
         boolean findNext = f.isSelected();
 	Container c = f.getParent();
-	if (findNext)
-	    try { f.setSelected(false); } catch (PropertyVetoException e2) { }
+        JInternalFrame nextFrame = null;
+        if (findNext) {
+            nextFrame = d.getNextFrame(f);
+            try { f.setSelected(false); } catch (PropertyVetoException e2) { }
+        }
         if(c != null) {
-            c.remove(f);
+            c.remove(f); // Removes the focus.
             c.repaint(f.getX(), f.getY(), f.getWidth(), f.getHeight());
         }
         removeIconFor(f);
@@ -76,7 +94,13 @@ public class DefaultDesktopManager implements DesktopManager, java.io.Serializab
             f.setNormalBounds(null);
         if(wasIcon(f))
             setWasIcon(f, null);
-	if (findNext) activateNextFrame(c);
+        if (nextFrame != null) {
+            try { nextFrame.setSelected(true); } 
+            catch (PropertyVetoException e2) { }
+        } else if (findNext && d.getComponentCount() == 0) {
+            // It was selected and was the last component on the desktop.
+            d.requestFocus();
+        }
     }
 
     /**
@@ -135,7 +159,6 @@ public class DefaultDesktopManager implements DesktopManager, java.io.Serializab
         Container c = f.getParent();
 	JDesktopPane d = f.getDesktopPane();
 	boolean findNext = f.isSelected();
-
         desktopIcon = f.getDesktopIcon();
         if(!wasIcon(f)) {
             Rectangle r = getBoundsForIconOf(f);
@@ -143,7 +166,7 @@ public class DefaultDesktopManager implements DesktopManager, java.io.Serializab
             setWasIcon(f, Boolean.TRUE);
         }
 
-	if (c == null) {
+	if (c == null || d == null) {
             return;
         }
 
@@ -159,36 +182,17 @@ public class DefaultDesktopManager implements DesktopManager, java.io.Serializab
         if (!f.isMaximum()) {
             f.setNormalBounds(f.getBounds());
         }
+        d.setComponentOrderCheckingEnabled(false);
         c.remove(f);
         c.add(desktopIcon);
+        d.setComponentOrderCheckingEnabled(true);
         c.repaint(f.getX(), f.getY(), f.getWidth(), f.getHeight());
-        try {
-            f.setSelected(false);
-        } catch (PropertyVetoException e2) {
+        if (findNext) {
+            if (d.selectFrame(true) == null) {
+                // The icon is the last frame.
+                f.restoreSubcomponentFocus();
+            }
         }
-
-	// Get topmost of the remaining frames
-	if (findNext) {
-	  activateNextFrame(c);
-	}
-    }
-
-    void activateNextFrame(Container c) {
-      int i;
-      JInternalFrame nextFrame = null;
-      if (c == null) return;
-      for (i = 0; i < c.getComponentCount(); i++) {
-	if (c.getComponent(i) instanceof JInternalFrame) {
-	  nextFrame = (JInternalFrame) c.getComponent(i);
-	  break;
-	}
-      }
-      if (nextFrame != null) {
-	try { nextFrame.setSelected(true); }
-	catch (PropertyVetoException e2) { }
-	nextFrame.moveToFront();
-      }
-      
     }
 
     /**
@@ -199,7 +203,8 @@ public class DefaultDesktopManager implements DesktopManager, java.io.Serializab
     public void deiconifyFrame(JInternalFrame f) {
         JInternalFrame.JDesktopIcon desktopIcon = f.getDesktopIcon();
         Container c = desktopIcon.getParent();
-        if (c != null) {
+        JDesktopPane d = f.getDesktopPane();
+        if (c != null && d != null) {
             c.add(f);
             // If the frame is to be restored to a maximized state make
             // sure it still fills the whole desktop.
@@ -214,11 +219,13 @@ public class DefaultDesktopManager implements DesktopManager, java.io.Serializab
             removeIconFor(f);
             if (f.isSelected()) {
                 f.moveToFront();
-            } else {
+                f.restoreSubcomponentFocus();
+            }
+            else {
                 try {
-                    f.setSelected(true);
-                } catch (PropertyVetoException e2) {
-                }
+                    f.setSelected(true);  
+                } catch (PropertyVetoException e2) {}
+
             }
         }
     }
@@ -273,26 +280,38 @@ public class DefaultDesktopManager implements DesktopManager, java.io.Serializab
         setupDragMode(f);
 
 	if (dragMode == FASTER_DRAG_MODE) {
+          Component desktop = f.getParent();
 	  floatingItems = findFloatingItems(f);
 	  currentBounds = f.getBounds();
-	  desktopBounds = f.getParent().getBounds();
-	  desktopBounds.x = 0;
-	  desktopBounds.y = 0;
-	  desktopGraphics = f.getParent().getGraphics();
+          if (desktop instanceof JComponent) {
+              desktopBounds = ((JComponent)desktop).getVisibleRect();
+          }
+          else {
+              desktopBounds = desktop.getBounds();
+              desktopBounds.x = desktopBounds.y = 0;
+          }
+          desktopGraphics = JComponent.safelyGetGraphics(desktop);
 	  ((JInternalFrame)f).isDragging = true;
+          didDrag = false;
 	}
 	
     }
 
     private void setupDragMode(JComponent f) {
         JDesktopPane p = getDesktopPane(f);
+        Container parent = f.getParent();
+        dragMode = DEFAULT_DRAG_MODE;
         if (p != null) {
             String mode = (String)p.getClientProperty("JDesktopPane.dragMode");
-            if (mode != null && mode.equals("outline")) {
+            Window window = SwingUtilities.getWindowAncestor(f);
+            if (window != null && !AWTUtilities.isWindowOpaque(window)) {
+                dragMode = DEFAULT_DRAG_MODE;
+            } else if (mode != null && mode.equals("outline")) {
                 dragMode = OUTLINE_DRAG_MODE;
             } else if (mode != null && mode.equals("faster")
                     && f instanceof JInternalFrame
-                    && ((JInternalFrame)f).isOpaque()) {
+                    && ((JInternalFrame)f).isOpaque() &&
+                       (parent == null || parent.isOpaque())) {
                 dragMode = FASTER_DRAG_MODE;
             } else {
                 if (p.getDragMode() == JDesktopPane.OUTLINE_DRAG_MODE ) {
@@ -321,7 +340,7 @@ public class DefaultDesktopManager implements DesktopManager, java.io.Serializab
         if (dragMode == OUTLINE_DRAG_MODE) {
 	    JDesktopPane desktopPane = getDesktopPane(f);
 	    if (desktopPane != null){
-	      Graphics g = desktopPane.getGraphics();
+              Graphics g = JComponent.safelyGetGraphics(desktopPane);
 
 	      g.setXORMode(Color.white);
 	      if (currentLoc != null) {
@@ -329,8 +348,22 @@ public class DefaultDesktopManager implements DesktopManager, java.io.Serializab
                         f.getWidth()-1, f.getHeight()-1);
 	      }
 	      g.drawRect( newX, newY, f.getWidth()-1, f.getHeight()-1);
-	      currentLoc = new Point (newX, newY);
-	      g.dispose();
+              /* Work around for 6635462: XOR mode may cause a SurfaceLost on first use.
+               * Swing doesn't expect that its XOR drawRect did
+               * not complete, so believes that on re-entering at
+               * the next update location, that there is an XOR rect
+               * to draw out at "currentLoc". But in fact
+               * it's now got a new clean surface without that rect,
+               * so drawing it "out" in fact draws it on, leaving garbage.
+               * So only update/set currentLoc if the draw completed.
+               */
+               sun.java2d.SurfaceData sData =
+                   ((sun.java2d.SunGraphics2D)g).getSurfaceData();
+
+               if (!sData.isSurfaceLost()) {
+                   currentLoc = new Point (newX, newY);
+               }
+               g.dispose();
 	    }
 	} else if (dragMode == FASTER_DRAG_MODE) {
 	  dragFrameFaster(f, newX, newY);
@@ -375,14 +408,21 @@ public class DefaultDesktopManager implements DesktopManager, java.io.Serializab
 	} else {
 	    JDesktopPane desktopPane = getDesktopPane(f);
 	    if (desktopPane != null){
-	      Graphics g = desktopPane.getGraphics();
+              Graphics g = JComponent.safelyGetGraphics(desktopPane);
 
 	      g.setXORMode(Color.white);
 	      if (currentBounds != null) {
 	        g.drawRect( currentBounds.x, currentBounds.y, currentBounds.width-1, currentBounds.height-1);
 	      }
 	      g.drawRect( newX, newY, newWidth-1, newHeight-1);
-	      currentBounds = new Rectangle (newX, newY, newWidth, newHeight);
+
+              // Work around for 6635462, see comment in dragFrame()
+              sun.java2d.SurfaceData sData =
+                  ((sun.java2d.SunGraphics2D)g).getSurfaceData();
+              if (!sData.isSurfaceLost()) {
+                  currentBounds = new Rectangle (newX, newY, newWidth, newHeight);
+              }
+
 	      g.setPaintMode();
 	      g.dispose();
 	    }
@@ -593,78 +633,104 @@ public class DefaultDesktopManager implements DesktopManager, java.io.Serializab
       currentBounds.x = newX;
       currentBounds.y = newY;
    
-      emergencyCleanup(f);
+      if (didDrag) {
+          // Only initiate cleanup if we have actually done a drag.
+          emergencyCleanup(f);
+      }
+      else {
+          didDrag = true;
+          // We reset the danger field as until now we haven't actually
+          // moved the internal frame so we don't need to initiate repaint.
+          ((JInternalFrame)f).danger = false;
+      }
       
       boolean floaterCollision = isFloaterCollision(previousBounds, currentBounds);
   
     // System.out.println(previousBounds);
+      JComponent parent = (JComponent)f.getParent();
       Rectangle visBounds = previousBounds.intersection(desktopBounds);
     //  System.out.println(previousBounds);
  
 
      // System.out.println(visBounds);
 
-      if(!floaterCollision) {
-      // blit the frame to the new location
-	// if we're under a floater we can't blit	
-      desktopGraphics.copyArea(visBounds.x,
-                               visBounds.y,
-                               visBounds.width,
-                               visBounds.height,
-                               newX - previousBounds.x,
-                               newY - previousBounds.y);   
-      }
- 
-      JComponent parent = (JComponent)f.getParent();
-        
-      f.setBounds(currentBounds);
-
-      if(floaterCollision) {
-	// since we couldn't blit we just redraw as fast as possible
-        // the isDragging mucking is to avoid activating emergency cleanup
-        ((JInternalFrame)f).isDragging = false;
-	parent.paintImmediately(currentBounds);
-        ((JInternalFrame)f).isDragging = true;
-      }
-
-      // fake out the repaint manager.  We'll take care of everything
       RepaintManager currentManager = RepaintManager.currentManager(f); 
 
-      currentManager.markCompletelyClean(parent);
-      currentManager.markCompletelyClean(f);
+      currentManager.beginPaint();
+      try {
+          if(!floaterCollision) {
+              currentManager.copyArea(parent, desktopGraphics, visBounds.x,
+                                      visBounds.y,
+                                      visBounds.width,
+                                      visBounds.height,
+                                      newX - previousBounds.x,
+                                      newY - previousBounds.y,
+                                      true);
+          }
+ 
+          f.setBounds(currentBounds);
 
-      // compute the minimal newly exposed area
-      // if the rects intersect then we use computeDifference.  Otherwise
-      // we'll repaint the entire previous bounds
-      Rectangle[] dirtyRects = null;
-      if ( previousBounds.intersects(currentBounds) ) {
-	  dirtyRects = SwingUtilities.computeDifference(previousBounds, currentBounds);
-      } else {
-          dirtyRects = new Rectangle[1];
-	  dirtyRects[0] = previousBounds;
-	  //  System.out.println("no intersection");
-      };
+          if(floaterCollision) {
+              // since we couldn't blit we just redraw as fast as possible
+              // the isDragging mucking is to avoid activating emergency
+              // cleanup
+              ((JInternalFrame)f).isDragging = false;
+              parent.paintImmediately(currentBounds);
+              ((JInternalFrame)f).isDragging = true;
+          }
 
-      // Fix the damage
-      for (int i = 0; i < dirtyRects.length; i++) {
-         parent.paintImmediately(dirtyRects[i]);
+          // fake out the repaint manager.  We'll take care of everything
+
+          currentManager.markCompletelyClean(parent);
+          currentManager.markCompletelyClean(f);
+
+          // compute the minimal newly exposed area
+          // if the rects intersect then we use computeDifference.  Otherwise
+          // we'll repaint the entire previous bounds
+          Rectangle[] dirtyRects = null;
+          if ( previousBounds.intersects(currentBounds) ) {
+              dirtyRects = SwingUtilities.computeDifference(previousBounds,
+                                                            currentBounds);
+          } else {
+              dirtyRects = new Rectangle[1];
+              dirtyRects[0] = previousBounds;
+              //  System.out.println("no intersection");
+          };
+
+          // Fix the damage
+          for (int i = 0; i < dirtyRects.length; i++) {
+              parent.paintImmediately(dirtyRects[i]);
+          }
+
+          // new areas of blit were exposed
+          if ( !(visBounds.equals(previousBounds)) ) {
+              dirtyRects = SwingUtilities.computeDifference(previousBounds,
+                                                            desktopBounds);
+              for (int i = 0; i < dirtyRects.length; i++) {
+                  dirtyRects[i].x += newX - previousBounds.x;
+                  dirtyRects[i].y += newY - previousBounds.y;
+                  ((JInternalFrame)f).isDragging = false;
+
+                  parent.paintImmediately(dirtyRects[i]);
+                  ((JInternalFrame)f).isDragging = true;
+            
+                  // System.out.println(dirtyRects[i]);
+              }
+              
+          }
+      } finally {
+          currentManager.endPaint();
       }
 
-      // new areas of blit were exposed
-      if ( !(visBounds.equals(previousBounds)) ) {
-         dirtyRects = SwingUtilities.computeDifference(previousBounds, desktopBounds);
-         for (int i = 0; i < dirtyRects.length; i++) {
-            dirtyRects[i].x += newX - previousBounds.x;
-            dirtyRects[i].y += newY - previousBounds.y;
-            ((JInternalFrame)f).isDragging = false;
-            
-            parent.paintImmediately(dirtyRects[i]);
-            ((JInternalFrame)f).isDragging = true;
-            
-           // System.out.println(dirtyRects[i]);
-         }
-   
-      }     
+      // update window if it's non-opaque
+      Window topLevel = SwingUtilities.getWindowAncestor(f);
+      Toolkit tk = Toolkit.getDefaultToolkit();
+      if (!AWTAccessor.getWindowAccessor().isOpaque(topLevel) &&
+          (tk instanceof SunToolkit) &&
+          ((SunToolkit)tk).needUpdateWindow())
+      {
+          AWTAccessor.getWindowAccessor().updateWindow(topLevel);
+      }
    }
 
    private boolean isFloaterCollision(Rectangle moveFrom, Rectangle moveTo) {

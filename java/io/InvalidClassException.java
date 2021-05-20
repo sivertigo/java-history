@@ -1,8 +1,8 @@
 /*
- * @(#)InvalidClassException.java	1.20 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.io;
@@ -18,10 +18,13 @@ package java.io;
  * </UL>
  *
  * @author  unascribed
- * @version 1.20, 12/19/03
+ * @version %I%, %G%
  * @since   JDK1.1
  */
 public class InvalidClassException extends ObjectStreamException {
+
+    private static final long serialVersionUID = -4333316296251054416L;
+
     /**
      * Name of the invalid class.
      *
@@ -30,7 +33,7 @@ public class InvalidClassException extends ObjectStreamException {
     public String classname;
 
     /**
-     * Report a InvalidClassException for the reason specified.
+     * Report an InvalidClassException for the reason specified.
      *
      * @param reason  String describing the reason for the exception.
      */

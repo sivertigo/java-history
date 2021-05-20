@@ -1,8 +1,8 @@
 /*
- * @(#)UnknownGroupException.java	1.13 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.rmi.activation;
@@ -16,7 +16,7 @@ package java.rmi.activation;
  * <code>ActivationGroupID</code> in an <code>ActivationDesc</code> refers to
  * a group that is not registered with the <code>ActivationSystem</code>
  * 
- * @version 1.13, 12/19/03
+ * @version %I%, %G%
  * @author  Ann Wollrath
  * @since   1.2
  * @see     java.rmi.activation.Activatable

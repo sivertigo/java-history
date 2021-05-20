@@ -1,8 +1,8 @@
 /*
- * @(#)DefaultTreeCellEditor.java	1.30 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing.tree;
@@ -13,7 +13,6 @@ import javax.swing.event.*;
 import javax.swing.plaf.FontUIResource;
 import java.awt.*;
 import java.awt.event.*;
-import java.beans.*;
 import java.io.*;
 import java.util.EventObject;
 import java.util.Vector;
@@ -40,7 +39,7 @@ import java.util.Vector;
  *
  * @see javax.swing.JTree
  *
- * @version 1.30 12/19/03
+ * @version %I% %G%
  * @author Scott Violet
  */
 public class DefaultTreeCellEditor implements ActionListener, TreeCellEditor,
@@ -577,6 +576,7 @@ public class DefaultTreeCellEditor implements ActionListener, TreeCellEditor,
          * <code>DefaultTreeCellEditor.DefaultTextField</code> object.
          *
          * @param border  a <code>Border</code> object
+	 * @since 1.4
          */
 	public DefaultTextField(Border border) {
             setBorder(border);

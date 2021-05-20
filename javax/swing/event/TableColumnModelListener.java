@@ -1,8 +1,8 @@
 /*
- * @(#)TableColumnModelListener.java	1.13 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing.event;
@@ -15,7 +15,7 @@ import java.util.EventListener;
  * TableColumnModelListener defines the interface for an object that listens
  * to changes in a TableColumnModel.
  *
- * @version 1.13 12/19/03
+ * @version %I% %G%
  * @author Alan Chung
  * @see TableColumnModelEvent
  */

@@ -1,8 +1,8 @@
 /*
- * @(#)JMXServiceURL.java	1.29 04/06/10
+ * %W% %E%
  * 
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 
@@ -585,7 +585,7 @@ public class JMXServiceURL implements Serializable {
      * InetAddress.getByName, is a numeric IPv6 address.
      */
     private static boolean isNumericIPv6Address(String s) {
-	// address contains colon iff it's a numeric IPv6 address
+	// address contains colon if and only if it's a numeric IPv6 address
 	return (s.indexOf(':') >= 0);
     }
 

@@ -1,8 +1,8 @@
 /*
- * @(#)SocketSecurityException.java	1.13 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.rmi.server;
@@ -10,7 +10,7 @@ package java.rmi.server;
 /**
  * An obsolete subclass of {@link ExportException}.
  *
- * @version 1.13, 12/19/03
+ * @version %I%, %G%
  * @author  Ann Wollrath
  * @since   JDK1.1
  **/

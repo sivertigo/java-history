@@ -1,8 +1,8 @@
 /*
- * @(#)SocksSocketImpl.java	1.19 09/05/11
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package java.net;
 import java.io.IOException;
@@ -29,7 +29,6 @@ class SocksSocketImpl extends PlainSocketImpl implements SocksConsts {
     private Socket cmdsock = null;
     private InputStream cmdIn = null;
     private OutputStream cmdOut = null;
-
     /* true if the Proxy has been set programatically */
     private boolean applicationSetProxy;  /* false */
 
@@ -49,7 +48,7 @@ class SocksSocketImpl extends PlainSocketImpl implements SocksConsts {
 	    // Use getHostString() to avoid reverse lookups
 	    server = ad.getHostString();
 	    port = ad.getPort();
-	    applicationSetProxy = true;
+            applicationSetProxy = true;
 	}
     }
 
@@ -1037,10 +1036,9 @@ class SocksSocketImpl extends PlainSocketImpl implements SocksConsts {
                 userName = System.getProperty("user.name");
             } catch (SecurityException se) { /* swallow Exception */ }
         } else {
-            userName = (String) java.security.AccessController.doPrivileged(
+            userName = java.security.AccessController.doPrivileged(
                 new sun.security.action.GetPropertyAction("user.name"));
         }
         return userName;
     }
-
 }

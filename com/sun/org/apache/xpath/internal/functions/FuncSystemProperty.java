@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /*
- * $Id: FuncSystemProperty.java,v 1.18 2004/02/23 10:29:37 aruny Exp $
+ * $Id: FuncSystemProperty.java,v 1.2.4.2 2005/09/14 20:18:45 jeffsuttor Exp $
  */
 package com.sun.org.apache.xpath.internal.functions;
 
@@ -27,6 +27,8 @@ import com.sun.org.apache.xpath.internal.objects.XNumber;
 import com.sun.org.apache.xpath.internal.objects.XObject;
 import com.sun.org.apache.xpath.internal.objects.XString;
 import com.sun.org.apache.xpath.internal.res.XPATHErrorResources;
+import com.sun.org.apache.xalan.internal.utils.ObjectFactory;
+import com.sun.org.apache.xalan.internal.utils.SecuritySupport;
 
 /**
  * Execute the SystemProperty() function.
@@ -34,12 +36,14 @@ import com.sun.org.apache.xpath.internal.res.XPATHErrorResources;
  */
 public class FuncSystemProperty extends FunctionOneArg
 {
+    static final long serialVersionUID = 3694874980992204867L;
   /**
    * The path/filename of the property file: XSLTInfo.properties
    * Maintenance note: see also
    * com.sun.org.apache.xalan.internal.processor.TransformerFactoryImpl.XSLT_PROPERTIES
    */
-  static String XSLT_PROPERTIES = "com/sun/org/apache/xalan/internal/res/XSLTInfo.properties";
+  static final String XSLT_PROPERTIES = 
+            "com/sun/org/apache/xalan/internal/res/XSLTInfo.properties";
 
   /**
    * Execute the function.  The function must return
@@ -94,7 +98,7 @@ public class FuncSystemProperty extends FunctionOneArg
 
         try
         {
-          result = System.getProperty(propName);
+          result = SecuritySupport.getSystemProperty(propName);
 
           if (null == result)
           {
@@ -116,7 +120,7 @@ public class FuncSystemProperty extends FunctionOneArg
     {
       try
       {
-        result = System.getProperty(fullName);
+        result = SecuritySupport.getSystemProperty(fullName);
 
         if (null == result)
         {
@@ -139,7 +143,7 @@ public class FuncSystemProperty extends FunctionOneArg
       try
       {
         // Needs to return the version number of the spec we conform to.
-        return new XNumber(1.0);
+        return new XString("1.0");
       }
       catch (Exception ex)
       {
@@ -162,9 +166,7 @@ public class FuncSystemProperty extends FunctionOneArg
     try
     {
       // Use SecuritySupport class to provide priveleged access to property file
-      SecuritySupport ss = SecuritySupport.getInstance();
-
-      InputStream is = ss.getResourceAsStream(ObjectFactory.findClassLoader(),
+      InputStream is = SecuritySupport.getResourceAsStream(ObjectFactory.findClassLoader(),
                                               file);
 
       // get a buffered version

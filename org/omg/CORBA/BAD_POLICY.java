@@ -1,8 +1,8 @@
 /*
- * @(#)BAD_POLICY.java	1.13 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package org.omg.CORBA;
@@ -11,7 +11,7 @@ package org.omg.CORBA;
  * the <tt>PolicyError</tt> exception.
  *
  * @author rip-dev
- * @version 1.13 12/19/03
+ * @version %I% %G%
  */
 
 public interface BAD_POLICY {

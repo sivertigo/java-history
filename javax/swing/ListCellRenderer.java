@@ -1,8 +1,8 @@
 /*
- * @(#)ListCellRenderer.java	1.17 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing;
@@ -19,16 +19,41 @@ import java.awt.Component;
  *     public MyCellRenderer() {
  *         setOpaque(true);
  *     }
- *     public Component getListCellRendererComponent(
- *         JList list,
- *         Object value,
- *         int index,
- *         boolean isSelected,
- *         boolean cellHasFocus)
- *     {
+ *
+ *     public Component getListCellRendererComponent(JList list,
+ *                                                   Object value,
+ *                                                   int index,
+ *                                                   boolean isSelected,
+ *                                                   boolean cellHasFocus) {
+ *
  *         setText(value.toString());
- *         setBackground(isSelected ? Color.red : Color.white);
- *         setForeground(isSelected ? Color.white : Color.black);
+ *
+ *         Color background;
+ *         Color foreground;
+ *
+ *         // check if this cell represents the current DnD drop location
+ *         JList.DropLocation dropLocation = list.getDropLocation();
+ *         if (dropLocation != null
+ *                 && !dropLocation.isInsert()
+ *                 && dropLocation.getIndex() == index) {
+ *
+ *             background = Color.BLUE;
+ *             foreground = Color.WHITE;
+ *
+ *         // check if this cell is selected
+ *         } else if (isSelected) {
+ *             background = Color.RED;
+ *             foreground = Color.WHITE;
+ *
+ *         // unselected, and not the DnD drop location
+ *         } else {
+ *             background = Color.WHITE;
+ *             foreground = Color.BLACK;
+ *         };
+ *
+ *         setBackground(background);
+ *         setForeground(foreground);
+ *
  *         return this;
  *     }
  * }
@@ -37,7 +62,7 @@ import java.awt.Component;
  * @see JList
  * @see DefaultListCellRenderer
  *
- * @version 1.17 12/19/03
+ * @version %I% %G%
  * @author Hans Muller
  */
 public interface ListCellRenderer

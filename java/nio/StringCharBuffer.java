@@ -1,8 +1,8 @@
 /*
- * @(#)StringCharBuffer.java	1.17 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2009, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.nio;
@@ -24,20 +24,27 @@ class StringCharBuffer					// package-private
     }
 
     public CharBuffer slice() {
-	return new StringCharBuffer(str, position(), limit());
+	return new StringCharBuffer(str,
+				    -1,
+				    0, 
+				    this.remaining(),
+				    this.remaining(),
+				    this.position());
     }
 
-
-    private StringCharBuffer(CharSequence s, int mark,
-			     int pos, int limit, int cap)
-    {
-	super(mark, pos, limit, cap);
+    private StringCharBuffer(CharSequence s,
+			     int mark,
+			     int pos,
+			     int limit,
+			     int cap,
+			     int offset) {
+	super(mark, pos, limit, cap, null, offset);
 	str = s;
     }
 
     public CharBuffer duplicate() {
 	return new StringCharBuffer(str, markValue(),
-				    position(), limit(), capacity());
+				    position(), limit(), capacity(), offset);
     }
 
     public CharBuffer asReadOnlyBuffer() {
@@ -45,11 +52,11 @@ class StringCharBuffer					// package-private
     }
 
     public final char get() {
-	return str.charAt(nextGetIndex());
+	return str.charAt(nextGetIndex() + offset);
     }
 
     public final char get(int index) {
-	return str.charAt(checkIndex(index));
+	return str.charAt(checkIndex(index) + offset);
     }
 
     // ## Override bulk get methods for better performance
@@ -71,15 +78,18 @@ class StringCharBuffer					// package-private
     }
 
     final String toString(int start, int end) {
-	return str.toString().substring(start, end);
+	return str.toString().substring(start + offset, end + offset);
     }
 
     public final CharSequence subSequence(int start, int end) {
 	try {
 	    int pos = position();
 	    return new StringCharBuffer(str,
+					-1,
 					pos + checkIndex(start, pos),
-					pos + checkIndex(end, pos));
+					pos + checkIndex(end, pos),
+                                        capacity(),
+                                        offset);
 	} catch (IllegalArgumentException x) {
 	    throw new IndexOutOfBoundsException();
 	}

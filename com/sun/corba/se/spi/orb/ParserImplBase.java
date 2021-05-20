@@ -1,8 +1,8 @@
 /*
- * @(#)ParserImplBase.java	1.19 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package com.sun.corba.se.spi.orb ;
 
@@ -107,7 +107,7 @@ public abstract class ParserImplBase {
 		// Since exc wraps the actual exception, use exc.getCause()
 		// instead of exc.
 		throw wrapper.errorSettingField( exc.getCause(), name,
-		    ObjectUtility.compactObjectToString(value) ) ;
+		    value.toString() ) ;
 	    }
 	}
 

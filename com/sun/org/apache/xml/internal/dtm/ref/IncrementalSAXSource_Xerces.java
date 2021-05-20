@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /*
- * $Id: IncrementalSAXSource_Xerces.java,v 1.15 2004/02/23 10:29:36 aruny Exp $
+ * $Id: IncrementalSAXSource_Xerces.java,v 1.2.4.1 2005/09/15 08:15:08 suresh_emailid Exp $
  */
 
 package com.sun.org.apache.xml.internal.dtm.ref;
@@ -26,6 +26,7 @@ import java.lang.reflect.Method;
 import com.sun.org.apache.xerces.internal.parsers.SAXParser;
 import com.sun.org.apache.xml.internal.res.XMLErrorResources;
 import com.sun.org.apache.xml.internal.res.XMLMessages;
+import com.sun.org.apache.xalan.internal.utils.ObjectFactory;
 
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -36,9 +37,9 @@ import org.xml.sax.XMLReader;
  * incremental mode is already a coroutine of sorts, and just wraps our
  * IncrementalSAXSource API around it.</p>
  *
- * <p>Usage example: See _main().</p>
+ * <p>Usage example: See main().</p>
  *
- * <p>Status: Passes simple _main() unit-test. NEEDS JAVADOC.</p>
+ * <p>Status: Passes simple main() unit-test. NEEDS JAVADOC.</p>
  * */
 public class IncrementalSAXSource_Xerces
   implements IncrementalSAXSource
@@ -97,7 +98,7 @@ public class IncrementalSAXSource_Xerces
 			// If we can't get the magic constructor, no need to look further.
 			Class xniConfigClass=ObjectFactory.findProviderClass(
                             "com.sun.org.apache.xerces.internal.xni.parser.XMLParserConfiguration",
-                            ObjectFactory.findClassLoader(), true);
+                            true);
 			Class[] args1={xniConfigClass};
 			Constructor ctor=SAXParser.class.getConstructor(args1);
 			
@@ -106,7 +107,7 @@ public class IncrementalSAXSource_Xerces
 			// we're going to want to use.
 			Class xniStdConfigClass=ObjectFactory.findProviderClass(
                             "com.sun.org.apache.xerces.internal.parsers.StandardParserConfiguration",
-                            ObjectFactory.findClassLoader(), true);
+                            true);
 			fPullParserConfig=xniStdConfigClass.newInstance();
 			Object[] args2={fPullParserConfig};
 			fIncrementalParser = (SAXParser)ctor.newInstance(args2);
@@ -116,7 +117,7 @@ public class IncrementalSAXSource_Xerces
 			// API changes again.
 			Class fXniInputSourceClass=ObjectFactory.findProviderClass(
                             "com.sun.org.apache.xerces.internal.xni.parser.XMLInputSource",
-                            ObjectFactory.findClassLoader(), true);
+                            true);
 			Class[] args3={fXniInputSourceClass};
 			fConfigSetInput=xniStdConfigClass.getMethod("setInputSource",args3);
 
@@ -355,10 +356,10 @@ public class IncrementalSAXSource_Xerces
 			return ((Boolean)ret).booleanValue();
 		}
 	}
-	
-	static final Object[] noparms=new Object[0]; // Would null work???
-	static final Object[] parmsfalse={Boolean.FALSE};
-	private boolean parseSome()
+//  Would null work???
+    private static final Object[] noparms=new Object[0];
+    private static final Object[] parmsfalse={Boolean.FALSE};
+    private boolean parseSome()
 		throws SAXException, IOException, IllegalAccessException,
 					 java.lang.reflect.InvocationTargetException
 	{

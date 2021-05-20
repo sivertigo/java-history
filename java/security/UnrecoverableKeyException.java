@@ -1,8 +1,8 @@
 /*
- * @(#)UnrecoverableKeyException.java	1.10 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.security;
@@ -10,12 +10,12 @@ package java.security;
 /**
  * This exception is thrown if a key in the keystore cannot be recovered.
  *
- * @version 1.10, 12/19/03
+ * @version %I%, %G%
  *
  * @since 1.2
  */
 
-public class UnrecoverableKeyException extends GeneralSecurityException {
+public class UnrecoverableKeyException extends UnrecoverableEntryException {
 
     private static final long serialVersionUID = 7275063078190151277L;
 

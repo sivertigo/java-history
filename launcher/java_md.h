@@ -1,8 +1,8 @@
 /*
- * @(#)java_md.h	1.14 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 #ifndef JAVA_MD_H
@@ -12,10 +12,12 @@
 #include <unistd.h>
 #include <sys/param.h>
 #include "manifest_info.h"
+#include "jli_util.h"
 
 #define PATH_SEPARATOR		':'
 #define FILESEP			"/"
 #define FILE_SEPARATOR		'/'
+#define IS_FILE_SEPARATOR(c) ((c) == '/')
 #ifndef	MAXNAMELEN
 #define MAXNAMELEN		PATH_MAX
 #endif
@@ -23,7 +25,7 @@
 #ifdef JAVA_ARGS
 /*
  * ApplicationHome is prepended to each of these entries; the resulting
- * strings are concatenated (seperated by PATH_SEPARATOR) and used as the
+ * strings are concatenated (separated by PATH_SEPARATOR) and used as the
  * value of -cp option to the launcher.
  */
 #ifndef APP_CLASSPATH
@@ -46,7 +48,7 @@
 /*
  * Function prototypes.
  */
-char *LocateJRE(manifest_info* info);
+char *LocateJRE(manifest_info *info);
 void ExecJRE(char *jre, char **argv);
 int UnsetEnv(char *name);
 

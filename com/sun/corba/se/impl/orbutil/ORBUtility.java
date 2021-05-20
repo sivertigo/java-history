@@ -1,8 +1,6 @@
 /*
- * @(#)ORBUtility.java	1.52 07/05/24
- *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2000, 2012, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.corba.se.impl.orbutil;
@@ -142,26 +140,9 @@ public final class ORBUtility {
     }
 
     /**
-     * Creates the correct ValueHandler for the given ORB, 
-     * querying ORBVersion information.  If the ORB or
-     * ORBVersion is null, gets the ValueHandler from
-     * Util.createValueHandler.
+     * Return default ValueHandler
      */
-    public static ValueHandler createValueHandler(ORB orb) {
-
-        if (orb == null)
-            return Util.createValueHandler();
-
-        ORBVersion version = orb.getORBVersion();
-
-        if (version == null)
-            return Util.createValueHandler();
-
-        if (version.equals(ORBVersionFactory.getOLD()))
-            return new ValueHandlerImpl_1_3();
-        if (version.equals(ORBVersionFactory.getNEW()))
-            return new ValueHandlerImpl_1_3_1();
-
+    public static ValueHandler createValueHandler() {
         return Util.createValueHandler();
     }
 

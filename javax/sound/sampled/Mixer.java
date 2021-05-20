@@ -1,8 +1,8 @@
 /*
- * @(#)Mixer.java	1.31 04/07/14
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.sound.sampled;
@@ -34,7 +34,7 @@ package javax.sound.sampled;
  * automatically start or stop simultaneously with the explicitly affected one.
  *
  * @author Kara Kytle
- * @version 1.31, 04/07/14
+ * @version %I%, %E%
  * @since 1.3
  */
 public interface Mixer extends Line {
@@ -229,7 +229,7 @@ public interface Mixer extends Line {
      * method of the <code>Mixer</code> interface.
      *
      * @author Kara Kytle
-     * @version 1.31, 04/07/14
+     * @version %I%, %E%
      * @since 1.3
      */
     public static class Info {

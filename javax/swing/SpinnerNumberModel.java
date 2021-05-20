@@ -1,8 +1,8 @@
 /*
- * @(#)SpinnerNumberModel.java	1.12 04/05/12
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing;
@@ -59,7 +59,7 @@ import java.io.Serializable;
  * @see SpinnerListModel
  * @see SpinnerDateModel
  * 
- * @version 1.12 05/12/04
+ * @version %I% %G%
  * @author Hans Muller
  * @since 1.4 
 */

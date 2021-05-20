@@ -1,8 +1,8 @@
 /*
- * @(#)Externalizable.java	1.19 04/01/12
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.io;
@@ -38,7 +38,7 @@ import java.io.ObjectInput;
  * interface.<br>
  *
  * @author  unascribed
- * @version 1.19, 01/12/04
+ * @version %I%, %G%
  * @see java.io.ObjectOutputStream
  * @see java.io.ObjectInputStream
  * @see java.io.ObjectOutput

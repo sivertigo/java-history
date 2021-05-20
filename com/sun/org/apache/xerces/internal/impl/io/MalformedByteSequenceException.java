@@ -24,13 +24,18 @@ import com.sun.org.apache.xerces.internal.util.MessageFormatter;
  * <p>Signals that a malformed byte sequence was detected
  * by a <code>java.io.Reader</code> that decodes bytes 
  * of a given encoding into characters.</p>
+ * 
+ * @xerces.internal
  *
  * @author Michael Glavassevich, IBM
  *
- * @version $Id: MalformedByteSequenceException.java,v 1.1.1.1 2004/05/04 10:22:02 vk112360 Exp $
+ * @version $Id: MalformedByteSequenceException.java,v 1.4 2007/07/19 04:38:36 ofung Exp $
  */
 public class MalformedByteSequenceException extends CharConversionException {
 
+    /** Serialization version. */
+    static final long serialVersionUID = 8436382245048328739L;
+    
     //
     // Data
     //

@@ -14,14 +14,18 @@
  * limitations under the License.
  */
 /*
- * $Id: XSLTCDTMManager.java,v 1.1.2.2 2006/10/03 13:52:11 spericas Exp $
+ * $Id: XSLTCDTMManager.java,v 1.2 2005/08/16 22:32:54 jeffsuttor Exp $
  */
 package com.sun.org.apache.xalan.internal.xsltc.dom;
 
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.XMLStreamReader;
 import javax.xml.transform.Source;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamSource;
+import javax.xml.transform.stax.StAXSource;
+
 
 import com.sun.org.apache.xml.internal.dtm.DTM;
 import com.sun.org.apache.xml.internal.dtm.ref.DTMDefaultBase;
@@ -32,6 +36,9 @@ import com.sun.org.apache.xml.internal.res.XMLErrorResources;
 import com.sun.org.apache.xml.internal.res.XMLMessages;
 import com.sun.org.apache.xml.internal.utils.SystemIDResolver;
 import com.sun.org.apache.xalan.internal.xsltc.trax.DOM2SAX;
+import com.sun.org.apache.xalan.internal.xsltc.trax.StAXEvent2SAX;
+import com.sun.org.apache.xalan.internal.xsltc.trax.StAXStream2SAX;
+import com.sun.org.apache.xalan.internal.utils.ObjectFactory;
 
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXNotRecognizedException;
@@ -51,9 +58,6 @@ public class XSLTCDTMManager extends DTMManagerDefault
     private static final String DEFAULT_PROP_NAME =
         "com.sun.org.apache.xalan.internal.xsltc.dom.XSLTCDTMManager";
 
-    private static final String NAMESPACE_PREFIXES_FEATURE =
-        "http://xml.org/sax/features/namespace-prefixes";
-    
     /** Set this to true if you want a dump of the DTM after creation */
     private static final boolean DUMPTREE = false;
   
@@ -95,9 +99,22 @@ public class XSLTCDTMManager extends DTMManagerDefault
      * The default is <code>com.sun.org.apache.xalan.internal.xsltc.dom.XSLTCDTMManager</code>.
      */
     public static Class getDTMManagerClass() {
-        Class mgrClass = ObjectFactory.lookUpFactoryClass(DEFAULT_PROP_NAME,
+        return getDTMManagerClass(true);
+    }
+
+    public static Class getDTMManagerClass(boolean useServicesMechanism) {
+        Class mgrClass = null;
+        if (useServicesMechanism) {
+            mgrClass = ObjectFactory.lookUpFactoryClass(DEFAULT_PROP_NAME,
                                                           null,
                                                           DEFAULT_CLASS_NAME);
+        } else {
+            try {
+                mgrClass = ObjectFactory.findProviderClass(DEFAULT_CLASS_NAME, true);
+            } catch (Exception e) {
+                //will not happen
+            }
+        }
         // If no class found, default to this one.  (This should never happen -
         // the ObjectFactory has already been told that the current class is
         // the default).
@@ -275,9 +292,56 @@ public class XSLTCDTMManager extends DTMManagerDefault
 
         int dtmPos = getFirstFreeDTMID();
         int documentID = dtmPos << IDENT_DTM_NODE_BITS;
+        
+        if ((null != source) && source instanceof StAXSource) {
+            final StAXSource staxSource = (StAXSource)source;
+            StAXEvent2SAX staxevent2sax = null;
+            StAXStream2SAX staxStream2SAX = null; 
+            if (staxSource.getXMLEventReader() != null) {
+                final XMLEventReader xmlEventReader = staxSource.getXMLEventReader();
+                staxevent2sax = new StAXEvent2SAX(xmlEventReader);
+            } else if (staxSource.getXMLStreamReader() != null) {
+                final XMLStreamReader xmlStreamReader = staxSource.getXMLStreamReader();
+                staxStream2SAX = new StAXStream2SAX(xmlStreamReader);
+            }
+      
+            SAXImpl dtm;
 
-        if ((null != source) && source instanceof DOMSource)
-        {
+            if (size <= 0) {
+                dtm = new SAXImpl(this, source, documentID,
+                                  whiteSpaceFilter, null, doIndexing, 
+                                  DTMDefaultBase.DEFAULT_BLOCKSIZE,
+                                  buildIdIndex, newNameTable);
+            } else {
+                dtm = new SAXImpl(this, source, documentID,
+                                  whiteSpaceFilter, null, doIndexing, 
+                                  size, buildIdIndex, newNameTable);
+            }
+      
+            dtm.setDocumentURI(source.getSystemId());
+
+            addDTM(dtm, dtmPos, 0);
+
+            try {
+                if (staxevent2sax != null) {    
+                    staxevent2sax.setContentHandler(dtm);
+                    staxevent2sax.parse();
+                }
+                else if (staxStream2SAX != null) {
+                    staxStream2SAX.setContentHandler(dtm);
+                    staxStream2SAX.parse();
+                }
+                
+            }
+            catch (RuntimeException re) {
+                throw re;
+            }
+            catch (Exception e) {
+                throw new com.sun.org.apache.xml.internal.utils.WrappedRuntimeException(e);
+            }
+      
+            return dtm;
+        }else if ((null != source) && source instanceof DOMSource) {
             final DOMSource domsrc = (DOMSource) source;
             final org.w3c.dom.Node node = domsrc.getNode();
             final DOM2SAX dom2sax = new DOM2SAX(node);
@@ -382,7 +446,6 @@ public class XSLTCDTMManager extends DTMManagerDefault
 
                 try {
                     reader.setProperty("http://xml.org/sax/properties/lexical-handler", dtm);
-                    reader.setFeature(NAMESPACE_PREFIXES_FEATURE, true);
                 }
                 catch (SAXNotRecognizedException e){}
                 catch (SAXNotSupportedException e){}

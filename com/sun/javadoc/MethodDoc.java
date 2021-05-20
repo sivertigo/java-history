@@ -1,8 +1,8 @@
 /*
- * @(#)MethodDoc.java	1.11 04/05/20
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.javadoc;
@@ -10,7 +10,7 @@ package com.sun.javadoc;
 /**
  * Represents a method of a java class.
  *
- * @since JDK1.2
+ * @since 1.2
  * @author Robert Field
  */
 public interface MethodDoc extends ExecutableMemberDoc {

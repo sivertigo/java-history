@@ -1,8 +1,6 @@
 /*
- * @(#)MemoryHandler.java	1.24 03/12/19
- *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, 2012, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.util.logging;
@@ -51,7 +49,7 @@ package java.util.logging;
  *	  (no default).
  * </ul>
  *
- * @version 1.24, 12/19/03
+ * @version %I%, %G%
  * @since 1.4
  */
 
@@ -162,6 +160,7 @@ public class MemoryHandler extends Handler {
 	    count++;
 	} else {
 	    start++;
+	    start %= buffer.length;
 	}
 	if (record.getLevel().intValue() >= pushLevel.intValue()) {
 	    push();
@@ -220,7 +219,7 @@ public class MemoryHandler extends Handler {
 	    throw new NullPointerException();
 	}
 	LogManager manager = LogManager.getLogManager();
-        checkAccess();
+        checkPermission();
 	pushLevel = newLevel;
     }
 

@@ -1,8 +1,8 @@
 /*
- * @(#)UIDefaults.java	1.62 09/09/14
+ * %W% %E%
  *
- * Copyright 2009 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2010, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing;
@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.ResourceBundle;
+import java.util.ResourceBundle.Control;
 import java.util.Locale;
 import java.util.Vector;
 import java.util.MissingResourceException;
@@ -33,6 +34,8 @@ import java.security.AccessControlContext;
 import java.security.PrivilegedAction;
 
 import sun.reflect.misc.MethodUtil;
+import sun.reflect.misc.ReflectUtil;
+import sun.util.CoreResourceBundleControl;
 
 /**
  * A table of defaults for Swing components.  Applications can set/get
@@ -48,7 +51,7 @@ import sun.reflect.misc.MethodUtil;
  * Please see {@link java.beans.XMLEncoder}.
  *
  * @see UIManager
- * @version 1.58 05/05/04
+ * @version 1.64 03/15/07
  * @author Hans Muller
  */
 public class UIDefaults extends Hashtable<Object,Object>
@@ -70,16 +73,29 @@ public class UIDefaults extends Hashtable<Object,Object>
     private Map resourceCache;
 
     /**
-     * Create an empty defaults table.
+     * Creates an empty defaults table.
      */
     public UIDefaults() {
-        super(700, .75f);
+        this(700, .75f);
+    }
+
+    /**
+     * Creates an empty defaults table with the specified initial capacity and
+     * load factor.
+     *
+     * @param initialCapacity   the initial capacity of the defaults table
+     * @param loadFactor        the load factor of the defaults table
+     * @see java.util.Hashtable
+     * @since 1.6
+     */
+    public UIDefaults(int initialCapacity, float loadFactor) {
+        super(initialCapacity, loadFactor);
         resourceCache = new HashMap();
     }
 
 
     /**
-     * Create a defaults table initialized with the specified
+     * Creates a defaults table initialized with the specified
      * key/value pairs.  For example:
      * <pre>
         Object[] uiDefaults = {
@@ -98,7 +114,6 @@ public class UIDefaults extends Hashtable<Object,Object>
             super.put(keyValueList[i], keyValueList[i + 1]);
         }
     }
-
 
     /**
      * Returns the value for key.  If the value is a
@@ -269,7 +284,13 @@ public class UIDefaults extends Hashtable<Object,Object>
             for (int i=resourceBundles.size()-1; i >= 0; i--) {
                 String bundleName = (String)resourceBundles.get(i);
                 try {
-                    ResourceBundle b = ResourceBundle.getBundle(bundleName, l);
+		    Control c = CoreResourceBundleControl.getRBControlInstance(bundleName);
+                    ResourceBundle b;
+		    if (c != null) {
+                        b = ResourceBundle.getBundle(bundleName, l, c);
+		    } else {
+                        b = ResourceBundle.getBundle(bundleName, l);
+		    }
                     Enumeration keys = b.getKeys();
 
                     while (keys.hasMoreElements()) {
@@ -639,6 +660,8 @@ public class UIDefaults extends Hashtable<Object,Object>
         try {
             String className = (String)get(uiClassID);
             if (className != null) {
+                ReflectUtil.checkPackageAccess(className);
+
                 Class cls = (Class)get(className);
                 if (cls == null) {
                     if (uiClassLoader == null) {
@@ -965,6 +988,7 @@ public class UIDefaults extends Hashtable<Object,Object>
      * a Look and Feel is loaded, at the cost of a slight performance
      * reduction the first time <code>createValue</code> is called
      * (since Reflection APIs are used).
+     * @since 1.3
      */
     public static class ProxyLazyValue implements LazyValue {
         private AccessControlContext acc;
@@ -1041,6 +1065,9 @@ public class UIDefaults extends Hashtable<Object,Object>
             // In order to pick up the security policy in effect at the
             // time of creation we use a doPrivileged with the
             // AccessControlContext that was in place when this was created.
+            if (acc == null && System.getSecurityManager() != null) {
+                throw new SecurityException("null AccessControlContext");
+            } 
 	    return AccessController.doPrivileged(new PrivilegedAction() {
                 public Object run() {
                     try {
@@ -1056,7 +1083,9 @@ public class UIDefaults extends Hashtable<Object,Object>
                                 cl = ClassLoader.getSystemClassLoader();
                             }
                         }
+                        ReflectUtil.checkPackageAccess(className);
                         c = Class.forName(className, true, (ClassLoader)cl);
+                        checkAccess(c.getModifiers());
                         if (methodName != null) {
                             Class[] types = getClassArray(args);
                             Method m = c.getMethod(methodName, types);
@@ -1064,6 +1093,7 @@ public class UIDefaults extends Hashtable<Object,Object>
                         } else {
                             Class[] types = getClassArray(args);
                             Constructor constructor = c.getConstructor(types);
+                            checkAccess(constructor.getModifiers());
                             return constructor.newInstance(args);
                         }
                     } catch(Exception e) {
@@ -1077,6 +1107,13 @@ public class UIDefaults extends Hashtable<Object,Object>
                 }
             }, acc);
 	}
+
+        private void checkAccess(int modifiers) {
+            if(System.getSecurityManager() != null && 
+                    !Modifier.isPublic(modifiers)) {
+                throw new SecurityException("Resource is not accessible");
+            }
+        }
 
 	/* 
 	 * Coerce the array of class types provided into one which
@@ -1139,6 +1176,7 @@ public class UIDefaults extends Hashtable<Object,Object>
      * (eg "alt SPACE") and
      * the odd number entries being the value to use in the
      * <code>InputMap</code> (and the key in the <code>ActionMap</code>).
+     * @since 1.3
      */
     public static class LazyInputMap implements LazyValue {
 	/** Key bindings are registered under. */

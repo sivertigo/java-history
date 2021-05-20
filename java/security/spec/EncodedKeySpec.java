@@ -1,8 +1,8 @@
 /*
- * @(#)EncodedKeySpec.java	1.20 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.security.spec;
@@ -12,7 +12,7 @@ package java.security.spec;
  *
  * @author Jan Luehe
  *
- * @version 1.20, 12/19/03
+ * @version %I%, %G%
  *
  * @see java.security.Key
  * @see java.security.KeyFactory
@@ -32,6 +32,8 @@ public abstract class EncodedKeySpec implements KeySpec {
      *
      * @param encodedKey the encoded key. The contents of the 
      * array are copied to protect against subsequent modification.
+     * @exception NullPointerException if <code>encodedKey</code>
+     * is null.
      */
     public EncodedKeySpec(byte[] encodedKey) {
 	this.encodedKey = (byte[])encodedKey.clone();

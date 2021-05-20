@@ -1,13 +1,13 @@
 /*
- * @(#)WindowsInternalFrameTitlePane.java	1.19 06/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.java.swing.plaf.windows;
 
-import com.sun.java.swing.SwingUtilities2;
+import sun.swing.SwingUtilities2;
 
 import javax.swing.*;
 import javax.swing.border.*;
@@ -18,9 +18,10 @@ import java.awt.*;
 import java.awt.event.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.beans.PropertyVetoException;
 
-import com.sun.java.swing.plaf.windows.TMSchema.*;
-import com.sun.java.swing.plaf.windows.XPStyle.Skin;
+import static com.sun.java.swing.plaf.windows.TMSchema.*;
+import static com.sun.java.swing.plaf.windows.XPStyle.Skin;
 
 public class WindowsInternalFrameTitlePane extends BasicInternalFrameTitlePane {
     private Color selectedTitleGradientColor;
@@ -31,6 +32,7 @@ public class WindowsInternalFrameTitlePane extends BasicInternalFrameTitlePane {
     private Font titleFont;
     private int titlePaneHeight;
     private int buttonWidth, buttonHeight;
+    private boolean hotTrackingOn;
 
     public WindowsInternalFrameTitlePane(JInternalFrame f) {
         super(f);
@@ -50,10 +52,19 @@ public class WindowsInternalFrameTitlePane extends BasicInternalFrameTitlePane {
 	buttonWidth     = UIManager.getInt("InternalFrame.titleButtonWidth")  - 4;
 	buttonHeight    = UIManager.getInt("InternalFrame.titleButtonHeight") - 4;
 
+	Object obj      = UIManager.get("InternalFrame.titleButtonToolTipsOn");
+	hotTrackingOn = (obj instanceof Boolean) ? (Boolean)obj : true;
+
+
 	if (XPStyle.getXP() != null) {
 	    // Fix for XP bug where sometimes these sizes aren't updated properly
-	    // Assume for now that XP buttons are always square
-	    buttonWidth = buttonHeight;
+            // Assume for now that height is correct and derive width using the 
+            // ratio from the uxtheme part
+            buttonWidth = buttonHeight;
+            Dimension d = XPStyle.getPartSize(Part.WP_CLOSEBUTTON, State.NORMAL);
+            if (d != null && d.width != 0 && d.height != 0) {
+                buttonWidth = (int) ((float) buttonWidth * d.width / d.height);
+            }
 	} else {
 	    buttonWidth += 2;
 	    selectedTitleGradientColor =
@@ -79,6 +90,17 @@ public class WindowsInternalFrameTitlePane extends BasicInternalFrameTitlePane {
 	    closeButton.setContentAreaFilled(false);
 	}
     }
+
+    protected void setButtonIcons() {
+	super.setButtonIcons();
+
+	if (!hotTrackingOn) {
+	    iconButton.setToolTipText(null);
+	    maxButton.setToolTipText(null);
+	    closeButton.setToolTipText(null);
+	}
+    }
+
 
     public void paintComponent(Graphics g)  {
 	XPStyle xp = XPStyle.getXP();
@@ -119,15 +141,15 @@ public class WindowsInternalFrameTitlePane extends BasicInternalFrameTitlePane {
 	    if (xp != null) {
 		String shadowType = null;
 		if (isSelected) {
-                    shadowType = xp.getString(this, Part.WP_CAPTION,
-                                              State.ACTIVE, Prop.TEXTSHADOWTYPE);
+		    shadowType = xp.getString(this, Part.WP_CAPTION,
+					      State.ACTIVE, Prop.TEXTSHADOWTYPE);
 		}
 		if ("single".equalsIgnoreCase(shadowType)) {
-                    Point shadowOffset = xp.getPoint(this, Part.WP_WINDOW, State.ACTIVE,
-                                                     Prop.TEXTSHADOWOFFSET);
-                    Color shadowColor  = xp.getColor(this, Part.WP_WINDOW, State.ACTIVE,
-                                                     Prop.TEXTSHADOWCOLOR, null);
-                    if (shadowOffset != null && shadowColor != null) {
+		    Point shadowOffset = xp.getPoint(this, Part.WP_WINDOW, State.ACTIVE,
+						     Prop.TEXTSHADOWOFFSET);
+		    Color shadowColor  = xp.getColor(this, Part.WP_WINDOW, State.ACTIVE,
+						     Prop.TEXTSHADOWCOLOR, null);
+		    if (shadowOffset != null && shadowColor != null) {
 			g.setColor(shadowColor);
 			SwingUtilities2.drawString(frame, g, title,
 				     titleX + shadowOffset.x,
@@ -165,12 +187,12 @@ public class WindowsInternalFrameTitlePane extends BasicInternalFrameTitlePane {
     protected void paintTitleBackground(Graphics g) {
 	XPStyle xp = XPStyle.getXP();
 	if (xp != null) {
-            Part part = frame.isIcon() ? Part.WP_MINCAPTION
+	    Part part = frame.isIcon() ? Part.WP_MINCAPTION
                                        : (frame.isMaximum() ? Part.WP_MAXCAPTION
                                                             : Part.WP_CAPTION);
-            State state = frame.isSelected() ? State.ACTIVE : State.INACTIVE;
-            Skin skin = xp.getSkin(this, part);
-            skin.paintSkin(g, 0,  0, getWidth(), getHeight(), state);
+	    State state = frame.isSelected() ? State.ACTIVE : State.INACTIVE;
+	    Skin skin = xp.getSkin(this, part);
+	    skin.paintSkin(g, 0,  0, getWidth(), getHeight(), state);
 	} else {
 	    Boolean gradientsOn = (Boolean)LookAndFeel.getDesktopPropertyValue(
 		"win.frame.captionGradientsOn", Boolean.valueOf(false));
@@ -243,7 +265,21 @@ public class WindowsInternalFrameTitlePane extends BasicInternalFrameTitlePane {
 	    }
 	};
         systemLabel.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2 && frame.isClosable() &&
+                    !frame.isIcon()) {
+                    systemPopupMenu.setVisible(false);
+                    frame.doDefaultCloseAction();
+                }
+                else {
+                    super.mouseClicked(e);
+                }
+            }
             public void mousePressed(MouseEvent e) {
+                try {
+                    frame.setSelected(true);
+                } catch(PropertyVetoException pve) {
+                }
 		showSystemPopupMenu(e.getComponent());
             }
         });
@@ -306,8 +342,8 @@ public class WindowsInternalFrameTitlePane extends BasicInternalFrameTitlePane {
 	WindowsTitlePaneLayout() {
 	    if (xp != null) {
 		Component c = WindowsInternalFrameTitlePane.this;
-                captionMargin = xp.getMargin(c, Part.WP_CAPTION, null, Prop.CAPTIONMARGINS);
-                contentMargin = xp.getMargin(c, Part.WP_CAPTION, null, Prop.CONTENTMARGINS);
+		captionMargin = xp.getMargin(c, Part.WP_CAPTION, null, Prop.CAPTIONMARGINS);
+		contentMargin = xp.getMargin(c, Part.WP_CAPTION, null, Prop.CONTENTMARGINS);
 	    }
 	    if (captionMargin == null) {
 		captionMargin = new Insets(0, 2, 0, 2);
@@ -317,7 +353,7 @@ public class WindowsInternalFrameTitlePane extends BasicInternalFrameTitlePane {
 	    }
 	}
 
-        private int layoutButton(JComponent button, Part part,
+	private int layoutButton(JComponent button, Part part,
 				 int x, int y, int w, int h, int gap,
 				 boolean leftToRight) {
 	    if (!leftToRight) {
@@ -347,7 +383,7 @@ public class WindowsInternalFrameTitlePane extends BasicInternalFrameTitlePane {
 		x = (leftToRight) ? captionMargin.left : w - captionMargin.right;
 	    }
 	    y = (h - iconSize) / 2;
-            layoutButton(systemLabel, Part.WP_SYSBUTTON,
+	    layoutButton(systemLabel, Part.WP_SYSBUTTON,
 			 x, y, iconSize, iconSize, 0,
 			 leftToRight);
 
@@ -366,19 +402,19 @@ public class WindowsInternalFrameTitlePane extends BasicInternalFrameTitlePane {
 	    }
 
 	    if(frame.isClosable()) {
-                x = layoutButton(closeButton, Part.WP_CLOSEBUTTON,
+		x = layoutButton(closeButton, Part.WP_CLOSEBUTTON,
 				 x, y, buttonWidth, buttonHeight, 2,
 				 !leftToRight);
 	    } 
 
 	    if(frame.isMaximizable()) {
-                x = layoutButton(maxButton, Part.WP_MAXBUTTON,
+		x = layoutButton(maxButton, Part.WP_MAXBUTTON,
 				 x, y, buttonWidth, buttonHeight, (xp != null) ? 2 : 0,
 				 !leftToRight);
 	    }
 
 	    if(frame.isIconifiable()) {
-                layoutButton(iconButton, Part.WP_MINBUTTON,
+		layoutButton(iconButton, Part.WP_MINBUTTON,
 			     x, y, buttonWidth, buttonHeight, 0,
 			     !leftToRight);
 	    } 

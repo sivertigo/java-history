@@ -1,20 +1,8 @@
 /*
- * @(#)UnknownServiceException.java	1.4 95/08/16
- * 
- * Copyright (c) 1994-1995 Sun Microsystems, Inc. All Rights Reserved.
- * 
- * Permission to use, copy, modify, and distribute this software and its
- * documentation for NON-COMMERCIAL purposes and without fee is hereby
- * granted provided that this copyright notice appears in all copies. Please
- * refer to the file "copyright.html" for further important copyright and
- * licensing information.
- * 
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
- * SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
- * OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
- * LICENSEE AS A RESULT OF USING, MODIFYING OR DISTRIBUTING THIS SOFTWARE OR
- * ITS DERIVATIVES.
+ * %W% %E%
+ *
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.net;
@@ -22,23 +10,28 @@ package java.net;
 import java.io.IOException;
 
 /**
- * Signals that an unknown service exception has occurred.
+ * Thrown to indicate that an unknown service exception has 
+ * occurred. Either the MIME type returned by a URL connection does 
+ * not make sense, or the application is attempting to write to a 
+ * read-only URL connection. 
+ *
+ * @author  unascribed
+ * @version %I%, %G%
+ * @since   JDK1.0
  */
 public class UnknownServiceException extends IOException {
-
     /**
-     * Constructs a new UnknownServiceException with no detail message. 
-     * A detail message is a String that gives a specific description
-     * of this error. 
+     * Constructs a new <code>UnknownServiceException</code> with no 
+     * detail message. 
      */
     public UnknownServiceException() {
     }
 
     /**
-     * Constructs a new UnknownServiceException with the specified detail message. 
-     * A detail message is a String that gives a specific description
-     * of this error. 
-     * @param msg the detail message
+     * Constructs a new <code>UnknownServiceException</code> with the 
+     * specified detail message. 
+     *
+     * @param   msg   the detail message.
      */
     public UnknownServiceException(String msg) {
 	super(msg);

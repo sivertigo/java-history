@@ -1,8 +1,8 @@
 /*
- * @(#)BasicGraphicsUtils.java	1.61 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package javax.swing.plaf.basic;
 
@@ -15,8 +15,11 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Insets;
 import java.awt.Rectangle;
+import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
-import com.sun.java.swing.SwingUtilities2;
+import java.awt.event.InputEvent;
+
+import sun.swing.SwingUtilities2;
 
 
 /*
@@ -285,5 +288,10 @@ public class BasicGraphicsUtils
      */
     static boolean isLeftToRight( Component c ) {
         return c.getComponentOrientation().isLeftToRight();
+    }
+    
+    static boolean isMenuShortcutKeyDown(InputEvent event) {
+        return (event.getModifiers() & 
+                Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()) != 0;
     }
 }

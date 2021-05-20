@@ -1,13 +1,53 @@
 /*
- * @(#)RMIConnector.java	1.117 05/12/01
- * 
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2007, 2011, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.management.remote.rmi;
 
-// JMX
+import com.sun.jmx.remote.internal.ClientCommunicatorAdmin;
+import com.sun.jmx.remote.internal.ClientListenerInfo;
+import com.sun.jmx.remote.internal.ClientNotifForwarder;
+import com.sun.jmx.remote.internal.ProxyInputStream;
+import com.sun.jmx.remote.internal.ProxyRef;
+import com.sun.jmx.remote.util.ClassLogger;
+import com.sun.jmx.remote.util.EnvHelp;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InvalidObjectException;
+import java.io.NotSerializableException;
+import java.io.ObjectInputStream;
+import java.io.ObjectStreamClass;
+import java.io.Serializable;
+import java.io.WriteAbortedException;
+import java.lang.ref.WeakReference;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Proxy;
+import java.net.MalformedURLException;
+import java.rmi.MarshalException;
+import java.rmi.MarshalledObject;
+import java.rmi.NoSuchObjectException;
+import java.rmi.Remote;
+import java.rmi.ServerException;
+import java.rmi.UnmarshalException;
+import java.rmi.server.RMIClientSocketFactory;
+import java.rmi.server.RemoteObject;
+import java.rmi.server.RemoteObjectInvocationHandler;
+import java.rmi.server.RemoteRef;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.security.PrivilegedExceptionAction;
+import java.security.ProtectionDomain;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.WeakHashMap;
 import javax.management.Attribute;
 import javax.management.AttributeList;
 import javax.management.AttributeNotFoundException;
@@ -16,16 +56,15 @@ import javax.management.InstanceNotFoundException;
 import javax.management.IntrospectionException;
 import javax.management.InvalidAttributeValueException;
 import javax.management.ListenerNotFoundException;
-import javax.management.MalformedObjectNameException;
 import javax.management.MBeanException;
 import javax.management.MBeanInfo;
 import javax.management.MBeanRegistrationException;
 import javax.management.MBeanServerConnection;
+import javax.management.MBeanServerDelegate;
 import javax.management.MBeanServerNotification;
 import javax.management.NotCompliantMBeanException;
 import javax.management.Notification;
 import javax.management.NotificationBroadcasterSupport;
-import javax.management.NotificationEmitter;
 import javax.management.NotificationFilter;
 import javax.management.NotificationFilterSupport;
 import javax.management.NotificationListener;
@@ -33,77 +72,22 @@ import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 import javax.management.QueryExp;
 import javax.management.ReflectionException;
-
-import javax.management.remote.JMXAuthenticator;
 import javax.management.remote.JMXConnectionNotification;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 import javax.management.remote.NotificationResult;
-import javax.management.remote.TargetedNotification;
-import javax.management.remote.JMXServerErrorException;
-
-import java.lang.ref.WeakReference;
-
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-
-// Util
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.WeakHashMap;
-
-// IO
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InvalidObjectException;
-import java.io.ObjectInputStream;
-import java.io.ObjectStreamClass;
-import java.io.Serializable;
-import java.io.WriteAbortedException;
-import java.io.NotSerializableException;
-
-// Net
-import java.net.MalformedURLException;
-
-// RMI
-import java.rmi.MarshalledObject;
-import java.rmi.NoSuchObjectException;
-import java.rmi.MarshalException;
-import java.rmi.UnmarshalException;
-import java.rmi.ServerException;
-import java.rmi.server.RemoteObject;
-import java.rmi.server.RemoteRef;
-
-//IIOP RMI
-import javax.rmi.PortableRemoteObject;
-import javax.rmi.CORBA.Stub;
-import org.omg.CORBA.portable.Delegate;
-
-// JNDI
+import javax.management.remote.JMXAddressable;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-
-import com.sun.jmx.remote.internal.ClientNotifForwarder;
-import com.sun.jmx.remote.internal.ClientCommunicatorAdmin;
-import com.sun.jmx.remote.internal.ClientListenerInfo;
-import com.sun.jmx.remote.internal.ProxyInputStream;
-import com.sun.jmx.remote.internal.ProxyRef;
-import com.sun.jmx.remote.util.ClassLogger;
-import com.sun.jmx.remote.util.EnvHelp;
-
-// SECURITY
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.security.PrivilegedExceptionAction;
-import java.security.ProtectionDomain;
+import javax.rmi.CORBA.Stub;
+import javax.rmi.PortableRemoteObject;
+import javax.rmi.ssl.SslRMIClientSocketFactory;
 import javax.security.auth.Subject;
+import org.omg.CORBA.BAD_OPERATION;
+import org.omg.CORBA.ORB;
+import sun.rmi.server.UnicastRef2;
+import sun.rmi.transport.LiveRef;
 
 /**
  * <p>A connection to a remote RMI connector.  Usually, such
@@ -116,7 +100,7 @@ import javax.security.auth.Subject;
  * @since 1.5
  * @since.unbundled 1.0
  */
-public class RMIConnector implements JMXConnector, Serializable {
+public class RMIConnector implements JMXConnector, Serializable, JMXAddressable {
 
     private static final ClassLogger logger =
 	new ClassLogger("javax.management.remote.rmi", "RMIConnector");
@@ -222,6 +206,18 @@ public class RMIConnector implements JMXConnector, Serializable {
         return b.toString();
     }
 
+    /**
+     * <p>The address of this connector.</p>
+     *
+     * @return the address of this connector, or null if it
+     * does not have one.
+     *
+     * @since 1.6
+     */ 
+    public JMXServiceURL getAddress() {
+	return jmxServiceURL;
+    }
+
     //--------------------------------------------------------------------
     // implements JMXConnector interface
     //--------------------------------------------------------------------
@@ -259,6 +255,14 @@ public class RMIConnector implements JMXConnector, Serializable {
             RMIServer stub = (rmiServer!=null)?rmiServer:
                 findRMIServer(jmxServiceURL, usemap);
 
+            // Check for secure RMIServer stub if the corresponding
+            // client-side environment property is set to "true".
+            //
+            boolean checkStub = EnvHelp.computeBooleanFromString(
+                usemap,
+                "jmx.remote.x.check.stub");
+            if (checkStub) checkStub(stub, rmiServerImplStubClass);
+
             // Connect IIOP Stub if needed.
 	    if (tracing) logger.trace("connect",idstr + " connecting stub...");
             stub = connectStub(stub,usemap);
@@ -268,7 +272,24 @@ public class RMIConnector implements JMXConnector, Serializable {
 	    if (tracing) 
 		logger.trace("connect",idstr + " getting connection...");
 	    Object credentials = usemap.get(CREDENTIALS);
-            connection = getConnection(stub, credentials);
+
+	    try {
+		connection = getConnection(stub, credentials, checkStub);
+	    } catch (java.rmi.RemoteException re) {
+		if (jmxServiceURL != null) {
+		    final String pro = jmxServiceURL.getProtocol();
+		    final String path = jmxServiceURL.getURLPath();
+
+		    if ("rmi".equals(pro) &&
+		        path.startsWith("/jndi/iiop:")) {
+		        MalformedURLException mfe = new MalformedURLException(
+			      "Protocol is rmi but JNDI scheme is iiop: " + jmxServiceURL);
+		        mfe.initCause(re);
+		        throw mfe;
+		    }
+		}
+		throw re;
+	    }
 
             // Always use one of:
             //   ClassLoader provided in Map at connect time,
@@ -297,7 +318,7 @@ public class RMIConnector implements JMXConnector, Serializable {
 		new JMXConnectionNotification(JMXConnectionNotification.OPENED,
 					      this,
 					      connectionId,
-					      clientNotifID++,
+					      clientNotifSeqNo++,
 					      "Successful connection",
 					      null);
 	    sendNotification(connectedNotif);
@@ -314,7 +335,7 @@ public class RMIConnector implements JMXConnector, Serializable {
         } catch (NamingException e) {
             final String msg = "Failed to retrieve RMIServer stub: " + e;
 	    if (tracing) logger.trace("connect",idstr + " " + msg);
-            throw (IOException) EnvHelp.initCause(new IOException(msg),e);
+            throw EnvHelp.initCause(new IOException(msg),e);
         }
     }
 
@@ -400,16 +421,16 @@ public class RMIConnector implements JMXConnector, Serializable {
 	close(false);
     }
 
-    // allows to do close after setting the flag "terminated" to true. 
-    // It is necessary to avoid a deadlock, see 6296324 
-    private synchronized void close(boolean intern) throws IOException {
+    // allows to do close after setting the flag "terminated" to true.
+    // It is necessary to avoid a deadlock, see 6296324
+    private synchronized void close(boolean intern) throws IOException {			   
 	final boolean tracing = logger.traceOn();
 	final boolean debug   = logger.debugOn();
 	final String  idstr   = (tracing?"["+this.toString()+"]":null);
 
-	if (!intern) { 
-	    // Return if already cleanly closed. 
-	    // 	    
+	if (!intern) {
+	    // Return if already cleanly closed.
+	    //
 	    if (terminated) {
 		if (closeException == null) {
 		    if (tracing) logger.trace("close",idstr + " already closed.");
@@ -482,7 +503,7 @@ public class RMIConnector implements JMXConnector, Serializable {
 		new JMXConnectionNotification(JMXConnectionNotification.CLOSED,
 					      this,
 					      savedConnectionId,
-					      clientNotifID++,
+					      clientNotifSeqNo++,
 					      "Client has been closed",
 					      null);
 	    sendNotification(closedNotif);
@@ -499,7 +520,7 @@ public class RMIConnector implements JMXConnector, Serializable {
 		throw (RuntimeException) closeException;
 	    final IOException x =
 		new IOException("Failed to close: " + closeException);
-	    throw (IOException) EnvHelp.initCause(x,closeException);
+	    throw EnvHelp.initCause(x,closeException);
 	}
     }
 
@@ -1350,7 +1371,8 @@ public class RMIConnector implements JMXConnector, Serializable {
 	    sFilter = new MarshalledObject(clientFilter);
 
 	    Integer[] listenerIDs;
-	    final ObjectName[] names = new ObjectName[] {delegateName};
+	    final ObjectName[] names =
+                new ObjectName[] {MBeanServerDelegate.DELEGATE_NAME};
 	    final MarshalledObject[] filters =
 		new MarshalledObject[] {sFilter};
 	    final Subject[] subjects = new Subject[] {null};
@@ -1375,15 +1397,17 @@ public class RMIConnector implements JMXConnector, Serializable {
 		throws IOException, InstanceNotFoundException,
 		       ListenerNotFoundException {
 	    try {
-		connection.removeNotificationListeners(delegateName,
-						       new Integer[] {id},
-						       null);
+		connection.removeNotificationListeners(
+                                             MBeanServerDelegate.DELEGATE_NAME,
+					     new Integer[] {id},
+					     null);
 	    } catch (IOException ioe) {
 		communicatorAdmin.gotIOException(ioe);
 
-		connection.removeNotificationListeners(delegateName,
-						       new Integer[] {id},
-						       null);
+		connection.removeNotificationListeners(
+                                             MBeanServerDelegate.DELEGATE_NAME,
+					     new Integer[] {id},
+					     null);
 	    }
 
 	}
@@ -1419,16 +1443,16 @@ public class RMIConnector implements JMXConnector, Serializable {
             try {
 		connection.getDefaultDomain(null);
 	    } catch (IOException ioexc) {
-		boolean toClose = false;
+	        boolean toClose = false;
 
 		synchronized(this) {
 		    if (!terminated) {
 			terminated = true;
-			
-			toClose = true;
-		    }
-		}
 
+			toClose = true;
+		    }	
+		}    	    
+ 
 		if (toClose) {
 		    // we should close the connection,
 		    // but send a failed notif at first
@@ -1437,10 +1461,10 @@ public class RMIConnector implements JMXConnector, Serializable {
 			    JMXConnectionNotification.FAILED,
 			    this,
 			    connectionId,
-			    clientNotifID++,
+			    clientNotifSeqNo++,
 			    "Failed to communicate with the server: "+ioe.toString(),
 			    ioe);
-		    
+
 		    sendNotification(failedNotif);
 
 		    try {
@@ -1582,7 +1606,7 @@ public class RMIConnector implements JMXConnector, Serializable {
 		new JMXConnectionNotification(JMXConnectionNotification.OPENED,
 					      this,
 					      connectionId,
-					      clientNotifID++,
+					      clientNotifSeqNo++,
 					      "Reconnected to server",
 					      null);
 	    sendNotification(reconnectedNotif);
@@ -1605,7 +1629,7 @@ public class RMIConnector implements JMXConnector, Serializable {
     //--------------------------------------------------------------------
     /**
      * <p>In order to be usable, an IIOP stub must be connected to an ORB.
-     * The stub is automagically connected to the ORB if:
+     * The stub is automatically connected to the ORB if:
      * <ul>
      *     <li> It was returned by the COS naming</li>
      *     <li> Its server counterpart has been registered in COS naming
@@ -1653,7 +1677,7 @@ public class RMIConnector implements JMXConnector, Serializable {
             javax.rmi.CORBA.Stub stub = (javax.rmi.CORBA.Stub) rmiServer;
             try {
                 stub._orb();
-            } catch (org.omg.CORBA.BAD_OPERATION x) {
+            } catch (BAD_OPERATION x) {
                 stub.connect(resolveOrb(environment));
             }
         }
@@ -1681,25 +1705,25 @@ public class RMIConnector implements JMXConnector, Serializable {
      *      does not point to an {@link org.omg.CORBA.ORB ORB}.
      * @exception IOException if the ORB initialization failed.
      **/
-    static org.omg.CORBA.ORB resolveOrb(Map environment)
+    static ORB resolveOrb(Map environment)
         throws IOException {
         if (environment != null) {
             final Object orb = environment.get(EnvHelp.DEFAULT_ORB);
-            if (orb != null && !(orb instanceof  org.omg.CORBA.ORB))
+            if (orb != null && !(orb instanceof  ORB))
                 throw new IllegalArgumentException(EnvHelp.DEFAULT_ORB +
                           " must be an instance of org.omg.CORBA.ORB.");
-            if (orb != null) return (org.omg.CORBA.ORB)orb;
+            if (orb != null) return (ORB)orb;
         }
-        final Object orb =
+        final ORB orb =
             (RMIConnector.orb==null)?null:RMIConnector.orb.get();
-        if (orb != null) return (org.omg.CORBA.ORB)orb;
+        if (orb != null) return orb;
 
-        final org.omg.CORBA.ORB newOrb =
-            org.omg.CORBA.ORB.init((String[])null, (Properties)null);
+        final ORB newOrb =
+            ORB.init((String[])null, (Properties)null);
         RMIConnector.orb = new WeakReference(newOrb);
         return newOrb;
     }
-
+    
     /**
      * Read RMIConnector fields from an {@link java.io.ObjectInputStream
      * ObjectInputStream}.
@@ -1767,6 +1791,51 @@ public class RMIConnector implements JMXConnector, Serializable {
         terminated = false;
 
 	connectionBroadcaster = new NotificationBroadcasterSupport();
+    }
+
+    //--------------------------------------------------------------------
+    // Private stuff - Check if stub can be trusted.
+    //--------------------------------------------------------------------
+
+    private static void checkStub(Remote stub,
+                                  Class<? extends Remote> stubClass) {
+
+        // Check remote stub is from the expected class.
+        //
+        if (stub.getClass() != stubClass) {
+            if (!Proxy.isProxyClass(stub.getClass())) {
+                throw new SecurityException(
+                          "Expecting a " + stubClass.getName() + " stub!");
+            } else {
+                InvocationHandler handler = Proxy.getInvocationHandler(stub);
+                if (handler.getClass() != RemoteObjectInvocationHandler.class)
+                    throw new SecurityException(
+                              "Expecting a dynamic proxy instance with a " +
+                              RemoteObjectInvocationHandler.class.getName() +
+                              " invocation handler!");
+                else
+                    stub = (Remote) handler;
+            }
+        }
+
+        // Check RemoteRef in stub is from the expected class
+        // "sun.rmi.server.UnicastRef2".
+        //
+        RemoteRef ref = ((RemoteObject)stub).getRef();
+        if (ref.getClass() != UnicastRef2.class)
+            throw new SecurityException(
+                      "Expecting a " + UnicastRef2.class.getName() +
+                      " remote reference in stub!");
+
+        // Check RMIClientSocketFactory in stub is from the expected class
+        // "javax.rmi.ssl.SslRMIClientSocketFactory".
+        //
+        LiveRef liveRef = ((UnicastRef2)ref).getLiveRef();
+        RMIClientSocketFactory csf = liveRef.getClientSocketFactory();
+        if (csf == null || csf.getClass() != SslRMIClientSocketFactory.class)
+            throw new SecurityException(
+                  "Expecting a " + SslRMIClientSocketFactory.class.getName() +
+                  " RMI client socket factory in stub!");
     }
 
     //--------------------------------------------------------------------
@@ -1843,7 +1912,7 @@ public class RMIConnector implements JMXConnector, Serializable {
 
     private RMIServer findRMIServerIIOP(String ior, Map env, boolean isIiop) {
 	// could forbid "rmi:" URL here -- but do we need to?
-	final org.omg.CORBA.ORB orb = (org.omg.CORBA.ORB)
+	final ORB orb = (ORB)
 	    env.get(EnvHelp.DEFAULT_ORB);
 	final Object stub = orb.string_to_object(ior);
 	return (RMIServer) PortableRemoteObject.narrow(stub, RMIServer.class);
@@ -1956,6 +2025,9 @@ public class RMIConnector implements JMXConnector, Serializable {
 	}
      */
 
+    private static final String rmiServerImplStubClassName =
+        RMIServer.class.getName() + "Impl_Stub";
+    private static final Class rmiServerImplStubClass;
     private static final String rmiConnectionImplStubClassName =
 	RMIConnection.class.getName() + "Impl_Stub";
     private static final Class rmiConnectionImplStubClass;
@@ -1995,6 +2067,18 @@ public class RMIConnector implements JMXConnector, Serializable {
 	    }
 	};
 
+        Class serverStubClass;
+        try {
+            serverStubClass = Class.forName(rmiServerImplStubClassName);
+        } catch (Exception e) {
+            logger.error("<clinit>",
+                         "Failed to instantiate " +
+                         rmiServerImplStubClassName + ": " + e);
+            logger.debug("<clinit>",e);
+            serverStubClass = null;
+        }
+        rmiServerImplStubClass = serverStubClass;
+
 	Class stubClass;
 	Constructor constr;
 	try {
@@ -2002,7 +2086,7 @@ public class RMIConnector implements JMXConnector, Serializable {
 	    constr = (Constructor) AccessController.doPrivileged(action);
 	} catch (Exception e) {
 	    logger.error("<clinit>", 
-			 "Failed to initialize proxy reference consructor "+
+			 "Failed to initialize proxy reference constructor "+
 			 "for " + rmiConnectionImplStubClassName + ": " + e);
 	    logger.debug("<clinit>",e);
 	    stubClass = null;
@@ -2143,8 +2227,10 @@ public class RMIConnector implements JMXConnector, Serializable {
 
 
      */
-    private static final String iiopConnectionStubClassName =
+    private static final String iiopConnectionStubClassName1 =
 	"org.omg.stub.javax.management.remote.rmi._RMIConnection_Stub";
+    private static final String iiopConnectionStubClassName2 =
+	"javax.management.remote.rmi._RMIConnection_Stub";
     private static final String proxyStubClassName =
 	"com.sun.jmx.remote.internal.ProxyStub";
     private static final String pInputStreamClassName =
@@ -2196,7 +2282,8 @@ public class RMIConnector implements JMXConnector, Serializable {
 	final String[] classNames={proxyStubClassName, pInputStreamClassName};
 	final byte[][] byteCodes = {proxyStubByteCode, pInputStreamByteCode};
 	final String[] otherClassNames = {
-	    iiopConnectionStubClassName,
+	    iiopConnectionStubClassName1,
+            iiopConnectionStubClassName2, 
 	    ProxyInputStream.class.getName(),
 	};
 	PrivilegedExceptionAction action = new PrivilegedExceptionAction() {
@@ -2234,13 +2321,18 @@ public class RMIConnector implements JMXConnector, Serializable {
     }
 
     private static RMIConnection getConnection(RMIServer server,
-					       Object credentials)
+                                               Object credentials,
+                                               boolean checkStub)
 	    throws IOException {
 	RMIConnection c = server.newClient(credentials);
+
+        if (checkStub) checkStub(c, rmiConnectionImplStubClass);
 	try {
 	    if (c.getClass() == rmiConnectionImplStubClass)
 		return shadowJrmpStub((RemoteObject) c);
-	    if (c.getClass().getName().equals(iiopConnectionStubClassName))
+            String name = c.getClass().getName();
+	    if (name.equals(iiopConnectionStubClassName1) ||
+                    name.equals(iiopConnectionStubClassName2)) 
 		return shadowIiopStub((Stub) c);
 	    logger.trace("getConnection",
 			 "Did not wrap " + c.getClass() + " to foil " +
@@ -2403,7 +2495,7 @@ public class RMIConnector implements JMXConnector, Serializable {
     private transient RMIConnection connection;
     private transient String connectionId;
 
-    private long clientNotifID = 0;
+    private transient long clientNotifSeqNo = 0;
 
     private transient WeakHashMap rmbscMap;
 
@@ -2422,24 +2514,12 @@ public class RMIConnector implements JMXConnector, Serializable {
     private transient NotificationBroadcasterSupport connectionBroadcaster;
 
     private transient ClientCommunicatorAdmin communicatorAdmin;
-
+    
     /**
      * A static WeakReference to an {@link org.omg.CORBA.ORB ORB} to
      * connect unconnected stubs.
      **/
-    private static WeakReference orb = null;
-
-    private static final ObjectName delegateName;
-    static {
-	try {
-	    delegateName =
-		new ObjectName("JMImplementation:type=MBeanServerDelegate");
-	} catch (MalformedObjectNameException e) {
-	    Error error = new Error("Can't initialize delegateName");
-	    EnvHelp.initCause(error, e);
-	    throw error;
-	}
-    }
+    private static WeakReference<ORB> orb = null;
 
     // TRACES & DEBUG
     //---------------

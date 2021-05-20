@@ -1,8 +1,8 @@
 /*
- * @(#)ExtendedRequest.java	1.9 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.naming.ldap;
@@ -61,7 +61,7 @@ import javax.naming.NamingException;
   * @author Rosanna Lee
   * @author Scott Seligman
   * @author Vincent Ryan
-  * @version 1.9 03/12/19
+  * @version %I% %E%
   *
   * @see ExtendedResponse
   * @see LdapContext#extendedOperation

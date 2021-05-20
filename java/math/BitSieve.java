@@ -1,10 +1,10 @@
 /*
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 /*
- * @(#)BitSieve.java	1.10 03/12/19
+ * %W% %E%
  */
 
 package java.math;
@@ -25,7 +25,7 @@ package java.math;
  * index of a bit in the sieve array.
  *
  * @see     BigInteger
- * @version 1.10, 12/19/03
+ * @version 1.13, 11/07/08
  * @author  Michael McCloskey
  * @since   1.3
  */
@@ -95,13 +95,11 @@ class BitSieve {
         int convertedStep = (step *2) + 1;
 
         // Construct the large sieve at an even offset specified by base
-        MutableBigInteger r = new MutableBigInteger();
+        MutableBigInteger b = new MutableBigInteger(base);
         MutableBigInteger q = new MutableBigInteger();
         do {
             // Calculate base mod convertedStep
-            r.copyValue(base.mag);
-            r.divideOneWord(convertedStep, q);
-            start = r.value[r.offset];
+            start = b.divideOneWord(convertedStep, q);
 
             // Take each multiple of step out of sieve
             start = convertedStep - start;
@@ -178,7 +176,7 @@ class BitSieve {
     /**
      * Test probable primes in the sieve and return successful candidates.
      */
-    BigInteger retrieve(BigInteger initValue, int certainty) {
+    BigInteger retrieve(BigInteger initValue, int certainty, java.util.Random random) {
         // Examine the sieve one long at a time to find possible primes
         int offset = 1;
         for (int i=0; i<bits.length; i++) {
@@ -187,7 +185,7 @@ class BitSieve {
                 if ((nextLong & 1) == 1) {
                     BigInteger candidate = initValue.add(
                                            BigInteger.valueOf(offset));
-                    if (candidate.primeToCertainty(certainty))
+                    if (candidate.primeToCertainty(certainty, random))
                         return candidate;
                 }
                 nextLong >>>= 1;

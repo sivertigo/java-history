@@ -1,8 +1,8 @@
 /*
- * @(#)MotifInternalFrameTitlePane.java	1.32 04/04/15
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.java.swing.plaf.motif;
@@ -21,7 +21,7 @@ import java.beans.PropertyVetoException;
 
 /**
  * Class that manages a Motif title bar
- * @version 1.32 04/15/04
+ * @version %I% %G%
  *
  * @since 1.3
  */
@@ -92,6 +92,10 @@ public class MotifInternalFrameTitlePane
 
         systemButton.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent evt) {
+                try {
+                    frame.setSelected(true);
+                } catch (PropertyVetoException pve) {
+                }
                 if ((evt.getClickCount() == 2)) {
                     closeAction.actionPerformed(new
                         ActionEvent(evt.getSource(),
@@ -329,7 +333,9 @@ public class MotifInternalFrameTitlePane
         void forwardEventToParent(MouseEvent e) {
             getParent().dispatchEvent(new MouseEvent(
                 getParent(), e.getID(), e.getWhen(), e.getModifiers(),
-                e.getX(), e.getY(), e.getClickCount(), e.isPopupTrigger()));
+                e.getX(), e.getY(),  e.getXOnScreen(),
+                e.getYOnScreen(), e.getClickCount(),
+                e.isPopupTrigger(),  MouseEvent.NOBUTTON));
         }
 
         public void paintComponent(Graphics g) {

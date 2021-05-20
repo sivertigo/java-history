@@ -1,8 +1,8 @@
 /*
- * @(#)CORBALogDomains.java	1.2 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, 2012, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.corba.se.spi.logging ;
@@ -40,7 +40,7 @@ public abstract class CORBALogDomains {
     private CORBALogDomains() {}
 
     // Top level log domain for CORBA
-    public static String TOP_LEVEL_DOMAIN  = "javax.enterprise.resource.corba";
+    public static final String TOP_LEVEL_DOMAIN  = "javax.enterprise.resource.corba";
 
     public static final String RPC		= "rpc" ;
 

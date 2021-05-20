@@ -1,8 +1,8 @@
 /*
- * @(#)GarbageCollectorMXBean.java	1.9 04/04/20
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang.management;
@@ -41,7 +41,7 @@ package java.lang.management;
  *      Ways to Access MXBeans</a>
  *
  * @author  Mandy Chung
- * @version 1.9, 04/20/04 
+ * @version %I%, %G% 
  * @since   1.5
  */
 public interface GarbageCollectorMXBean extends MemoryManagerMXBean {

@@ -1,8 +1,8 @@
 /*
- * @(#)StateEngineFactory.java	1.8 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.corba.se.spi.orbutil.fsm;
@@ -12,7 +12,7 @@ import com.sun.corba.se.impl.orbutil.fsm.StateEngineImpl ;
 /**
  * Factory for creating the standard state machine implementation.
  *
- * @version @(#)StateEngineFactory.java	1.8 03/12/19
+ * @version %W% %E%
  * @author Ken Cavanaugh
  */
 public class StateEngineFactory {

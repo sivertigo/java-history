@@ -1,45 +1,37 @@
 /*
- * @(#)ClassFormatError.java	1.10 95/08/11  
+ * %W% %E%
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang;
 
 /**
- * Signals an invalid file format has occurred.
- * @version 	1.10, 08/11/95
+ * Thrown when the Java Virtual Machine attempts to read a class 
+ * file and determines that the file is malformed or otherwise cannot 
+ * be interpreted as a class file. 
+ *
+ * @author  unascribed
+ * @version %I%, %G%
+ * @since   JDK1.0
  */
 public
 class ClassFormatError extends LinkageError {
     /**
-     * Constructs a ClassFormatError with no detail message.  A detail message
-     * is a String that describes this particular exception.
+     * Constructs a <code>ClassFormatError</code> with no detail message. 
      */
     public ClassFormatError() {
 	super();
     }
 
     /**
-     * Constructs a ClassFormatError with the specified detail message.
-     * A detail message is a String that describes this particular exception.
-     * @param s the String containing the detail message
+     * Constructs a <code>ClassFormatError</code> with the specified 
+     * detail message. 
+     *
+     * @param   s   the detail message.
      */
     public ClassFormatError(String s) {
 	super(s);
     }
 }
-

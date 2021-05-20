@@ -1,8 +1,8 @@
 /*
- * @(#)FontFormatException.java	1.8 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.awt;
@@ -12,12 +12,17 @@ package java.awt;
  * that the specified font is bad. 
  *
  * @author  Parry Kejriwal
- * @version 1.8, 12/19/03
+ * @version %I%, %G%
  * @see     java.awt.Font
  * @since   1.3
  */
 public
 class FontFormatException extends Exception {
+    /*
+     * serialVersionUID
+     */
+    private static final long serialVersionUID = -4481290147811361272L;
+
     /**
      * Report a FontFormatException for the reason specified.
      * @param reason a <code>String</code> message indicating why

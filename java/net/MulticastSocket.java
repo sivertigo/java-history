@@ -1,8 +1,8 @@
 /*
- * @(#)MulticastSocket.java	1.71 04/05/18
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.net;
@@ -264,6 +264,7 @@ class MulticastSocket extends DatagramSocket {
             throw new SocketException("Socket is closed");
         }
 
+	checkAddress(mcastaddr, "joinGroup");
         SecurityManager security = System.getSecurityManager();
         if (security != null) {
             security.checkMulticast(mcastaddr);
@@ -297,7 +298,7 @@ class MulticastSocket extends DatagramSocket {
         if (isClosed()) {
             throw new SocketException("Socket is closed");
         }
-
+	checkAddress(mcastaddr, "joinGroup");
         SecurityManager security = System.getSecurityManager();
         if (security != null) {
             security.checkMulticast(mcastaddr);
@@ -345,6 +346,7 @@ class MulticastSocket extends DatagramSocket {
 	if (oldImpl)
 	    throw new UnsupportedOperationException();
 
+	checkAddress(((InetSocketAddress)mcastaddr).getAddress(), "joinGroup");
 	SecurityManager security = System.getSecurityManager();
 	if (security != null) {
 	    security.checkMulticast(((InetSocketAddress)mcastaddr).getAddress());
@@ -391,6 +393,7 @@ class MulticastSocket extends DatagramSocket {
 	if (oldImpl)
 	    throw new UnsupportedOperationException();
 
+	checkAddress(((InetSocketAddress)mcastaddr).getAddress(), "leaveGroup");
 	SecurityManager security = System.getSecurityManager();
 	if (security != null) {
 	    security.checkMulticast(((InetSocketAddress)mcastaddr).getAddress());
@@ -416,6 +419,7 @@ class MulticastSocket extends DatagramSocket {
 	if (isClosed()) {
 	    throw new SocketException("Socket is closed");
 	}
+	checkAddress(inf, "setInterface");
 	synchronized (infLock) {
 	    getImpl().setOption(SocketOptions.IP_MULTICAST_IF, inf);
 	    infAddress = inf;
@@ -607,6 +611,7 @@ class MulticastSocket extends DatagramSocket {
         throws IOException {
 	    if (isClosed())
 		throw new SocketException("Socket is closed");
+	    checkAddress(p.getAddress(), "send");
             synchronized(ttlLock) {
                 synchronized(p) {
 		    if (connectState == ST_NOT_CONNECTED) {

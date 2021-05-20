@@ -1,9 +1,9 @@
 /*
- * @(#)UnsupportedCharsetException.java	1.2 01/09/17
+ * @(#)UnsupportedCharsetException.java	%I% %E%
  *
- * Copyright 2000 by Sun Microsystems, Inc.  All Rights Reserved.
+ * Copyright (c) 2000, Oracle and/or its affiliates. All rights reserved.
  * 
- * This software is the proprietary information of Sun Microsystems, Inc.  
+ * This software is the proprietary information of Oracle.
  * Use is subject to license terms.
  */
 
@@ -16,7 +16,7 @@ package java.nio.charset;
  * Unchecked exception thrown when no support is available
  * for a requested charset.
  *
- * @version 1.2, 01/09/17
+ * @version %I%, %E%
  * @since 1.4
  */
 

@@ -1,13 +1,13 @@
 /*
- * @(#)NamingContextImpl.java	1.17 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 /*
  * @(#)NamingContextImpl.java 1.4 00/02/07
  *
- * Copyright 1993-1997 Sun Microsystems, Inc. 901 San Antonio Road,
+ * Copyright (c) 1993, 1997, Oracle and/or its affiliates. All rights reserved. 901 San Antonio Road,
  * Palo Alto, California, 94303, U.S.A.  All Rights Reserved.
  *
  * This software is the confidential and proprietary information of Sun

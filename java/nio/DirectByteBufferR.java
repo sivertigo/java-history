@@ -1,8 +1,6 @@
 /*
- * @(#)Direct-X-Buffer.java	1.48 04/05/03
- *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2000, 2011, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 // -- This file was mechanically generated: Do not edit! -- //
@@ -23,6 +21,10 @@ class DirectByteBufferR
 
     implements DirectBuffer
 {
+
+
+
+
 
 
 
@@ -110,9 +112,21 @@ class DirectByteBufferR
 
 
 
+
 	super(cap);
 
     }
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -190,6 +204,8 @@ class DirectByteBufferR
 	return duplicate();
 
     }
+
+
 
 
 
@@ -322,6 +338,8 @@ class DirectByteBufferR
 
 
 
+
+
 	throw new ReadOnlyBufferException();
 
     }
@@ -351,6 +369,8 @@ class DirectByteBufferR
     }
 
 
+
+
 
 
 

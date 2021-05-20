@@ -1,10 +1,10 @@
 /*
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 /*
- * @(#)SignedMutableBigInteger.java	1.9 03/12/19
+ * %W% %E%
  */
 
 package java.math;
@@ -24,7 +24,7 @@ package java.math;
  * subtraction. All other operations occur as with MutableBigIntegers.
  * 
  * @see     BigInteger
- * @version 1.9, 12/19/03
+ * @version 1.11, 11/07/08
  * @author  Michael McCloskey
  * @since   1.3
  */
@@ -114,9 +114,7 @@ class SignedMutableBigInteger extends MutableBigInteger {
      * array starting at offset.
      */
     public String toString() {
-        BigInteger b = new BigInteger(this, sign);
-        return
-            b.toString();
+        return this.toBigInteger(sign).toString();
     }
 
 }

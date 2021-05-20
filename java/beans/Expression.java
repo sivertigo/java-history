@@ -1,8 +1,8 @@
 /*
- * @(#)Expression.java	1.13 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.beans; 
@@ -84,7 +84,7 @@ public class Expression extends Statement {
      * replaces this default value in the same way that any other value 
      * would, ensuring that expressions are never evaluated more than once. 
      * <p>
-     * See the <code>excecute<code> method for details on how 
+     * See the <code>excecute</code> method for details on how 
      * methods are chosen using the dynamic types of the target 
      * and arguments. 
      * 

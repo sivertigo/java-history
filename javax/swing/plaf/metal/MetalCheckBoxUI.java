@@ -1,8 +1,8 @@
 /*
- * @(#)MetalCheckBoxUI.java	1.19 09/07/30
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing.plaf.metal;
@@ -30,7 +30,7 @@ import java.io.Serializable;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
- * @version 1.19 07/30/09
+ * @version %I% %G%
  * @author Michael C. Albers
  *
  */
@@ -41,7 +41,7 @@ public class MetalCheckBoxUI extends MetalRadioButtonUI {
     // painting changes made in MetalRadioButtonUI.
 
     private static final Object METAL_CHECK_BOX_UI_KEY = new Object();
-	
+
     private final static String propertyPrefix = "CheckBox" + ".";
 
     private boolean defaults_initialized = false;

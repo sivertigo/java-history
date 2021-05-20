@@ -1,8 +1,8 @@
 /*
- * @(#)UnsupportedOperationException.java	1.19 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang;
@@ -11,11 +11,11 @@ package java.lang;
  * Thrown to indicate that the requested operation is not supported.<p>
  *
  * This class is a member of the
- * <a href="{@docRoot}/../guide/collections/index.html">
+ * <a href="{@docRoot}/../technotes/guides/collections/index.html">
  * Java Collections Framework</a>.
  *
  * @author  Josh Bloch
- * @version 1.19, 12/19/03
+ * @version %I%, %G%
  * @since   1.2
  */
 public class UnsupportedOperationException extends RuntimeException {

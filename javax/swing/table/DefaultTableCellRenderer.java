@@ -1,8 +1,8 @@
 /*
- * @(#)DefaultTableCellRenderer.java	1.42 05/10/31
+ * %W% %E%
  *
- * Copyright 2005 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing.table;
@@ -16,6 +16,7 @@ import java.awt.Color;
 import java.awt.Rectangle;
 
 import java.io.Serializable;
+import sun.swing.DefaultLookup;
 
 
 /**
@@ -61,7 +62,7 @@ import java.io.Serializable;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
- * @version 1.42 10/31/05
+ * @version %I% %G%
  * @author Philip Milne 
  * @see JTable
  */
@@ -69,8 +70,15 @@ public class DefaultTableCellRenderer extends JLabel
     implements TableCellRenderer, Serializable
 {
 
-    protected static Border noFocusBorder = new EmptyBorder(1, 1, 1, 1); 
+   /**
+    * An empty <code>Border</code>. This field might not be used. To change the
+    * <code>Border</code> used by this renderer override the 
+    * <code>getTableCellRendererComponent</code> method and set the border
+    * of the returned component directly.
+    */
     private static final Border SAFE_NO_FOCUS_BORDER = new EmptyBorder(1, 1, 1, 1);
+    private static final Border DEFAULT_NO_FOCUS_BORDER = new EmptyBorder(1, 1, 1, 1);
+    protected static Border noFocusBorder = DEFAULT_NO_FOCUS_BORDER;
 
     // We need a place to store the color the JLabel should be returned 
     // to after its foreground and background colors have been set 
@@ -86,14 +94,20 @@ public class DefaultTableCellRenderer extends JLabel
 	super();
 	setOpaque(true);
         setBorder(getNoFocusBorder());
+        setName("Table.cellRenderer");
     }
 
-    private static Border getNoFocusBorder() {
+    private Border getNoFocusBorder() {
+        Border border = DefaultLookup.getBorder(this, ui, "Table.cellNoFocusBorder");
         if (System.getSecurityManager() != null) {
+            if (border != null) return border;
             return SAFE_NO_FOCUS_BORDER;
-        } else {
-            return noFocusBorder;
+        } else if (border != null) {
+            if (noFocusBorder == null || noFocusBorder == DEFAULT_NO_FOCUS_BORDER) {
+                return border;
+            }
         }
+        return noFocusBorder;
     }
 
     /**
@@ -136,6 +150,13 @@ public class DefaultTableCellRenderer extends JLabel
     /**
      *
      * Returns the default table cell renderer.
+     * <p>
+     * During a printing operation, this method will be called with
+     * <code>isSelected</code> and <code>hasFocus</code> values of
+     * <code>false</code> to prevent selection and focus from appearing
+     * in the printed output. To do other customization based on whether
+     * or not the table is being printed, check the return value from
+     * {@link javax.swing.JComponent#isPaintingForPrint()}.
      *
      * @param table  the <code>JTable</code>
      * @param value  the value to assign to the cell at
@@ -145,40 +166,66 @@ public class DefaultTableCellRenderer extends JLabel
      * @param row  the row of the cell to render
      * @param column the column of the cell to render
      * @return the default table cell renderer
+     * @see javax.swing.JComponent#isPaintingForPrint()
      */
     public Component getTableCellRendererComponent(JTable table, Object value,
                           boolean isSelected, boolean hasFocus, int row, int column) {
 
-	if (isSelected) {
-	   super.setForeground(table.getSelectionForeground());
-	   super.setBackground(table.getSelectionBackground());
+        Color fg = null;
+        Color bg = null;
+
+        JTable.DropLocation dropLocation = table.getDropLocation();
+        if (dropLocation != null
+                && !dropLocation.isInsertRow()
+                && !dropLocation.isInsertColumn()
+                && dropLocation.getRow() == row
+                && dropLocation.getColumn() == column) {
+
+            fg = DefaultLookup.getColor(this, ui, "Table.dropCellForeground");
+            bg = DefaultLookup.getColor(this, ui, "Table.dropCellBackground");
+
+            isSelected = true;
+        }
+
+        if (isSelected) {
+            super.setForeground(fg == null ? table.getSelectionForeground()
+                                           : fg);
+            super.setBackground(bg == null ? table.getSelectionBackground()
+                                           : bg);
+	} else {
+            Color background = unselectedBackground != null
+                                    ? unselectedBackground
+                                    : table.getBackground();
+            if (background == null || background instanceof javax.swing.plaf.UIResource) {
+                Color alternateColor = DefaultLookup.getColor(this, ui, "Table.alternateRowColor");
+                if (alternateColor != null && row % 2 == 0)
+                    background = alternateColor;
+            }
+            super.setForeground(unselectedForeground != null
+                                    ? unselectedForeground
+                                    : table.getForeground());
+            super.setBackground(background);
 	}
-	else {
-	    super.setForeground((unselectedForeground != null) ? unselectedForeground 
-	                                                       : table.getForeground());
-	    super.setBackground((unselectedBackground != null) ? unselectedBackground 
-	                                                       : table.getBackground());
-	}
-	
+
 	setFont(table.getFont());
 
 	if (hasFocus) {
             Border border = null;
             if (isSelected) {
-                border = UIManager.getBorder("Table.focusSelectedCellHighlightBorder");
+                border = DefaultLookup.getBorder(this, ui, "Table.focusSelectedCellHighlightBorder");
             }
             if (border == null) {
-                border = UIManager.getBorder("Table.focusCellHighlightBorder");
+                border = DefaultLookup.getBorder(this, ui, "Table.focusCellHighlightBorder");
             }
             setBorder(border);
 
 	    if (!isSelected && table.isCellEditable(row, column)) {
                 Color col;
-                col = UIManager.getColor("Table.focusCellForeground");
+                col = DefaultLookup.getColor(this, ui, "Table.focusCellForeground");
                 if (col != null) {
                     super.setForeground(col);
                 }
-                col = UIManager.getColor("Table.focusCellBackground");
+                col = DefaultLookup.getColor(this, ui, "Table.focusCellBackground");
                 if (col != null) {
                     super.setBackground(col);
                 }
@@ -211,6 +258,7 @@ public class DefaultTableCellRenderer extends JLabel
 	if (p != null) { 
 	    p = p.getParent(); 
 	}
+        
 	// p should now be the JTable. 
 	boolean colorMatch = (back != null) && (p != null) && 
 	    back.equals(p.getBackground()) && 
@@ -272,9 +320,15 @@ public class DefaultTableCellRenderer extends JLabel
      */
     protected void firePropertyChange(String propertyName, Object oldValue, Object newValue) {	
 	// Strings get interned...
-	if (propertyName=="text") {
-	    super.firePropertyChange(propertyName, oldValue, newValue);
-	}
+	if (propertyName=="text"
+                || propertyName == "labelFor"
+                || propertyName == "displayedMnemonic"
+                || ((propertyName == "font" || propertyName == "foreground")
+                    && oldValue != newValue
+                    && getClientProperty(javax.swing.plaf.basic.BasicHTML.propertyKey) != null)) {
+
+            super.firePropertyChange(propertyName, oldValue, newValue);
+        }
     }
 
     /**

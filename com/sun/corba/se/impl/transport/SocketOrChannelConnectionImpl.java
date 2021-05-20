@@ -1,8 +1,6 @@
 /*
- * @(#)SocketOrChannelConnectionImpl.java	1.92 07/08/23
- * 
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2009, 2012, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.corba.se.impl.transport;
@@ -793,12 +791,36 @@ public class SocketOrChannelConnectionImpl
 		    dprint(".close: " + this, e);
 		}
 	    }
+              closeConnectionResources();
 	} finally {
 	    if (orb.transportDebugFlag) {
 		dprint(".close<-: " + this);
 	    }
 	}
     }
+
+
+     public void closeConnectionResources() {
+           if (orb.transportDebugFlag) {
+               dprint(".closeConnectionResources->: " + this);
+           }
+           Selector selector = orb.getTransportManager().getSelector(0);
+           selector.unregisterForEvent(this);
+           try {
+             if (socketChannel != null)
+              socketChannel.close() ;
+                if (socket != null && !socket.isClosed())
+                socket.close() ;
+           } catch (IOException e) {
+             if (orb.transportDebugFlag) {
+                 dprint( ".closeConnectionResources: " + this, e ) ;
+             }
+           }
+           if (orb.transportDebugFlag) {
+               dprint(".closeConnectionResources<-: " + this);
+           }
+      }
+
 
     public Acceptor getAcceptor()
     {
@@ -1039,9 +1061,9 @@ public class SocketOrChannelConnectionImpl
             
             // IIOPOutputStream will cleanup the connection info when it
             // sees this exception.
-	    SystemException exc = wrapper.writeErrorSend(e1);
-	    purgeCalls(exc, false, true);
-	    throw exc;
+            SystemException exc = wrapper.writeErrorSend(e1); 
+            purgeCalls(exc, false, true); 
+            throw exc; 
         }
     }
 
@@ -1480,7 +1502,7 @@ public class SocketOrChannelConnectionImpl
 	    // connection and give them the SystemException;
 
 	    responseWaitingRoom.signalExceptionToAllWaiters(systemException);
-
+        } finally { 
 	    if (contactInfo != null) {
 		((OutboundConnectionCache)getConnectionCache()).remove(contactInfo);
 	    } else if (acceptor != null) {
@@ -1501,7 +1523,6 @@ public class SocketOrChannelConnectionImpl
 
 	    writeUnlock();
 
-	} finally {
 	    if (orb.transportDebugFlag) {
 		dprint(".purgeCalls<-: " 
 		       + minor_code + "/" + die + "/" + lockHeld

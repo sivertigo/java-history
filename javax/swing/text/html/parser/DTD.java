@@ -1,11 +1,13 @@
 /*
- * @(#)DTD.java	1.20 04/05/05
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, 2010 Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing.text.html.parser;
+
+import sun.awt.AppContext;
 
 import java.io.PrintStream;
 import java.io.File;
@@ -34,7 +36,7 @@ import java.net.URL;
  * @see ContentModel
  * @see Parser
  * @author Arthur van Hoff
- * @version 1.20 05/05/04
+ * @version %I% %G%
  */
 public
 class DTD implements DTDConstants {
@@ -108,8 +110,7 @@ class DTD implements DTDConstants {
      *   part of the DTD, otherwise returns <code>false</code>
      */
     boolean elementExists(String name) {
-	Element e = (Element)elementHash.get(name);
-	return ((e == null) ? false : true);
+        return !"unknown".equals(name) && (elementHash.get(name) != null);
     }
 
     /**
@@ -177,7 +178,7 @@ class DTD implements DTDConstants {
      *
      * @param name the name of the <code>Element</code>
      * @param type the type of the <code>Element</code>
-     * @param omitStart <code>true</code if start should be omitted
+     * @param omitStart <code>true</code> if start should be omitted
      * @param omitEnd  <code>true</code> if end should be omitted
      * @param content  the <code>ContentModel</code>
      * @param atts the <code>AttributeList</code> specifying the 
@@ -199,14 +200,11 @@ class DTD implements DTDConstants {
     }
 
     /**
-     * Returns the <code>Element</code> which matches the
-     * specified <code>AttributeList</code>. 
-     * If one doesn't exist, a new one is created and returned.
+     * Defines attributes for an {@code Element}.
      *
      * @param name the name of the <code>Element</code>
-     * @param atts the <code>AttributeList</code> specifying the 
+     * @param atts the <code>AttributeList</code> specifying the
      *    <code>Element</code>
-     * @return the <code>Element</code> specified
      */
     public void defineAttributes(String name, AttributeList atts) {
 	Element e = getElement(name);
@@ -303,13 +301,14 @@ class DTD implements DTDConstants {
     }
 
     /**
-     * The hashtable of DTDs.
+     * The hashtable key of DTDs in AppContext.
      */
-    static Hashtable dtdHash = new Hashtable();
+    private static final Object DTD_HASH_KEY = new Object();
 
-  public static void putDTDHash(String name, DTD dtd) {
-    dtdHash.put(name, dtd);
-  }
+    public static void putDTDHash(String name, DTD dtd) {
+        getDtdHash().put(name, dtd);
+    }
+
     /**
      * Returns a DTD with the specified <code>name</code>.  If
      * a DTD with that name doesn't exist, one is created
@@ -321,12 +320,28 @@ class DTD implements DTDConstants {
      */
     public static DTD getDTD(String name) throws IOException {
 	name = name.toLowerCase();
-	DTD dtd = (DTD)dtdHash.get(name);
+        DTD dtd = getDtdHash().get(name);
 	if (dtd == null)
 	  dtd = new DTD(name);
 
 	return dtd;
     }
+
+    private static Hashtable<String, DTD> getDtdHash() {
+        AppContext appContext = AppContext.getAppContext();
+
+        Hashtable<String, DTD> result = (Hashtable<String, DTD>) appContext.get(DTD_HASH_KEY);
+
+        if (result == null) {
+            result = new Hashtable<String, DTD>();
+
+            appContext.put(DTD_HASH_KEY, result);
+        }
+
+        return result;
+    }
+
+
 
     /**
      * Recreates a DTD from an archived format.

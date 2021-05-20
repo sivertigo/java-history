@@ -1,27 +1,37 @@
 /*
- * @(#)TextFieldPeer.java	1.5 95/08/07 Sami Shaio
+ * %W% %E%
  *
- * Copyright (c) 1995 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package java.awt.peer;
 
 import java.awt.Dimension;
 
+/**
+ * The peer interfaces are intended only for use in porting
+ * the AWT. They are not intended for use by application
+ * developers, and developers should not implement peers
+ * nor invoke any of the peer methods directly on the peer
+ * instances.
+ */
 public interface TextFieldPeer extends TextComponentPeer {
+    void setEchoChar(char echoChar);
+    Dimension getPreferredSize(int columns);
+    Dimension getMinimumSize(int columns);
+
+    /**
+     * DEPRECATED:  Replaced by setEchoChar(char echoChar).
+     */
     void setEchoCharacter(char c);
+
+    /**
+     * DEPRECATED:  Replaced by getPreferredSize(int).
+     */
     Dimension preferredSize(int cols);
+
+    /**
+     * DEPRECATED:  Replaced by getMinimumSize(int).
+     */
     Dimension minimumSize(int cols);
 }

@@ -1,8 +1,8 @@
 /*
- * @(#)ParserTable.java	1.50 05/01/04
+ * %W% %E%
  *
- * Copyright 2005 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, 2012, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.corba.se.impl.orb ;
@@ -88,7 +88,9 @@ public class ParserTable {
 
     public ParserData[] getParserData() 
     {
-	return parserData ;
+        ParserData[] parserArray = new ParserData[parserData.length];
+        System.arraycopy(parserData, 0, parserArray, 0, parserData.length);
+        return parserArray;
     }
 
     private ParserTable() {
@@ -330,6 +332,10 @@ public class ParserTable {
 	    ParserDataFactory.make( ORBConstants.SERVER_ID_PROPERTY, 
 		OperationFactory.setFlagAction(), 
 		"persistentServerIdInitialized", Boolean.FALSE,
+		Boolean.TRUE, "294" ),
+	    ParserDataFactory.make( ORBConstants.SERVER_ID_PROPERTY, 
+		OperationFactory.setFlagAction(), 
+		"orbServerIdPropertySpecified", Boolean.FALSE,
 		Boolean.TRUE, "294" ),
 	    ParserDataFactory.make( ORBConstants.ACTIVATED_PROPERTY, 
 		OperationFactory.booleanAction(), 

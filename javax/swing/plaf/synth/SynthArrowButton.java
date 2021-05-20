@@ -1,8 +1,8 @@
 /*
- * @(#)SynthArrowButton.java	1.15 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package javax.swing.plaf.synth;
 
@@ -13,7 +13,7 @@ import javax.swing.plaf.UIResource;
 /**
  * JButton object that draws a scaled Arrow in one of the cardinal directions.
  *
- * @version 1.15, 12/19/03
+ * @version %I%, %G%
  * @author Scott Violet
  */
 class SynthArrowButton extends JButton implements SwingConstants, UIResource {
@@ -21,7 +21,7 @@ class SynthArrowButton extends JButton implements SwingConstants, UIResource {
 
     public SynthArrowButton(int direction) {
         super();
-        setFocusable(false);
+        super.setFocusable(false);
         setDirection(direction);
         setDefaultCapable(false);
     }
@@ -44,7 +44,8 @@ class SynthArrowButton extends JButton implements SwingConstants, UIResource {
         return direction;
     }
 
-
+    public void setFocusable(boolean focusable) {} 
+    
     private static class SynthArrowButtonUI extends SynthButtonUI {
         protected void installDefaults(AbstractButton b) {
             super.installDefaults(b);
@@ -79,11 +80,48 @@ class SynthArrowButton extends JButton implements SwingConstants, UIResource {
 
         public Dimension getPreferredSize(JComponent c) {
             SynthContext context = getContext(c);
-            int size = context.getStyle().getInt(context, "ArrowButton.size",
-                                                 16);
+            Dimension dim = null;
+            if (context.getComponent().getName() == "ScrollBar.button") {
+                // ScrollBar arrow buttons can be non-square when
+                // the ScrollBar.squareButtons property is set to FALSE
+                // and the ScrollBar.buttonSize property is non-null
+                dim = (Dimension)
+                    context.getStyle().get(context, "ScrollBar.buttonSize");
+            }
+            if (dim == null) {
+                // For all other cases (including Spinner, ComboBox), we will
+                // fall back on the single ArrowButton.size value to create
+                // a square return value
+                int size =
+                    context.getStyle().getInt(context, "ArrowButton.size", 16);
+                dim = new Dimension(size, size);
+            }
+
+            // handle scaling for sizeVarients for special case components. The
+            // key "JComponent.sizeVariant" scales for large/small/mini
+            // components are based on Apples LAF
+            JComponent parent = (JComponent)context.getComponent().getParent();
+            if (parent != null && !(parent instanceof JComboBox)){
+                String scaleKey = (String)parent.getClientProperty("JComponent.sizeVariant");
+                if (scaleKey != null){
+                    if ("large".equals(scaleKey)){
+                        dim = new Dimension(
+                                (int)(dim.width * 1.15),
+                                (int)(dim.height * 1.15));
+                    } else if ("small".equals(scaleKey)){
+                        dim = new Dimension(
+                                (int)(dim.width * 0.857),
+                                (int)(dim.height * 0.857));
+                    } else if ("mini".equals(scaleKey)){
+                        dim = new Dimension(
+                                (int)(dim.width * 0.714),
+                                (int)(dim.height * 0.714));
+                    }
+                }
+            }
 
             context.dispose();
-            return new Dimension(size, size);
+            return dim;
         }
     }
 }

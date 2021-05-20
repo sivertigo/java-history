@@ -1,8 +1,8 @@
 /*
- * @(#)TOAFactory.java	1.17 03/12/19
+ * %W% %E%
  * 
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, 2012, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.corba.se.impl.oa.toa ;
@@ -60,8 +60,8 @@ public class TOAFactory implements ObjectAdapterFactory
 
     public void shutdown( boolean waitForCompletion )
     {
-	if (Util.instance != null) {
-	    Util.instance.unregisterTargetsForORB(orb);
+	if (Util.isInstanceDefined()) {
+            Util.getInstance().unregisterTargetsForORB(orb);
 	}
     }
 

@@ -1,8 +1,8 @@
 /*
- * @(#)MotifButtonUI.java	1.27 09/07/30
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
  
 package com.sun.java.swing.plaf.motif;
@@ -26,7 +26,7 @@ import javax.swing.plaf.*;
  * version of Swing.  A future release of Swing will provide support for
  * long term persistence.
  *
- * @version 1.27 07/30/09
+ * @version %I% %G%
  * @author Rich Schiavi
  */
 public class MotifButtonUI extends BasicButtonUI {
@@ -34,21 +34,21 @@ public class MotifButtonUI extends BasicButtonUI {
     protected Color selectColor; 
 
     private boolean defaults_initialized = false;
-   
+    
     private static final Object MOTIF_BUTTON_UI_KEY = new Object();
- 
+    
     // ********************************
     //          Create PLAF
     // ********************************
     public static ComponentUI createUI(JComponent c){
-	AppContext appContext = AppContext.getAppContext();
+        AppContext appContext = AppContext.getAppContext();
         MotifButtonUI motifButtonUI = 
                 (MotifButtonUI) appContext.get(MOTIF_BUTTON_UI_KEY);
         if (motifButtonUI == null) {
             motifButtonUI = new MotifButtonUI();
             appContext.put(MOTIF_BUTTON_UI_KEY, motifButtonUI);
         }
-	return motifButtonUI;
+        return motifButtonUI;
     }
     
     // ********************************

@@ -1,8 +1,8 @@
 /*
- * @(#)JSeparator.java	1.50 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing;
@@ -32,6 +32,11 @@ import java.io.IOException;
  href="http://java.sun.com/docs/books/tutorial/uiswing/components/menu.html">How to Use Menus</a>,
  * a section in <em>The Java Tutorial.</em>
  * <p>
+ * <strong>Warning:</strong> Swing is not thread safe. For more
+ * information see <a
+ * href="package-summary.html#threading">Swing's Threading
+ * Policy</a>.
+ * <p>
  * <strong>Warning:</strong>
  * Serialized objects of this class will not be compatible with
  * future Swing releases. The current serialization support is
@@ -45,7 +50,7 @@ import java.io.IOException;
  *      attribute: isContainer false
  *    description: A divider between menu items.
  *
- * @version 1.50 12/19/03
+ * @version %I% %G%
  * @author Georges Saab
  * @author Jeff Shapiro
  */

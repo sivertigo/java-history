@@ -1,8 +1,8 @@
 /*
- * @(#)SecureRandomSpi.java	1.11 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
  
 package java.security;
@@ -14,7 +14,7 @@ package java.security;
  * service provider who wishes to supply the implementation
  * of a cryptographically strong pseudo-random number generator.
  *
- * @version 1.11, 12/19/03
+ * @version %I%, %G%
  *
  * @see SecureRandom
  * @since 1.2
@@ -35,6 +35,11 @@ public abstract class SecureRandomSpi implements java.io.Serializable {
 
     /**
      * Generates a user-specified number of random bytes.
+     *
+     * <p> If a call to <code>engineSetSeed</code> had not occurred previously,
+     * the first call to this method forces this SecureRandom implementation
+     * to seed itself.  This self-seeding will not occur if
+     * <code>engineSetSeed</code> was previously called.
      * 
      * @param bytes the array to be filled in with random bytes.
      */

@@ -1,8 +1,8 @@
 /*
- * @(#)SelectorImpl.java	1.18 08/10/03
+ * %W% %E%
  * 
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.corba.se.impl.transport;
@@ -14,6 +14,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Iterator;
 import java.util.List;
 
@@ -42,13 +43,14 @@ public class SelectorImpl
     implements
 	com.sun.corba.se.pept.transport.Selector
 {
+
     private ORB orb;
     private Selector selector;
     private long timeout;
     private List deferredRegistrations;
     private List interestOpsList;
     private HashMap listenerThreads;
-    private HashMap readerThreads;
+    private Map readerThreads;
     private boolean selectorStarted;
     private volatile boolean closed;
     private ORBUtilSystemException wrapper ;
@@ -63,7 +65,7 @@ public class SelectorImpl
 	deferredRegistrations = new ArrayList();
 	interestOpsList = new ArrayList();
 	listenerThreads = new HashMap();
-	readerThreads = new HashMap();
+	readerThreads = java.util.Collections.synchronizedMap(new HashMap());
 	closed = false;
         wrapper = ORBUtilSystemException.get(orb,CORBALogDomains.RPC_TRANSPORT);
     }
@@ -160,8 +162,13 @@ public class SelectorImpl
 	}
 
 	if (eventHandler.shouldUseSelectThreadToWait()) {
-	    SelectionKey selectionKey = eventHandler.getSelectionKey();
-	    selectionKey.cancel();
+	    SelectionKey selectionKey; 
+            synchronized(deferredRegistrations) {   
+                 selectionKey = eventHandler.getSelectionKey();
+            }
+            if (selectionKey != null) {
+              selectionKey.cancel();
+            }
 	    selector.wakeup();
 	    return;
 	}

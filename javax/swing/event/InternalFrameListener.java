@@ -1,8 +1,8 @@
 /*
- * @(#)InternalFrameListener.java	1.12 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing.event;
@@ -21,7 +21,7 @@ import java.util.EventListener;
  *
  * @see java.awt.event.WindowListener
  *
- * @version 1.12 12/19/03
+ * @version %I% %G%
  * @author Thomas Ball
  */
 public interface InternalFrameListener extends EventListener {

@@ -1,8 +1,8 @@
 /*
- * @(#)CachedCodeBase.java	1.7 08/10/03
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.corba.se.impl.encoding;
@@ -14,11 +14,8 @@ import com.sun.org.omg.SendingContext.CodeBaseHelper;
 import com.sun.org.omg.SendingContext._CodeBaseImplBase;
 import com.sun.org.omg.SendingContext._CodeBaseStub;
 import com.sun.corba.se.spi.transport.CorbaConnection;
-
-import com.sun.corba.se.spi.ior.IOR ;
-
-import com.sun.corba.se.spi.orb.ORB ;
-
+import com.sun.corba.se.spi.ior.IOR;
+import com.sun.corba.se.spi.orb.ORB;
 /**
  * Provides the reading side with a per connection cache of
  * info obtained via calls to the remote CodeBase.
@@ -43,7 +40,7 @@ public class CachedCodeBase extends _CodeBaseImplBase
     private volatile CodeBase delegate;
     private CorbaConnection conn;
 
-    private static Object iorMapLock = new Object() ; 
+    private static Object iorMapLock = new Object();
     private static Hashtable<IOR,CodeBase> iorMap = 
         new Hashtable<IOR,CodeBase>();
 
@@ -171,6 +168,7 @@ public class CachedCodeBase extends _CodeBaseImplBase
 
             // Do we have a reference initialized by another connection?
             delegate = CachedCodeBase.iorMap.get( conn.getCodeBaseIOR());
+
             if (delegate != null)
                 return true;
             
@@ -178,7 +176,7 @@ public class CachedCodeBase extends _CodeBaseImplBase
             delegate = CodeBaseHelper.narrow(getObjectFromIOR());
             
             // Save it for the benefit of other connections
-            CachedCodeBase.iorMap.put(conn.getCodeBaseIOR(), delegate);
+	    CachedCodeBase.iorMap.put(conn.getCodeBaseIOR(), delegate);
         }
 
         // It's now safe to use the delegate

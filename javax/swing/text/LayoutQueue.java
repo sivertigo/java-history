@@ -1,8 +1,8 @@
 /*
- * @(#)LayoutQueue.java	1.8 09/06/05
+ * %W% %E%
  *
- * Copyright 2009 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package javax.swing.text;
 
@@ -13,14 +13,15 @@ import sun.awt.AppContext;
  * A queue of text layout tasks. 
  *
  * @author  Timothy Prinzing
- * @version 1.8 06/05/09
+ * @version %I% %G%
  * @see     AsyncBoxView
  * @since   1.3 
  */
 public class LayoutQueue {
 
     private static final Object DEFAULT_QUEUE = new Object();
-    private Vector<Runnable> tasks;
+
+    private Vector tasks;
     private Thread worker;
 
     /**
@@ -34,31 +35,26 @@ public class LayoutQueue {
      * Fetch the default layout queue.
      */
     public static LayoutQueue getDefaultQueue() {
-	AppContext ac = AppContext.getAppContext();
-	synchronized (DEFAULT_QUEUE) {
-	    LayoutQueue defaultQueue = (LayoutQueue) ac.get(DEFAULT_QUEUE);
-	    if (defaultQueue == null) {
-	        defaultQueue = new LayoutQueue();
-	        ac.put(DEFAULT_QUEUE, defaultQueue);
-	    }
-	    return defaultQueue;
+        AppContext ac = AppContext.getAppContext();
+        synchronized (DEFAULT_QUEUE) {
+            LayoutQueue defaultQueue = (LayoutQueue) ac.get(DEFAULT_QUEUE);
+            if (defaultQueue == null) {
+                defaultQueue = new LayoutQueue();
+                ac.put(DEFAULT_QUEUE, defaultQueue);
+            }
+            return defaultQueue;
 	}
     }
 
     /**
      * Set the default layout queue.
      *
-     * @param defaultQueue the new queue.
+     * @param q the new queue.
      */
-    public static void setDefaultQueue(LayoutQueue defaultQueue) {
-	synchronized (DEFAULT_QUEUE) {
-	    AppContext ac = AppContext.getAppContext();
-	    if (defaultQueue == null) {
-	        ac.remove(DEFAULT_QUEUE);
-	    } else {
-	        ac.put(DEFAULT_QUEUE, defaultQueue);
-	    }
-	}
+    public static void setDefaultQueue(LayoutQueue q) {
+        synchronized (DEFAULT_QUEUE) {
+            AppContext.getAppContext().put(DEFAULT_QUEUE, q);
+        }
     }
 
     /**

@@ -1,8 +1,8 @@
 /*
- * @(#)JPEGMetadata.java	1.27 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.imageio.plugins.jpeg;
@@ -472,7 +472,7 @@ public class JPEGMetadata extends IIOMetadata implements Cloneable {
                 }
                 break;
             case ColorSpace.TYPE_3CLR:
-                if (cs == JPEG.YCC) {
+                if (cs == JPEG.JCS.getYCC()) {
                     wantJFIF = false;
                     componentIDs[0] = (byte) 'Y';
                     componentIDs[1] = (byte) 'C';
@@ -1250,7 +1250,7 @@ public class JPEGMetadata extends IIOMetadata implements Cloneable {
             NodeList children = node.getChildNodes();
             for (int i = 0; i < children.getLength(); i++) {
                 Node child = children.item(i);
-                NamedNodeMap attrs = node.getAttributes();
+                NamedNodeMap attrs = child.getAttributes();
                 int childID = MarkerSegment.getAttributeValue(child, 
                                                               attrs, 
                                                               "htableId", 

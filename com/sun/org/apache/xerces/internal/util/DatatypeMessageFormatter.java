@@ -1,24 +1,35 @@
 /*
- * DatatypeMessageFormatter.java
- *
- * Created on June 28, 2004, 9:15 AM
+ * Copyright 2005 The Apache Software Foundation.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.sun.org.apache.xerces.internal.util;
 
+import com.sun.org.apache.xerces.internal.utils.SecuritySupport;
 import java.util.Locale;
 import java.util.MissingResourceException;
-import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
 
 /**
+ * <p>Used to format JAXP 1.3 Datatype API error messages using a specified locale.</p>
  *
  * @author  Neeraj Bajaj, Sun Microsystems
+ * @version $Id: DatatypeMessageFormatter.java,v 1.4 2007/07/19 04:38:58 ofung Exp $
  */
-
 public class DatatypeMessageFormatter {
     
-    static final String BASE_NAME = "com.sun.org.apache.xerces.internal.impl.msg.DatatypeMessages";
+    private static final String BASE_NAME = "com.sun.org.apache.xerces.internal.impl.msg.DatatypeMessages";
     
     /**
      * Formats a message with the specified arguments using the given
@@ -42,11 +53,11 @@ public class DatatypeMessageFormatter {
         ResourceBundle resourceBundle = null;
         if (locale != null) {
             resourceBundle = 
-                PropertyResourceBundle.getBundle(BASE_NAME, locale);
+                SecuritySupport.getResourceBundle(BASE_NAME, locale);
         }
         else {
             resourceBundle = 
-                PropertyResourceBundle.getBundle(BASE_NAME);
+                SecuritySupport.getResourceBundle(BASE_NAME);
         }
 
         // format message

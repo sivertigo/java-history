@@ -1,8 +1,8 @@
 /*
- * @(#)InterfaceDeclaration.java	1.1 04/01/26
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc.  All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL.  Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL.  Use is subject to license terms.
  */
 
 package com.sun.mirror.declaration;
@@ -24,7 +24,7 @@ import com.sun.mirror.type.InterfaceType;
  *
  * @author Joseph D. Darcy
  * @author Scott Seligman
- * @version 1.1 04/01/26
+ * @version %I% %E%
  *
  * @see InterfaceType
  * @since 1.5

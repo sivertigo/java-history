@@ -60,8 +60,10 @@ package com.sun.org.apache.xerces.internal.impl.dtd.models;
 
 /**
  * Content model any node.
+ * 
+ * @xerces.internal
  *
- * @version $Id: CMAny.java,v 1.3 2003/05/08 20:11:55 elena Exp $
+* @version $Id: CMAny.java,v 1.3 2007/07/19 04:38:28 ofung Exp $
  */
 public class CMAny
     extends CMNode {

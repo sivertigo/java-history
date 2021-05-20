@@ -1,8 +1,8 @@
 /*
- * @(#)ElementType.java	1.6 04/03/16
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang.annotation;
@@ -22,7 +22,7 @@ public enum ElementType {
     /** Class, interface (including annotation type), or enum declaration */
     TYPE,
 
-    /** Field declaration (inlcudes enum constants) */
+    /** Field declaration (includes enum constants) */
     FIELD,
 
     /** Method declaration */

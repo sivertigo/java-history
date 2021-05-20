@@ -70,7 +70,7 @@ import org.w3c.dom.DOMException;
  *
  * @author Rahul Srivastava, Sun Microsystems Inc.
  *
- * @version $Id: AttrImpl.java,v 1.5 2003/03/20 00:38:30 elena Exp $
+ * @version $Id: AttrImpl.java,v 1.3 2007/07/19 04:38:47 ofung Exp $
  */
 public class AttrImpl extends NodeImpl 
                       implements Attr {
@@ -139,4 +139,3 @@ public class AttrImpl extends NodeImpl
     }
 
 }
-

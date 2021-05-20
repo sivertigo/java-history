@@ -1,8 +1,8 @@
 /*
- * @(#)MediaSize.java	1.15 09/01/08
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package javax.print.attribute.standard;
 
@@ -105,10 +105,10 @@ public class MediaSize extends Size2DSyntax implements Attribute {
 	if (x > y) {
 	    throw new IllegalArgumentException("X dimension > Y dimension");
 	}
-	if (media != null && mediaMap.get(media) == null) {
-	    mediaName = media;
-	    mediaMap.put(mediaName, this);
-	}
+        if (media != null && mediaMap.get(media) == null) {
+            mediaName = media;
+            mediaMap.put(mediaName, this);
+        }
 	sizeVector.add(this);
     }
 
@@ -131,10 +131,10 @@ public class MediaSize extends Size2DSyntax implements Attribute {
 	if (x > y) {
 	    throw new IllegalArgumentException("X dimension > Y dimension");
 	}
-	if (media != null && mediaMap.get(media) == null) {
-	    mediaName = media;
-	    mediaMap.put(mediaName, this);
-	}
+        if (media != null && mediaMap.get(media) == null) {
+            mediaName = media;
+            mediaMap.put(mediaName, this);
+        }
 	sizeVector.add(this);
     }
 
@@ -763,6 +763,7 @@ public class MediaSize extends Size2DSyntax implements Attribute {
 
 	/**
 	 * Specifies the tabloid size, 11 inches by 17 inches.
+	 * @since 1.5
 	 */
 	public static final MediaSize
 	    TABLOID = new MediaSize(11.0f, 17.0f, Size2DSyntax.INCH,

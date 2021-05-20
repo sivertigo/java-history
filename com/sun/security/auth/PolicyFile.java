@@ -1,8 +1,8 @@
 /*
- * @(#)PolicyFile.java	1.34 04/05/18
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.security.auth;
@@ -50,8 +50,9 @@ import sun.security.util.PropertyExpander;
  *   <i>auth.policy.url.1</i>, <i>auth.policy.url.2</i>, ...,
  *   <i>auth.policy.url.X</i>".  These properties are set
  *   in the Java security properties file, which is located in the file named
- *   &lt;JAVA_HOME&gt;/lib/security/java.security, where &lt;JAVA_HOME&gt;
- *   refers to the directory where the JDK was installed.
+ *   &lt;JAVA_HOME&gt;/lib/security/java.security.
+ *   &lt;JAVA_HOME&gt; refers to the value of the java.home system property,
+ *   and specifies the directory where the JRE is installed.
  *   Each property value specifies a <code>URL</code> pointing to a
  *   policy file to be loaded.  Read in and load each policy.
  *   
@@ -215,7 +216,7 @@ import sun.security.util.PropertyExpander;
  * </pre>
  
  * @deprecated As of JDK&nbsp;1.4, replaced by 
- *             {@link sun.security.provider.PolicyFile}.
+ *             <code>sun.security.provider.PolicyFile</code>.
  *             This class is entirely deprecated.
  *
  * @version 1.22, 01/25/00

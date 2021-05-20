@@ -1,8 +1,8 @@
 /*
- * @(#)HyperlinkEvent.java	1.18 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package javax.swing.event;
 
@@ -24,7 +24,7 @@ import javax.swing.text.Element;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
- * @version 1.18 12/19/03
+ * @version %I% %G%
  * @author  Timothy Prinzing
  */
 public class HyperlinkEvent extends EventObject {

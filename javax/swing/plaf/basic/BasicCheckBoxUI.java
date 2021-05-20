@@ -1,8 +1,8 @@
 /*
- * @(#)BasicCheckBoxUI.java	1.38 09/07/30
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing.plaf.basic;
@@ -29,7 +29,7 @@ import java.io.Serializable;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
- * @version 1.38 07/30/09
+ * @version %I% %G%
  * @author Jeff Dinkins
  */
 public class BasicCheckBoxUI extends BasicRadioButtonUI {
@@ -49,7 +49,7 @@ public class BasicCheckBoxUI extends BasicRadioButtonUI {
             checkboxUI = new BasicCheckBoxUI();
             appContext.put(BASIC_CHECK_BOX_UI_KEY, checkboxUI);
         }
-	return checkboxUI;
+        return checkboxUI;
     }
 
     public String getPropertyPrefix() {

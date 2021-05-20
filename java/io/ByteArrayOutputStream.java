@@ -1,138 +1,227 @@
 /*
- * @(#)ByteArrayOutputStream.java	1.16 95/12/18 Arthur van Hoff
+ * %W% %E%
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.io;
 
+import java.util.Arrays;
+
 /**
- * This class implements a buffer that can be
- * used as an OutputStream. The buffer automatically
- * grows when data is written to the stream.
- * The data can be retrieved using toByteArray() and
- * toString().
- * @version 	1.16, 12/18/95
- * @author	Arthur van Hoff
+ * This class implements an output stream in which the data is 
+ * written into a byte array. The buffer automatically grows as data 
+ * is written to it. 
+ * The data can be retrieved using <code>toByteArray()</code> and
+ * <code>toString()</code>.
+ * <p>
+ * Closing a <tt>ByteArrayOutputStream</tt> has no effect. The methods in
+ * this class can be called after the stream has been closed without
+ * generating an <tt>IOException</tt>.
+ *
+ * @author  Arthur van Hoff
+ * @version %I%, %G%
+ * @since   JDK1.0
  */
-public
-class ByteArrayOutputStream extends OutputStream {
+
+public class ByteArrayOutputStream extends OutputStream {
+
     /** 
-     * The buffer where data is stored.
+     * The buffer where data is stored. 
      */
     protected byte buf[];
 
     /**
-     * The number of bytes in the buffer.
+     * The number of valid bytes in the buffer. 
      */
     protected int count;
 
     /**
-     * Creates a new ByteArrayOutputStream.
+     * Creates a new byte array output stream. The buffer capacity is 
+     * initially 32 bytes, though its size increases if necessary. 
      */
     public ByteArrayOutputStream() {
 	this(32);
     }
 
     /**
-     * Creates a new ByteArrayOutputStream with the specified initial size.
-     * @param size the initial size
+     * Creates a new byte array output stream, with a buffer capacity of 
+     * the specified size, in bytes. 
+     *
+     * @param   size   the initial size.
+     * @exception  IllegalArgumentException if size is negative.
      */
     public ByteArrayOutputStream(int size) {
+        if (size < 0) {
+            throw new IllegalArgumentException("Negative initial size: "
+                                               + size);
+        }
 	buf = new byte[size];
     }
 
     /**
-     * Writes a byte to the buffer.
-     * @param b	the byte
+     * Writes the specified byte to this byte array output stream. 
+     *
+     * @param   b   the byte to be written.
      */
     public synchronized void write(int b) {
 	int newcount = count + 1;
 	if (newcount > buf.length) {
-	    byte newbuf[] = new byte[Math.max(buf.length << 1, newcount)];
-	    System.arraycopy(buf, 0, newbuf, 0, count);
-	    buf = newbuf;
+            buf = Arrays.copyOf(buf, Math.max(buf.length << 1, newcount));
 	}
 	buf[count] = (byte)b;
 	count = newcount;
     }
 
     /**
-     * Writes bytes to the buffer.
-     * @param b	the data to be written
-     * @param off	the start offset in the data
-     * @param len	the number of bytes that are written
+     * Writes <code>len</code> bytes from the specified byte array 
+     * starting at offset <code>off</code> to this byte array output stream.
+     *
+     * @param   b     the data.
+     * @param   off   the start offset in the data.
+     * @param   len   the number of bytes to write.
      */
     public synchronized void write(byte b[], int off, int len) {
-	int newcount = count + len;
-	if (newcount > buf.length) {
-	    byte newbuf[] = new byte[Math.max(buf.length << 1, newcount)];
-	    System.arraycopy(buf, 0, newbuf, 0, count);
-	    buf = newbuf;
+	if ((off < 0) || (off > b.length) || (len < 0) ||
+            ((off + len) > b.length) || ((off + len) < 0)) {
+	    throw new IndexOutOfBoundsException();
+	} else if (len == 0) {
+	    return;
 	}
-	System.arraycopy(b, off, buf, count, len);
-	count = newcount;
+        int newcount = count + len;
+        if (newcount > buf.length) {
+            buf = Arrays.copyOf(buf, Math.max(buf.length << 1, newcount));
+        }
+        System.arraycopy(b, off, buf, count, len);
+        count = newcount;
     }
 
     /**
-     * Writes the contents of the buffer to another stream.
-     * @param out	the output stream to write to
+     * Writes the complete contents of this byte array output stream to 
+     * the specified output stream argument, as if by calling the output 
+     * stream's write method using <code>out.write(buf, 0, count)</code>.
+     *
+     * @param      out   the output stream to which to write the data.
+     * @exception  IOException  if an I/O error occurs.
      */
     public synchronized void writeTo(OutputStream out) throws IOException {
 	out.write(buf, 0, count);
     }
 
     /**
-     * Resets the buffer so that you can use it again without
-     * throwing away the already allocated buffer.
+     * Resets the <code>count</code> field of this byte array output 
+     * stream to zero, so that all currently accumulated output in the 
+     * output stream is discarded. The output stream can be used again, 
+     * reusing the already allocated buffer space. 
+     *
+     * @see     java.io.ByteArrayInputStream#count
      */
     public synchronized void reset() {
 	count = 0;
     }
 
     /**
-     * Returns a copy of the input data.
+     * Creates a newly allocated byte array. Its size is the current 
+     * size of this output stream and the valid contents of the buffer 
+     * have been copied into it. 
+     *
+     * @return  the current contents of this output stream, as a byte array.
+     * @see     java.io.ByteArrayOutputStream#size()
      */
     public synchronized byte toByteArray()[] {
-	byte newbuf[] = new byte[count];
-	System.arraycopy(buf, 0, newbuf, 0, count);
-	return newbuf;
+        return Arrays.copyOf(buf, count);
     }
 
     /**
      * Returns the current size of the buffer.
+     *
+     * @return  the value of the <code>count</code> field, which is the number
+     *          of valid bytes in this output stream.
+     * @see     java.io.ByteArrayOutputStream#count
      */
-    public int size() {
+    public synchronized int size() {
 	return count;
     }
 
     /**
-     * Converts input data to a string.
-     * @return the string.
+     * Converts the buffer's contents into a string decoding bytes using the
+     * platform's default character set. The length of the new <tt>String</tt>
+     * is a function of the character set, and hence may not be equal to the 
+     * size of the buffer.
+     *
+     * <p> This method always replaces malformed-input and unmappable-character
+     * sequences with the default replacement string for the platform's
+     * default character set. The {@linkplain java.nio.charset.CharsetDecoder}
+     * class should be used when more control over the decoding process is
+     * required.
+     *
+     * @return String decoded from the buffer's contents.
+     * @since  JDK1.1
      */
-    public String toString() {
-	return new String(toByteArray(), 0);
+    public synchronized String toString() {
+	return new String(buf, 0, count);
+    }
+    
+    /**
+     * Converts the buffer's contents into a string by decoding the bytes using
+     * the specified {@link java.nio.charset.Charset charsetName}. The length of
+     * the new <tt>String</tt> is a function of the charset, and hence may not be
+     * equal to the length of the byte array.
+     *
+     * <p> This method always replaces malformed-input and unmappable-character
+     * sequences with this charset's default replacement string. The {@link
+     * java.nio.charset.CharsetDecoder} class should be used when more control
+     * over the decoding process is required.
+     *
+     * @param  charsetName  the name of a supported
+     *		    {@linkplain java.nio.charset.Charset </code>charset<code>}
+     * @return String decoded from the buffer's contents.
+     * @exception  UnsupportedEncodingException
+     *             If the named charset is not supported
+     * @since   JDK1.1
+     */
+    public synchronized String toString(String charsetName)
+	throws UnsupportedEncodingException
+    {
+	return new String(buf, 0, count, charsetName);
     }
 
     /**
-     * Converts input data to a string. The top 8 bits of 
-     * each 16 bit Unicode character are set to hibyte.
-     * @param hibyte the bits set
+     * Creates a newly allocated string. Its size is the current size of 
+     * the output stream and the valid contents of the buffer have been 
+     * copied into it. Each character <i>c</i> in the resulting string is 
+     * constructed from the corresponding element <i>b</i> in the byte 
+     * array such that:
+     * <blockquote><pre>
+     *     c == (char)(((hibyte &amp; 0xff) &lt;&lt; 8) | (b &amp; 0xff))
+     * </pre></blockquote>
+     *
+     * @deprecated This method does not properly convert bytes into characters.
+     * As of JDK&nbsp;1.1, the preferred way to do this is via the
+     * <code>toString(String enc)</code> method, which takes an encoding-name
+     * argument, or the <code>toString()</code> method, which uses the
+     * platform's default character encoding.
+     *
+     * @param      hibyte    the high byte of each resulting Unicode character.
+     * @return     the current contents of the output stream, as a string.
+     * @see        java.io.ByteArrayOutputStream#size()
+     * @see        java.io.ByteArrayOutputStream#toString(String)
+     * @see        java.io.ByteArrayOutputStream#toString()
      */
-    public String toString(int hibyte) {
-	return new String(toByteArray(), hibyte);
+    @Deprecated
+    public synchronized String toString(int hibyte) {
+	return new String(buf, hibyte, 0, count);
     }
+
+    /**
+     * Closing a <tt>ByteArrayOutputStream</tt> has no effect. The methods in
+     * this class can be called after the stream has been closed without
+     * generating an <tt>IOException</tt>.
+     * <p>
+     *
+     */
+    public void close() throws IOException {
+    }
+
 }

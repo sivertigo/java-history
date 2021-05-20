@@ -1,8 +1,8 @@
 /*
- * @(#)FileFilter.java	1.19 04/06/28
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing.filechooser;
@@ -10,8 +10,12 @@ package javax.swing.filechooser;
 import java.io.File;
 
 /**
- * <code>FileFilter</code> is an abstract class that has no default
- * implementation.  A <code>FileFilter</code>, once implemented,
+ * <code>FileFilter</code> is an abstract class used by {@code JFileChooser}
+ * for filtering the set of files shown to the user. See 
+ * {@code FileNameExtensionFilter} for an implementation that filters using
+ * the file name extension.
+ * <p>
+ * A <code>FileFilter</code> 
  * can be set on a <code>JFileChooser</code> to
  * keep unwanted files from appearing in the directory listing.
  * For an example implementation of a simple file filter, see
@@ -20,10 +24,11 @@ import java.io.File;
  * <a href="http://java.sun.com/docs/books/tutorial/uiswing/components/filechooser.html">How to Use File Choosers</a>,
  * a section in <em>The Java Tutorial</em>.
  *
+ * @see FileNameExtensionFilter
  * @see javax.swing.JFileChooser#setFileFilter
  * @see javax.swing.JFileChooser#addChoosableFileFilter
  *
- * @version 1.19 06/28/04
+ * @version %I% %G%
  * @author Jeff Dinkins
  */
 public abstract class FileFilter {

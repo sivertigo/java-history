@@ -1,8 +1,8 @@
 /*
- * @(#)InputMap.java	1.14 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package javax.swing;
 
@@ -31,7 +31,7 @@ import java.util.Set;
  * </pre>
  * some of the methods will cause a StackOverflowError to be thrown.
  *
- * @version 1.14 12/19/03
+ * @version %I% %G%
  * @author Scott Violet
  * @since 1.3
  */

@@ -1,8 +1,8 @@
 /*
- * @(#)DefaultCellEditor.java	1.52 05/08/09
+ * %W% %E%
  *
- * Copyright 2005 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing;
@@ -16,7 +16,6 @@ import javax.swing.event.*;
 import java.util.EventObject;
 import javax.swing.tree.*;
 import java.io.Serializable;
-import static com.sun.java.swing.SwingUtilities2.DRAG_FIX;
 
 /**
  * The default editor for table and tree cells.
@@ -30,7 +29,7 @@ import static com.sun.java.swing.SwingUtilities2.DRAG_FIX;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
- * @version 1.52 08/09/05
+ * @version %I% %G%
  * @author Alan Chung
  * @author Philip Milne
  */
@@ -104,10 +103,7 @@ public class DefaultCellEditor extends AbstractCellEditor
 	    }
         };
 	checkBox.addActionListener(delegate);
-
-        if (DRAG_FIX) {
-            checkBox.setRequestFocusEnabled(false);
-        }
+        checkBox.setRequestFocusEnabled(false);
     }
 
     /**
@@ -252,6 +248,26 @@ public class DefaultCellEditor extends AbstractCellEditor
 						 boolean isSelected,
 						 int row, int column) {
         delegate.setValue(value);
+        if (editorComponent instanceof JCheckBox) {
+            //in order to avoid a "flashing" effect when clicking a checkbox
+            //in a table, it is important for the editor to have as a border
+            //the same border that the renderer has, and have as the background
+            //the same color as the renderer has. This is primarily only
+            //needed for JCheckBox since this editor doesn't fill all the
+            //visual space of the table cell, unlike a text field.
+            TableCellRenderer renderer = table.getCellRenderer(row, column);
+            Component c = renderer.getTableCellRendererComponent(table, value,
+                    isSelected, true, row, column);
+            if (c != null) {
+                editorComponent.setOpaque(true);
+                editorComponent.setBackground(c.getBackground());
+                if (c instanceof JComponent) {
+                    editorComponent.setBorder(((JComponent)c).getBorder());
+                }
+            } else {
+                editorComponent.setOpaque(false);
+            }
+        }
 	return editorComponent;
     }
 

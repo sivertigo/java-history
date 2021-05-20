@@ -1,8 +1,8 @@
 /*
- * @(#)ZipInputStream.java	1.38 06/11/30
+ * %W% %E%
  *
- * Copyright 2006 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2009, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.util.zip;
@@ -10,7 +10,11 @@ package java.util.zip;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.EOFException;
+import java.io.UnsupportedEncodingException;
 import java.io.PushbackInputStream;
+import sun.security.action.GetPropertyAction;
+import java.util.jar.JarInputStream;
+
 
 /**
  * This class implements an input stream filter for reading files in the
@@ -18,23 +22,28 @@ import java.io.PushbackInputStream;
  * entries.
  *
  * @author	David Connelly
- * @version	1.38, 11/30/06
+ * @version	%I%, %G%
  */
 public
 class ZipInputStream extends InflaterInputStream implements ZipConstants {
     private ZipEntry entry;
+    private int flag;
     private CRC32 crc = new CRC32();
     private long remaining;
     private byte[] tmpbuf = new byte[512];
 
     private static final int STORED = ZipEntry.STORED;
     private static final int DEFLATED = ZipEntry.DEFLATED;
-    
+
     private boolean closed = false;
     // this flag is set to true after EOF has reached for
     // one entry
     private boolean entryEOF = false;
-    
+    // Used to decide what encoding to use while reading zip entries 
+    private static final String fileEncoding = java.security.AccessController
+        .doPrivileged(new GetPropertyAction("sun.zip.encoding"));
+
+
     /**
      * Check to make sure that this stream has not been closed
      */
@@ -101,7 +110,7 @@ class ZipInputStream extends InflaterInputStream implements ZipConstants {
      *
      * @return     1 before EOF and 0 after EOF has reached for current entry.
      * @exception  IOException  if an I/O error occurs.
-     * 
+     *
      */
     public int available() throws IOException {
         ensureOpen();
@@ -113,13 +122,19 @@ class ZipInputStream extends InflaterInputStream implements ZipConstants {
     }
 
     /**
-     * Reads from the current ZIP entry into an array of bytes. Blocks until
-     * some input is available.
+     * Reads from the current ZIP entry into an array of bytes.
+     * If <code>len</code> is not zero, the method
+     * blocks until some input is available; otherwise, no
+     * bytes are read and <code>0</code> is returned.
      * @param b the buffer into which the data is read
-     * @param off the start offset of the data
+     * @param off the start offset in the destination array <code>b</code>
      * @param len the maximum number of bytes read
      * @return the actual number of bytes read, or -1 if the end of the
      *         entry is reached
+     * @exception  NullPointerException If <code>b</code> is <code>null</code>.
+     * @exception  IndexOutOfBoundsException If <code>off</code> is negative,
+     * <code>len</code> is negative, or <code>len</code> is greater than
+     * <code>b.length - off</code>
      * @exception ZipException if a ZIP file error has occurred
      * @exception IOException if an I/O error has occurred
      */
@@ -167,7 +182,7 @@ class ZipInputStream extends InflaterInputStream implements ZipConstants {
 	    }
 	    return len;
 	default:
-	    throw new InternalError("invalid compression method");
+	    throw new ZipException("invalid compression method");
 	}
     }
 
@@ -229,28 +244,26 @@ class ZipInputStream extends InflaterInputStream implements ZipConstants {
 	}
 	// get the entry name and create the ZipEntry first
 	int len = get16(tmpbuf, LOCNAM);
-	if (len == 0) {
-	    throw new ZipException("missing entry name");
-	}
         int blen = b.length;
         if (len > blen) {
-            do 
+            do
                 blen = blen * 2;
-            while (len > blen); 
+            while (len > blen);
             b = new byte[blen];
-        } 
+        }
 	readFully(b, 0, len);
-	ZipEntry e = createZipEntry(getUTF8String(b, 0, len));
+	String name = getFileName(b, len);
+
+        ZipEntry e = createZipEntry(name);
 	// now get the remaining fields for the entry
-	e.version = get16(tmpbuf, LOCVER);
-	e.flag = get16(tmpbuf, LOCFLG);
-	if ((e.flag & 1) == 1) {
+	flag = get16(tmpbuf, LOCFLG);
+	if ((flag & 1) == 1) {
 	    throw new ZipException("encrypted ZIP entry not supported");
 	}
 	e.method = get16(tmpbuf, LOCHOW);
 	e.time = get32(tmpbuf, LOCTIM);
-	if ((e.flag & 8) == 8) {
-	    /* EXT descriptor present */
+	if ((flag & 8) == 8) {
+	    /* "Data Descriptor" present */
 	    if (e.method != DEFLATED) {
 		throw new ZipException(
 			"only DEFLATED entries can have EXT descriptor");
@@ -264,7 +277,7 @@ class ZipInputStream extends InflaterInputStream implements ZipConstants {
 	if (len > 0) {
 	    byte[] bb = new byte[len];
 	    readFully(bb, 0, len);
-	    e.extra = bb;
+	    e.setExtra(bb);
 	}
 	return e;
     }
@@ -353,8 +366,8 @@ class ZipInputStream extends InflaterInputStream implements ZipConstants {
 	if (n > 0) {
 	    ((PushbackInputStream)in).unread(buf, len - n, n);
 	}
-	if ((e.flag & 8) == 8) {
-	    /* EXT descriptor present */
+	if ((flag & 8) == 8) {
+	    /* "Data Descriptor" present */
 	    readFully(tmpbuf, 0, EXTHDR);
 	    long sig = get32(tmpbuf, 0);
             if (sig != EXTSIG) { // no EXTSIG present
@@ -367,7 +380,7 @@ class ZipInputStream extends InflaterInputStream implements ZipConstants {
                 e.crc = get32(tmpbuf, EXTCRC);
                 e.csize = get32(tmpbuf, EXTSIZ);
                 e.size = get32(tmpbuf, EXTLEN);
-            }  
+            }
 	}
 	if (e.size != inf.getBytesWritten()) {
 	    throw new ZipException(
@@ -415,4 +428,48 @@ class ZipInputStream extends InflaterInputStream implements ZipConstants {
     private static final long get32(byte b[], int off) {
 	return get16(b, off) | ((long)get16(b, off+2) << 16);
     }
+
+    private String getFileName(byte[] b, int len) throws IOException {
+	String name;
+	try {
+	    if (fileEncoding == null || fileEncoding.equals("") || this instanceof JarInputStream) {
+		name = getUTF8String(b, 0, len);
+	    } else {
+		if (fileEncoding.equalsIgnoreCase("default")) {
+	   	    // use platforms's default encoding
+		    name = new String(b, 0, len);
+		} else {
+		    try {
+		    	name = new String(b, 0, len, fileEncoding);
+	  	    } catch (UnsupportedEncodingException UEE) {
+			throw new ZipException("Unable to encode entry " +
+			    "name (sun.zip.encoding is " + fileEncoding + ")");
+		    }
+		}
+	    }
+	} catch (IllegalArgumentException e) {
+	    // Alt encoding that can be used  if
+	    // the initial decoding attempt fails.
+	    String altEncoding = java.security.AccessController
+	  	.doPrivileged(new GetPropertyAction("sun.zip.altEncoding"));
+	    if (altEncoding == null || altEncoding.equals("") ||
+            	this instanceof JarInputStream) {
+            	throw e;
+            }
+	    if (altEncoding.equalsIgnoreCase("default")) {
+		// use platform's default encoding
+		name = new String(b, 0, len);
+	    } else {
+		try {
+		    // use the specified encoding
+		    name = new String(b, 0, len, altEncoding);
+		} catch (UnsupportedEncodingException UEE) {
+		    throw new ZipException("Unable to encode entry " +
+			"name (sun.zip.altEncoding is " + altEncoding + ")");
+		}
+	    }
+		
+	}
+	return name;
+    } 
 }

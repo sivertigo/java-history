@@ -1,8 +1,8 @@
 /*
- * @(#)DatagramSocketImpl.java	1.32 04/05/18
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.net;
@@ -83,9 +83,10 @@ public abstract class DatagramSocketImpl implements SocketOptions {
     protected void disconnect() {}
 
     /**
-     * Peek at the packet to see who it is from.
+     * Peek at the packet to see who it is from. Updates the specified <code>InetAddress</code>
+     * to the address which the packet came from.
      * @param i an InetAddress object 
-     * @return the address which the packet came from.
+     * @return the port number which the packet came from.
      * @exception IOException if an I/O exception occurs
      * @exception  PortUnreachableException may be thrown if the socket is connected
      *       to a currently unreachable destination. Note, there is no guarantee that the
@@ -94,11 +95,12 @@ public abstract class DatagramSocketImpl implements SocketOptions {
     protected abstract int peek(InetAddress i) throws IOException;
 
     /**
-     * Peek at the packet to see who it is from. The data is returned,
+     * Peek at the packet to see who it is from. The data is copied into the specified
+     * <code>DatagramPacket</code>. The data is returned,
      * but not consumed, so that a subsequent peekData/receive operation 
      * will see the same data.
      * @param p the Packet Received.
-     * @return the address which the packet came from.
+     * @return the port number which the packet came from.
      * @exception IOException if an I/O exception occurs
      * @exception  PortUnreachableException may be thrown if the socket is connected
      *       to a currently unreachable destination. Note, there is no guarantee that the

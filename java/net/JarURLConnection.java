@@ -1,8 +1,8 @@
 /*
- * @(#)JarURLConnection.java	1.33 05/01/04
+ * %W% %E%
  *
- * Copyright 2005 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.net;
@@ -150,12 +150,12 @@ public abstract class JarURLConnection extends URLConnection {
     private void parseSpecs(URL url) throws MalformedURLException {
 	String spec = url.getFile();
 
-	int separator = spec.indexOf('!');
+	int separator = spec.indexOf("!/");
 	/*
 	 * REMIND: we don't handle nested JAR URLs
 	 */
 	if (separator == -1) {
-	    throw new MalformedURLException("no ! found in url spec:" + spec);
+	    throw new MalformedURLException("no !/ found in url spec:" + spec);
 	}
 
 	jarFileURL = new URL(spec.substring(0, separator++));

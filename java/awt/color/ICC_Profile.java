@@ -1,8 +1,8 @@
 /*
- * @(#)ICC_Profile.java	1.38 09/08/03
+ * %W% %E%
  *
- * Copyright 2009 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 /**********************************************************************
@@ -299,6 +299,7 @@ public class ICC_Profile implements Serializable {
 
     /**
      * ICC Profile Rendering Intent: Media-RelativeColorimetric.
+     * @since 1.5
      */
     public static final int icMediaRelativeColorimetric = 1;
 
@@ -314,6 +315,7 @@ public class ICC_Profile implements Serializable {
 
     /**
      * ICC Profile Rendering Intent: ICC-AbsoluteColorimetric.
+     * @since 1.5
      */
     public static final int icICCAbsoluteColorimetric = 3;
 
@@ -345,6 +347,7 @@ public class ICC_Profile implements Serializable {
 
     /**
      * ICC Profile Tag Signature: 'bXYZ'.
+     * @since 1.5
      */
     public static final int icSigBlueMatrixColumnTag = 0x6258595A; /* 'bXYZ' */
 
@@ -421,6 +424,7 @@ public class ICC_Profile implements Serializable {
 
     /**
      * ICC Profile Tag Signature: 'gXYZ'.
+     * @since 1.5
      */
     public static final int icSigGreenMatrixColumnTag = 0x6758595A;/* 'gXYZ' */
 
@@ -524,6 +528,7 @@ public class ICC_Profile implements Serializable {
 
     /**
      * ICC Profile Tag Signature: 'rXYZ'.
+     * @since 1.5
      */
     public static final int icSigRedMatrixColumnTag = 0x7258595A;  /* 'rXYZ' */
 
@@ -569,16 +574,19 @@ public class ICC_Profile implements Serializable {
 
     /**
      * ICC Profile Tag Signature: 'chad'.
+     * @since 1.5
      */
     public static final int icSigChromaticAdaptationTag = 0x63686164;/* 'chad' */
 
     /**
      * ICC Profile Tag Signature: 'clro'.
+     * @since 1.5
      */
     public static final int icSigColorantOrderTag = 0x636C726F;    /* 'clro' */
 
     /**
      * ICC Profile Tag Signature: 'clrt'.
+     * @since 1.5
      */
     public static final int icSigColorantTableTag = 0x636C7274;    /* 'clrt' */
 
@@ -665,6 +673,7 @@ public class ICC_Profile implements Serializable {
 
     /**
      * ICC Profile Header Location: profile's ID.
+     * @since 1.5
      */
     public static final int icHdrProfileID = 84; /* Profile's ID */
 
@@ -710,7 +719,7 @@ public class ICC_Profile implements Serializable {
     ICC_Profile(ProfileDeferralInfo pdi) {
         this.deferralInfo = pdi;
         this.profileActivator = new ProfileActivator() {
-            public void activate() {
+            public void activate() throws ProfileDataException {
                 activateDeferredProfile();
             }
         };
@@ -803,20 +812,16 @@ public class ICC_Profile implements Serializable {
 	case ColorSpace.CS_sRGB:
             synchronized(ICC_Profile.class) {
 	        if (sRGBprofile == null) {
-		    try {
-		        /*
-		         * Deferral is only used for standard profiles.
-		         * Enabling the appropriate access privileges is handled
-		         * at a lower level.
-		         */
-		        sRGBprofile = getDeferredInstance(
-			    new ProfileDeferralInfo("sRGB.pf", 
-                                                    ColorSpace.TYPE_RGB,
-						    3, CLASS_DISPLAY)); 
-		    } catch (IOException e) {
-		        throw new IllegalArgumentException(
-                              "Can't load standard profile: sRGB.pf");
-		    }
+                    /*
+                     * Deferral is only used for standard profiles.
+                     * Enabling the appropriate access privileges is handled
+                     * at a lower level.
+                     */
+                    ProfileDeferralInfo pInfo =
+                        new ProfileDeferralInfo("sRGB.pf",
+                                                ColorSpace.TYPE_RGB, 3,
+                                                CLASS_DISPLAY);
+                    sRGBprofile = getDeferredInstance(pInfo);
 	        }
 	        thisProfile = sRGBprofile;
             }
@@ -825,10 +830,14 @@ public class ICC_Profile implements Serializable {
 
 	case ColorSpace.CS_CIEXYZ:
             synchronized(ICC_Profile.class) {
-	        if (XYZprofile == null) {
-		    XYZprofile = getStandardProfile("CIEXYZ.pf");
-	        }
-	        thisProfile = XYZprofile;
+                if (XYZprofile == null) {
+                    ProfileDeferralInfo pInfo =
+                        new ProfileDeferralInfo("CIEXYZ.pf",
+                                                ColorSpace.TYPE_XYZ, 3,
+                                                CLASS_DISPLAY);
+                    XYZprofile = getDeferredInstance(pInfo);
+                }
+                thisProfile = XYZprofile;
             }
 
 	    break;
@@ -836,7 +845,19 @@ public class ICC_Profile implements Serializable {
 	case ColorSpace.CS_PYCC:
             synchronized(ICC_Profile.class) {
 	        if (PYCCprofile == null) {
-		    PYCCprofile = getStandardProfile("PYCC.pf");
+                    if (!sun.jkernel.DownloadManager.isJREComplete() ||
+                        standardProfileExists("PYCC.pf"))
+                    {
+                        /* profile file exist or will be downloaded by jkernel */
+                        ProfileDeferralInfo pInfo =
+                            new ProfileDeferralInfo("PYCC.pf",
+                                                    ColorSpace.TYPE_3CLR, 3,
+                                                    CLASS_DISPLAY);
+                        PYCCprofile = getDeferredInstance(pInfo);
+                    } else {
+                        throw new IllegalArgumentException(
+                                "Can't load standard profile: PYCC.pf");
+                    }
 	        }
 	        thisProfile = PYCCprofile;
             }
@@ -846,7 +867,11 @@ public class ICC_Profile implements Serializable {
 	case ColorSpace.CS_GRAY:
             synchronized(ICC_Profile.class) {
 	        if (GRAYprofile == null) {
-		    GRAYprofile = getStandardProfile("GRAY.pf");
+                    ProfileDeferralInfo pInfo =
+                        new ProfileDeferralInfo("GRAY.pf",
+                                                ColorSpace.TYPE_GRAY, 1,
+                                                CLASS_DISPLAY);
+                    GRAYprofile = getDeferredInstance(pInfo);
 	        }
 	        thisProfile = GRAYprofile;
             }
@@ -856,7 +881,11 @@ public class ICC_Profile implements Serializable {
 	case ColorSpace.CS_LINEAR_RGB:
             synchronized(ICC_Profile.class) {
 	        if (LINEAR_RGBprofile == null) {
-		    LINEAR_RGBprofile = getStandardProfile("LINEAR_RGB.pf");
+                    ProfileDeferralInfo pInfo =
+                        new ProfileDeferralInfo("LINEAR_RGB.pf",
+                                                ColorSpace.TYPE_RGB, 3,
+                                                CLASS_DISPLAY);
+                    LINEAR_RGBprofile = getDeferredInstance(pInfo);
 	        }
 	        thisProfile = LINEAR_RGBprofile;
             }
@@ -919,12 +948,12 @@ public class ICC_Profile implements Serializable {
     public static ICC_Profile getInstance(String fileName) throws IOException {
         ICC_Profile thisProfile;
         FileInputStream fis = null;
-      
+
+
         File f = getProfileFile(fileName);
         if (f != null) {
             fis = new FileInputStream(f);
         }
-
         if (fis == null) {
             throw new IOException("Cannot open file " + fileName);
         }
@@ -932,7 +961,7 @@ public class ICC_Profile implements Serializable {
         thisProfile = getInstance(fis);
 
         fis.close();    /* close the file */
-    
+
         return thisProfile;
     }
 
@@ -1020,9 +1049,7 @@ public class ICC_Profile implements Serializable {
      * code will take care of access privileges.
      * @see activateDeferredProfile() 
      */
-    static ICC_Profile getDeferredInstance(ProfileDeferralInfo pdi)
-        throws IOException {
-
+    static ICC_Profile getDeferredInstance(ProfileDeferralInfo pdi) {
         if (!ProfileDeferralMgr.deferring) {
             return getStandardProfile(pdi.filename);
         }
@@ -1036,11 +1063,11 @@ public class ICC_Profile implements Serializable {
     }
 
 
-    void activateDeferredProfile() {
-    long[] theID = new long [1];
-    byte profileData[];
-    FileInputStream fis;
-    final String fileName = deferralInfo.filename;
+    void activateDeferredProfile() throws ProfileDataException {
+        long[] theID = new long [1];
+        byte profileData[];
+        FileInputStream fis;
+        final String fileName = deferralInfo.filename;
 
         profileActivator = null;
         deferralInfo = null;
@@ -1053,28 +1080,32 @@ public class ICC_Profile implements Serializable {
                     } catch (FileNotFoundException e) {}
                 }
                 return null;
-           }
+            }
         };
         if ((fis = AccessController.doPrivileged(pa)) == null) {
-            throw new IllegalArgumentException("Cannot open file " + fileName);
+            throw new ProfileDataException("Cannot open file " + fileName);
         }
         try {
             profileData = getProfileDataFromStream(fis);
             fis.close();    /* close the file */
         }
         catch (IOException e) {
-            throw new IllegalArgumentException("Invalid ICC Profile Data" +
-                fileName);
+            ProfileDataException pde = new
+                ProfileDataException("Invalid ICC Profile Data" + fileName);
+            pde.initCause(e);
+            throw pde;
         }
         if (profileData == null) {
-            throw new IllegalArgumentException("Invalid ICC Profile Data" +
-                fileName);
+            throw new ProfileDataException("Invalid ICC Profile Data" +
+                                           fileName);
         }
         try {
             CMM.checkStatus(CMM.cmmLoadProfile(profileData, theID));
         } catch (CMMException c) {
-            throw new IllegalArgumentException("Invalid ICC Profile Data" +
-                fileName);
+            ProfileDataException pde = new
+                ProfileDataException("Invalid ICC Profile Data" + fileName);
+            pde.initCause(c);
+            throw pde;
         }
         ID = theID[0];
     }
@@ -1739,6 +1770,7 @@ public class ICC_Profile implements Serializable {
             array[index+1] = (byte) (value);
     }
 
+
     /*
      * fileName may be an absolute or a relative file specification.
      * Relative file names are looked for in several places: first, relative
@@ -1748,8 +1780,7 @@ public class ICC_Profile implements Serializable {
      * available, such as a profile for sRGB.  Built-in profiles use .pf as
      * the file name extension for profiles, e.g. sRGB.pf.
      */
-
-     private static File getProfileFile(String fileName) {
+    private static File getProfileFile(String fileName) {
         String path, dir, fullPath;
 
         File f = new File(fileName); /* try absolute file name */
@@ -1758,105 +1789,64 @@ public class ICC_Profile implements Serializable {
                so return here. */
             return f.isFile() ? f : null;
         }
-
         if ((!f.isFile()) &&
-                ((path = System.getProperty("java.iccprofile.path")) != null)){
+            ((path = System.getProperty("java.iccprofile.path")) != null)){
                                     /* try relative to java.iccprofile.path */
-                StringTokenizer st = 
-                    new StringTokenizer(path, File.pathSeparator);
-                while (st.hasMoreTokens() &&  ((f== null) || (!f.isFile()))) {
-                    dir = st.nextToken();
-                        fullPath = dir + File.separatorChar + fileName;
-                    f = new File(fullPath);
-                    if (!isChildOf(f, dir)) {
-                          f = null;
-                    }  
+            StringTokenizer st = 
+                new StringTokenizer(path, File.pathSeparator);
+            while (st.hasMoreTokens() && ((f == null) || (!f.isFile())))  {
+                dir = st.nextToken();
+                fullPath = dir + File.separatorChar + fileName;
+                f = new File(fullPath);
+                if (!isChildOf(f, dir)) {
+                    f = null;
                 }
             }
+        }
 
         if (((f == null) || (!f.isFile())) &&
-                ((path = System.getProperty("java.class.path")) != null)) {
-                                    /* try relative to java.class.path */
-                StringTokenizer st =
-                    new StringTokenizer(path, File.pathSeparator);
-                while (st.hasMoreTokens() && ((f == null) ||  (!f.isFile()))) {
-                    dir = st.nextToken();
-                        fullPath = dir + File.separatorChar + fileName;
-                    f = new File(fullPath);
-                    if (!isChildOf(f, dir)) {
-                      f = null;
-                   }       
+            ((path = System.getProperty("java.class.path")) != null)) {
+                                /* try relative to java.class.path */
+            StringTokenizer st =
+                new StringTokenizer(path, File.pathSeparator);
+            while (st.hasMoreTokens() && ((f == null) || (!f.isFile()))) {
+                dir = st.nextToken();
+                fullPath = dir + File.separatorChar + fileName;
+                f = new File(fullPath);
+                if (!isChildOf(f, dir)) {
+                    f = null;
                 }
             }
-
+        }
         if ((f == null) || (!f.isFile())) {
             /* try the directory of built-in profiles */
             f = getStandardProfileFile(fileName);
         }
-
         if (f != null && f.isFile()) {
             return f;
         }
         return null;
-     }
-
-    /*
-     * this version is called from doPrivileged in privilegedOpenProfile.
-     * the whole method is privileged!
-     */
-    private static FileInputStream privilegedOpenProfile(String fileName) {
-        FileInputStream fis = null;
-        String path, dir, fullPath;
-
-        File f = new File(fileName); /* try absolute file name */
-
-        if ((!f.isFile()) &&
-		((path = System.getProperty("java.iccprofile.path")) != null)){
-                                    /* try relative to java.iccprofile.path */
-	        StringTokenizer st = 
-		    new StringTokenizer(path, File.pathSeparator);
-                while (st.hasMoreTokens() && (!f.isFile())) {
-		    dir = st.nextToken();
-		        fullPath = dir + File.separatorChar + fileName;
-                    f = new File(fullPath);
-		}
-	    }
-
-        if ((!f.isFile()) &&
-		((path = System.getProperty("java.class.path")) != null)) {
-                                    /* try relative to java.class.path */
-	        StringTokenizer st =
-		    new StringTokenizer(path, File.pathSeparator);
-                while (st.hasMoreTokens() && (!f.isFile())) {
-		    dir = st.nextToken();
-		        fullPath = dir + File.separatorChar + fileName;
-                    f = new File(fullPath);
-		}
-	    }
-
-        if (!f.isFile()) { /* try the directory of built-in profiles */
-             f = getStandardProfileFile(fileName);
-	}
-
-        if (f != null && f.isFile()) {
-           try {
-              fis = new FileInputStream(f); 
-              } catch (FileNotFoundException e){}
-         }
-        return fis;
     }
 
-
     /**
-     * Returns a file object corresponding to a built-in profile specified by fileName.
-     * If there is no built-in profile with such name, then the method returns null.
+     * Returns a file object corresponding to a built-in profile
+     * specified by fileName.
+     * If there is no built-in profile with such name, then the method
+     * returns null.
      */
-
-     private static File getStandardProfileFile(String fileName) {
+    private static File getStandardProfileFile(String fileName) {
         String dir = System.getProperty("java.home") +
             File.separatorChar + "lib" + File.separatorChar + "cmm";
         String fullPath = dir + File.separatorChar + fileName;
         File f = new File(fullPath);
+        if (!f.isFile()) {
+            //make sure file was installed in the kernel mode
+            try {
+                //kernel uses platform independent paths =>
+                //   should not use platform separator char
+                sun.jkernel.DownloadManager.downloadFile("lib/cmm/"+fileName);
+            } catch (IOException ioe) {}
+        }
         return (f.isFile() && isChildOf(f, dir)) ? f : null;
     }
 
@@ -1879,6 +1869,18 @@ public class ICC_Profile implements Serializable {
             return false;
         }
     }
+
+    /**
+     * Checks whether built-in profile specified by fileName exists.
+     */
+    private static boolean standardProfileExists(final String fileName) {
+        return AccessController.doPrivileged(new PrivilegedAction<Boolean>() {
+                public Boolean run() {
+                    return getStandardProfileFile(fileName) != null;
+                }
+            });
+    }
+
 
     /* 
      * Serialization support.
@@ -2050,6 +2052,7 @@ public class ICC_Profile implements Serializable {
      * @return ICC_Profile object for profile registered with CMM.
      * @throws ObjectStreamException
      *     never thrown, but mandated by the serialization spec.
+     * @since 1.3
      */
     protected Object readResolve() throws ObjectStreamException {
 	return resolvedDeserializedProfile;

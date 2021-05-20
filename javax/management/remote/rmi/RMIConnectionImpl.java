@@ -1,35 +1,36 @@
 /*
- * @(#)RMIConnectionImpl.java	1.88 06/10/23
- * 
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2002, 2012, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.management.remote.rmi;
 
-import java.io.InterruptedIOException;
+import com.sun.jmx.remote.internal.ServerCommunicatorAdmin;
+import com.sun.jmx.remote.internal.ServerNotifForwarder;
+import com.sun.jmx.remote.internal.Unmarshal;
+import com.sun.jmx.remote.security.JMXSubjectDomainCombiner;
+import com.sun.jmx.remote.security.SubjectDelegator;
+import com.sun.jmx.remote.util.ClassLoaderWithRepository;
+import com.sun.jmx.remote.util.ClassLogger;
+import com.sun.jmx.remote.util.EnvHelp;
+import com.sun.jmx.remote.util.OrderClassLoaders;
 import java.io.IOException;
-import java.io.Serializable;
 import java.rmi.MarshalledObject;
-import java.rmi.server.RMIClientSocketFactory;
-import java.rmi.server.RMIServerSocketFactory;
-import java.rmi.server.UnicastRemoteObject;
+import java.rmi.UnmarshalException;
 import java.rmi.server.Unreferenced;
-import java.rmi.NoSuchObjectException;
 import java.security.AccessControlContext;
 import java.security.AccessController;
-import java.security.Principal;
+import java.security.Permission;
+import java.security.PermissionCollection;
+import java.security.Permissions;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import java.security.ProtectionDomain;
 import java.util.Arrays;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Set;
 import java.util.Map;
-import java.rmi.UnmarshalException;
-
+import java.util.Set;
 import javax.management.Attribute;
 import javax.management.AttributeList;
 import javax.management.AttributeNotFoundException;
@@ -38,38 +39,23 @@ import javax.management.InstanceNotFoundException;
 import javax.management.IntrospectionException;
 import javax.management.InvalidAttributeValueException;
 import javax.management.ListenerNotFoundException;
-import javax.management.MalformedObjectNameException;
 import javax.management.MBeanException;
 import javax.management.MBeanInfo;
 import javax.management.MBeanRegistrationException;
+import javax.management.MBeanPermission;
 import javax.management.MBeanServer;
 import javax.management.NotCompliantMBeanException;
-import javax.management.Notification;
 import javax.management.NotificationFilter;
-import javax.management.NotificationListener;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 import javax.management.QueryExp;
 import javax.management.ReflectionException;
 import javax.management.RuntimeOperationsException;
 import javax.management.loading.ClassLoaderRepository;
-import javax.management.remote.NotificationResult;
-import javax.management.remote.SubjectDelegationPermission;
-import javax.management.remote.TargetedNotification;
 import javax.management.remote.JMXServerErrorException;
-
+import javax.management.remote.NotificationResult;
+import javax.management.remote.TargetedNotification;
 import javax.security.auth.Subject;
-
-import com.sun.jmx.remote.internal.ServerNotifForwarder;
-import com.sun.jmx.remote.internal.ServerCommunicatorAdmin;
-import com.sun.jmx.remote.internal.Unmarshal;
-import com.sun.jmx.remote.security.JMXSubjectDomainCombiner;
-import com.sun.jmx.remote.security.SubjectDelegator;
-import com.sun.jmx.remote.util.CacheMap;
-import com.sun.jmx.remote.util.ClassLoaderWithRepository;
-import com.sun.jmx.remote.util.ClassLogger;
-import com.sun.jmx.remote.util.EnvHelp;
-import com.sun.jmx.remote.util.OrderClassLoaders;
 
 /**
  * <p>Implementation of the {@link RMIConnection} interface.  User
@@ -77,6 +63,13 @@ import com.sun.jmx.remote.util.OrderClassLoaders;
  *
  * @since 1.5
  * @since.unbundled 1.0
+ */
+/*
+ * Notice that we omit the type parameter from MarshalledObject everywhere,
+ * even though it would add useful information to the documentation.  The
+ * reason is that it was only added in Mustang (Java SE 6), whereas versions
+ * 1.4 and 2.0 of the JMX API must be implementable on Tiger per our
+ * commitments for JSR 255.
  */
 public class RMIConnectionImpl implements RMIConnection, Unreferenced {
 
@@ -120,37 +113,74 @@ public class RMIConnectionImpl implements RMIConnection, Unreferenced {
         this.subject = subject;
         if (subject == null) {
             this.acc = null;
+            this.removeCallerContext = false;
         } else {
-            this.acc = JMXSubjectDomainCombiner.getContext(subject);
+            this.removeCallerContext =
+                SubjectDelegator.checkRemoveCallerContext(subject);
+            if (this.removeCallerContext) {
+                this.acc =
+                    JMXSubjectDomainCombiner.getDomainCombinerContext(subject);
+            } else {
+                this.acc =
+                    JMXSubjectDomainCombiner.getContext(subject);
+            }
         }
         this.mbeanServer = rmiServer.getMBeanServer();
 
         final ClassLoader dcl = defaultClassLoader;
-        this.classLoaderWithRepository = (ClassLoaderWithRepository)
-            AccessController.doPrivileged(new PrivilegedAction() {
-                    public Object run() {
+
+        this.classLoaderWithRepository =
+            AccessController.doPrivileged(
+                new PrivilegedAction<ClassLoaderWithRepository>() {
+                    public ClassLoaderWithRepository run() {
                         return new ClassLoaderWithRepository(
-                                              getClassLoaderRepository(),
-                                              dcl);
+                                      mbeanServer.getClassLoaderRepository(),
+                                      dcl);
+                    }
+                },
+
+                withPermissions( new MBeanPermission("*", "getClassLoaderRepository"),
+                                 new RuntimePermission("createClassLoader"))
+            );
+
+        this.defaultContextClassLoader =
+            AccessController.doPrivileged(
+                new PrivilegedAction<ClassLoader>() {
+                    @Override
+                    public ClassLoader run() {
+                        return new CombinedClassLoader(Thread.currentThread().getContextClassLoader(),
+                                dcl);
                     }
                 });
 
-	serverCommunicatorAdmin = new 
-	  RMIServerCommunicatorAdmin(EnvHelp.getServerConnectionTimeout(env));
+        serverCommunicatorAdmin = new 
+            RMIServerCommunicatorAdmin(EnvHelp.getServerConnectionTimeout(env));
 
-	this.env = env;
+        this.env = env;
     }
-    
+
+    private static AccessControlContext withPermissions(Permission ... perms) {
+        Permissions col = new Permissions();
+
+        for (Permission thePerm : perms ) {
+            col.add(thePerm);
+        }
+
+        final ProtectionDomain pd = new ProtectionDomain(null, col);
+        return new AccessControlContext( new ProtectionDomain[] { pd });
+    }
+
+ 
     private synchronized ServerNotifForwarder getServerNotifFwd() {
-	// Lazily created when first use. Mainly when 
-	// addNotificationListener is first called.
-	if(serverNotifForwarder == null)
-	    serverNotifForwarder = 
-		new ServerNotifForwarder(mbeanServer, 
-					 env,
-					 rmiServer.getNotifBuffer());
-	
-	return serverNotifForwarder;
+        // Lazily created when first use. Mainly when
+        // addNotificationListener is first called.
+        if (serverNotifForwarder == null)
+            serverNotifForwarder =
+                new ServerNotifForwarder(mbeanServer,
+                                         env,
+                                         rmiServer.getNotifBuffer(),
+                                         connectionId);
+        return serverNotifForwarder;
     }
 
     public String getConnectionId() throws IOException {
@@ -163,21 +193,21 @@ public class RMIConnectionImpl implements RMIConnection, Unreferenced {
         final String  idstr = (debug?"["+this.toString()+"]":null);
 
 	synchronized(this) {
-            if (terminated) {
-                if (debug) logger.debug("close",idstr + " already terminated.");
-                return;
-            }
+	    if (terminated) {
+		if (debug) logger.debug("close",idstr + " already terminated.");
+		return;
+	    }
 
-            if (debug) logger.debug("close",idstr + " closing.");
+	    if (debug) logger.debug("close",idstr + " closing.");
 
-            terminated = true;
+	    terminated = true;
 
 	    if (serverCommunicatorAdmin != null) {
-	        serverCommunicatorAdmin.terminate();
+		serverCommunicatorAdmin.terminate();
 	    }
 
 	    if (serverNotifForwarder != null) {
-	        serverNotifForwarder.terminate();
+		serverNotifForwarder.terminate();
 	    }
 	}
 
@@ -311,8 +341,8 @@ public class RMIConnectionImpl implements RMIConnection, Unreferenced {
                   "connectionId=" + connectionId 
                   +", unwrapping parameters using classLoaderWithRepository.");
 
-	values = nullIsEmpty((Object[]) unwrap(params,
-						   classLoaderWithRepository));
+	values =
+            nullIsEmpty(unwrap(params, classLoaderWithRepository, Object[].class));
 
         try {
             final Object params2[] =
@@ -351,11 +381,11 @@ public class RMIConnectionImpl implements RMIConnection, Unreferenced {
     }
 
     public ObjectInstance createMBean(String className,
-                                      ObjectName name,
-                                      ObjectName loaderName,
-                                      MarshalledObject params,
-                                      String signature[],
-                                      Subject delegationSubject)
+                                 ObjectName name,
+                                 ObjectName loaderName,
+                                 MarshalledObject params,
+                                 String signature[],
+                                 Subject delegationSubject)
         throws
         ReflectionException,
         InstanceAlreadyExistsException,
@@ -373,10 +403,11 @@ public class RMIConnectionImpl implements RMIConnection, Unreferenced {
                  "connectionId=" + connectionId 
                  +", unwrapping params with MBean extended ClassLoader.");
 
-	values = nullIsEmpty((Object[]) unwrap(params,
-						   getClassLoader(loaderName),
-						   defaultClassLoader));
-
+	values = nullIsEmpty(unwrap(params,
+                                    getClassLoader(loaderName),
+                                    defaultClassLoader,
+                                    Object[].class));
+	
         try {
             final Object params2[] =
                new Object[] { className, name, loaderName, values,
@@ -486,7 +517,7 @@ public class RMIConnectionImpl implements RMIConnection, Unreferenced {
                  "connectionId=" + connectionId
                  +" unwrapping query with defaultClassLoader.");
 
-	queryValue = (QueryExp) unwrap(query, defaultClassLoader);
+	queryValue = unwrap(query, defaultContextClassLoader, QueryExp.class);
 
         try {
             final Object params[] = new Object[] { name, queryValue };
@@ -520,7 +551,7 @@ public class RMIConnectionImpl implements RMIConnection, Unreferenced {
                  "connectionId=" + connectionId
                  +" unwrapping query with defaultClassLoader.");
 
-	queryValue = (QueryExp) unwrap(query, defaultClassLoader);
+	queryValue = unwrap(query, defaultContextClassLoader, QueryExp.class);
 
         try {
             final Object params[] = new Object[] { name, queryValue };
@@ -666,9 +697,10 @@ public class RMIConnectionImpl implements RMIConnection, Unreferenced {
                  "connectionId=" + connectionId
                  +" unwrapping attribute with MBean extended ClassLoader.");
 
-	attr = (Attribute) unwrap(attribute,
-                                      getClassLoaderFor(name),
-                                      defaultClassLoader);
+	attr = unwrap(attribute,
+		      getClassLoaderFor(name),
+		      defaultClassLoader,
+                      Attribute.class);
 
         try {
             final Object params[] = new Object[] { name, attr };
@@ -701,8 +733,8 @@ public class RMIConnectionImpl implements RMIConnection, Unreferenced {
     }
 
     public AttributeList setAttributes(ObjectName name,
-                                       MarshalledObject attributes,
-                                       Subject delegationSubject)
+                         MarshalledObject attributes,
+                         Subject delegationSubject)
         throws
         InstanceNotFoundException,
         ReflectionException,
@@ -715,9 +747,10 @@ public class RMIConnectionImpl implements RMIConnection, Unreferenced {
                  +" unwrapping attributes with MBean extended ClassLoader.");
 
 	attrlist =
-	    (AttributeList) unwrap(attributes,
-                                       getClassLoaderFor(name),
-                                       defaultClassLoader);
+	    unwrap(attributes,
+		   getClassLoaderFor(name),
+		   defaultClassLoader,
+                   AttributeList.class);
 
         try {
             final Object params[] = new Object[] { name, attrlist };
@@ -765,9 +798,10 @@ public class RMIConnectionImpl implements RMIConnection, Unreferenced {
                  "connectionId=" + connectionId
                  +" unwrapping params with MBean extended ClassLoader.");
 
-	values = nullIsEmpty((Object[]) unwrap(params,
-						   getClassLoaderFor(name), 
-						   defaultClassLoader));
+	values = nullIsEmpty(unwrap(params,
+                                    getClassLoaderFor(name), 
+                                    defaultClassLoader,
+                                    Object[].class));
 
         try {
             final Object params2[] =
@@ -907,8 +941,8 @@ public class RMIConnectionImpl implements RMIConnection, Unreferenced {
     }
     
     public Integer[] addNotificationListeners(ObjectName[] names,
-                                              MarshalledObject[] filters,
-                                              Subject[] delegationSubjects)
+                      MarshalledObject[] filters,
+                      Subject[] delegationSubjects)
 	    throws InstanceNotFoundException, IOException {
 
 	if (names == null || filters == null) {
@@ -946,8 +980,9 @@ public class RMIConnectionImpl implements RMIConnection, Unreferenced {
 					"connectionId=" + connectionId +
 		      " unwrapping filter with target extended ClassLoader.");
 
-		filterValues[i] = (NotificationFilter)unwrap(filters[i], 
-					      targetCl, defaultClassLoader);
+		filterValues[i] =
+                    unwrap(filters[i], targetCl, defaultClassLoader,
+                           NotificationFilter.class);
 
 		if (debug) logger.debug("addNotificationListener"+
 					"(ObjectName,NotificationFilter)",
@@ -993,10 +1028,10 @@ public class RMIConnectionImpl implements RMIConnection, Unreferenced {
     }
 
     public void addNotificationListener(ObjectName name,
-                                        ObjectName listener,
-                                        MarshalledObject filter,
-                                        MarshalledObject handback,
-                                        Subject delegationSubject)
+                       ObjectName listener,
+                       MarshalledObject filter,
+                       MarshalledObject handback,
+                       Subject delegationSubject)
         throws InstanceNotFoundException, IOException {
 
 	checkNonNull("Target MBean name", name);
@@ -1013,15 +1048,16 @@ public class RMIConnectionImpl implements RMIConnection, Unreferenced {
                  "connectionId=" + connectionId
                  +" unwrapping filter with target extended ClassLoader.");
 
-	filterValue = (NotificationFilter)
-                unwrap(filter, targetCl, defaultClassLoader);
+	filterValue =
+            unwrap(filter, targetCl, defaultClassLoader, NotificationFilter.class);
 
 	if (debug) logger.debug("addNotificationListener"+
                  "(ObjectName,ObjectName,NotificationFilter,Object)",
                  "connectionId=" + connectionId
                  +" unwrapping handback with target extended ClassLoader.");
 
-	handbackValue = unwrap(handback, targetCl, defaultClassLoader);
+	handbackValue =
+            unwrap(handback, targetCl, defaultClassLoader, Object.class);
 
         try {
             final Object params[] =
@@ -1127,10 +1163,10 @@ public class RMIConnectionImpl implements RMIConnection, Unreferenced {
     }
 
     public void removeNotificationListener(ObjectName name,
-                                           ObjectName listener,
-                                           MarshalledObject filter,
-                                           MarshalledObject handback,
-                                           Subject delegationSubject)
+                        ObjectName listener,
+                        MarshalledObject filter,
+                        MarshalledObject handback,
+                        Subject delegationSubject)
         throws
         InstanceNotFoundException,
         ListenerNotFoundException,
@@ -1150,15 +1186,16 @@ public class RMIConnectionImpl implements RMIConnection, Unreferenced {
                  "connectionId=" + connectionId
                  +" unwrapping filter with target extended ClassLoader.");
 
-	filterValue = (NotificationFilter)
-                unwrap(filter, targetCl, defaultClassLoader);
+	filterValue =
+            unwrap(filter, targetCl, defaultClassLoader, NotificationFilter.class);
 
 	if (debug) logger.debug("removeNotificationListener"+
                  "(ObjectName,ObjectName,NotificationFilter,Object)",
                  "connectionId=" + connectionId
                  +" unwrapping handback with target extended ClassLoader.");
 
-	handbackValue = unwrap(handback, targetCl, defaultClassLoader);
+	handbackValue =
+            unwrap(handback, targetCl, defaultClassLoader, Object.class);
 
         try {
             final Object params[] =
@@ -1211,9 +1248,19 @@ public class RMIConnectionImpl implements RMIConnection, Unreferenced {
 					      new TargetedNotification[0]);
 
 	    }
-
-	    return getServerNotifFwd().fetchNotifs(clientSequenceNumber,
-						   timeout, maxNotifications);
+            final long csn = clientSequenceNumber;
+            final int mn = maxNotifications;
+            final long t = timeout;
+            PrivilegedAction<NotificationResult> action =
+                new PrivilegedAction<NotificationResult>() {
+                    public NotificationResult run() {
+                        return getServerNotifFwd().fetchNotifs(csn, t, mn);
+                    }
+            };
+            if (acc == null)
+                return action.run();
+            else
+                return AccessController.doPrivileged(action, acc);
 	} finally {
 	    serverCommunicatorAdmin.rspOutgoing();
 	}
@@ -1228,6 +1275,7 @@ public class RMIConnectionImpl implements RMIConnection, Unreferenced {
      *
      * @return a String representation of this object.
      **/
+    @Override
     public String toString() {
         return super.toString() + ": connectionId=" + connectionId;
     }
@@ -1276,24 +1324,18 @@ public class RMIConnectionImpl implements RMIConnection, Unreferenced {
     // private methods
     //------------------------------------------------------------------------
 
-    private ClassLoaderRepository getClassLoaderRepository() {
-        return (ClassLoaderRepository)
-            AccessController.doPrivileged(new PrivilegedAction() {
-                    public Object run() {
-                        return mbeanServer.getClassLoaderRepository();
-                    }
-                });
-    }
-
     private ClassLoader getClassLoader(final ObjectName name)
         throws InstanceNotFoundException {
         try {
-            return (ClassLoader)
-                AccessController.doPrivileged(new PrivilegedExceptionAction() {
-                        public Object run() throws InstanceNotFoundException {
+            return
+                AccessController.doPrivileged(
+                    new PrivilegedExceptionAction<ClassLoader>() {
+                        public ClassLoader run() throws InstanceNotFoundException {
                             return mbeanServer.getClassLoader(name);
                         }
-                    });
+                    },
+                    withPermissions(new MBeanPermission("*", "getClassLoader"))
+            );
         } catch (PrivilegedActionException pe) {
             throw (InstanceNotFoundException) extractException(pe);
         }
@@ -1303,11 +1345,14 @@ public class RMIConnectionImpl implements RMIConnection, Unreferenced {
         throws InstanceNotFoundException {
         try {
             return (ClassLoader)
-                AccessController.doPrivileged(new PrivilegedExceptionAction() {
+                AccessController.doPrivileged(
+                    new PrivilegedExceptionAction<Object>() {
                         public Object run() throws InstanceNotFoundException {
                             return mbeanServer.getClassLoaderFor(name);
                         }
-                    });
+                    },
+                    withPermissions(new MBeanPermission("*", "getClassLoaderFor"))
+            );
         } catch (PrivilegedActionException pe) {
             throw (InstanceNotFoundException) extractException(pe);
         }
@@ -1331,9 +1376,8 @@ public class RMIConnectionImpl implements RMIConnection, Unreferenced {
 			"an authenticated subject is put in place";
 		    throw new SecurityException(msg);
 		}
-		reqACC =
-		    subjectDelegator.delegatedContext(acc,
-						      delegationSubject);
+		reqACC = subjectDelegator.delegatedContext(
+                    acc, delegationSubject, removeCallerContext);
 	    }
 
 	    PrivilegedOperation op =
@@ -1478,132 +1522,37 @@ public class RMIConnectionImpl implements RMIConnection, Unreferenced {
 	}
     }
 
-    /*
-       Parameters to certain MBeanServer operations are passed
-       remotely wrapped inside a MarshalledObject, so that they can be
-       unwrapped with the right class loader.  This loader is
-       typically the target MBean's class loader.
-       MarshalledObject.get() uses the context class loader to load
-       classes as it deserializes, which is what we want.  However,
-       before consulting the context class loader, it consults the
-       calling class's loader, if that's not null.  So, in the
-       standalone version of javax.management.remote, if the class
-       you're looking for is known to RMIConnectionImpl's class loader
-       (typically the system class loader) then that loader will load
-       it. This contradicts the class-loading semantics defined in JSR
-       160, and can lead to problems if the same class name is known
-       to RMIConnectionImpl's class loader and to the class loader of
-       the target MBean in an invoke, setAttribute, or createMBean
-       operation. If it is deserialized by the former, it can't be
-       passed to the MBean, which expects the latter.
+    private static class SetCcl implements PrivilegedExceptionAction<ClassLoader> {
+        private final ClassLoader classLoader;
 
-       We therefore call MarshalledObject.get() from within a class
-       that is loaded by a NoCallStackClassLoader.  This loader
-       doesn't know any other classes, so cannot load any that it is
-       not supposed to.
+        SetCcl(ClassLoader classLoader) {
+            this.classLoader = classLoader;
+        }
 
-       This is not needed in J2SE 5, where javax.management.remote
-       is loaded by the bootstrap class loader.
-
-       The byteCodeString below encodes the following Java class,
-       compiled with "javac -g:none" on J2SE 1.4.2.
-
-	package com.sun.jmx.remote.internal;
-
-	import java.io.IOException;
-	import java.rmi.MarshalledObject;
-
-	public class MOGet implements Unmarshal {
-	    public Object get(MarshalledObject mo)
-		    throws IOException, ClassNotFoundException {
-		return mo.get();
-	    }
-	}
-     
-     */
-
-    private static final String unmarshalClassName =
-	"com.sun.jmx.remote.internal.MOGet";
-
-    private static boolean bootstrapLoaded =
-	(RMIConnectionImpl.class.getClassLoader() ==
-	 Object.class.getClassLoader());
-
-    private static final Unmarshal unmarshal;
-    static {
-	final String byteCodeString =
-	    "\312\376\272\276\0\0\0.\0\30\12\0\4\0\16\12\0\17\0\20\7\0\21\7\0"+
-	    "\22\7\0\23\1\0\6<init>\1\0\3()V\1\0\4Code\1\0\3get\1\0/(Ljava/r"+
-	    "mi/MarshalledObject;)Ljava/lang/Object;\1\0\12Exceptions\7\0\24"+
-	    "\7\0\25\14\0\6\0\7\7\0\26\14\0\11\0\27\1\0!com/sun/jmx/remote/i"+
-	    "nternal/MOGet\1\0\20java/lang/Object\1\0%com/sun/jmx/remote/int"+
-	    "ernal/Unmarshal\1\0\23java/io/IOException\1\0\40java/lang/Class"+
-	    "NotFoundException\1\0\31java/rmi/MarshalledObject\1\0\24()Ljava"+
-	    "/lang/Object;\0!\0\3\0\4\0\1\0\5\0\0\0\2\0\1\0\6\0\7\0\1\0\10\0"+
-	    "\0\0\21\0\1\0\1\0\0\0\5*\267\0\1\261\0\0\0\0\0\1\0\11\0\12\0\2\0"+
-	    "\10\0\0\0\21\0\1\0\2\0\0\0\5+\266\0\2\260\0\0\0\0\0\13\0\0\0\6\0"+
-	    "\2\0\14\0\15\0\0";
-	if (bootstrapLoaded)
-	    unmarshal = null;
-	else {
-	    final byte[] byteCode =
-		NoCallStackClassLoader.stringToBytes(byteCodeString);
-	    final String[] otherClassNames = {
-		Unmarshal.class.getName()
-	    };
-	    final Class thisClass = RMIConnectionImpl.class;
-	    final ClassLoader thisClassLoader = thisClass.getClassLoader();
-	    final PrivilegedExceptionAction action =
-		new PrivilegedExceptionAction() {
-		    public Object run() throws Exception {
-			final ProtectionDomain thisProtectionDomain =
-			    thisClass.getProtectionDomain();
-			ClassLoader cl =
-			    new NoCallStackClassLoader(unmarshalClassName,
-						       byteCode,
-						       otherClassNames,
-						       thisClassLoader,
-						       thisProtectionDomain);
-			Class c = cl.loadClass(unmarshalClassName);
-			return c.newInstance();
-		    }
-		};
-	    try {
-		unmarshal = (Unmarshal) AccessController.doPrivileged(action);
-	    } catch (PrivilegedActionException e) {
-		Error error = new Error("Internal error: " + e);
-		EnvHelp.initCause(error, e);
-		throw error;
-	    }
-	}
+        public ClassLoader run() {
+            Thread currentThread = Thread.currentThread();
+            ClassLoader old = currentThread.getContextClassLoader();
+            currentThread.setContextClassLoader(classLoader);
+            return old;
+        }
     }
 
-    private static Object unwrap(final MarshalledObject mo,
-				 final ClassLoader cl)
+    private static <T> T unwrap(final MarshalledObject mo,
+				final ClassLoader cl,
+                                final Class<T> wrappedClass)
 	    throws IOException {
         if (mo == null) {
             return null;
         }
         try {
-            return AccessController.doPrivileged(
-		new PrivilegedExceptionAction() {
-                    public Object run()
-			    throws IOException {
-                        final ClassLoader old =
-                            Thread.currentThread().getContextClassLoader();
-                        Thread.currentThread().setContextClassLoader(cl);
-                        try {
-			    if (bootstrapLoaded)
-				return mo.get();
-			    else
-				return unmarshal.get(mo);
-			} catch (ClassNotFoundException cnfe) {
-			    throw new UnmarshalException(cnfe.toString(), cnfe);
-                        } finally {
-                            Thread.currentThread().setContextClassLoader(old);
-                        }
-                    }
-                });
+            final ClassLoader old = AccessController.doPrivileged(new SetCcl(cl));
+            try {
+                return wrappedClass.cast(mo.get());
+            } catch (ClassNotFoundException cnfe) {
+                throw new UnmarshalException(cnfe.toString(), cnfe);
+            } finally {
+                AccessController.doPrivileged(new SetCcl(old));
+            }
         } catch (PrivilegedActionException pe) {
             Exception e = extractException(pe);
             if (e instanceof IOException) {
@@ -1618,21 +1567,24 @@ public class RMIConnectionImpl implements RMIConnection, Unreferenced {
         return null;
     }
 
-    private static Object unwrap(final MarshalledObject mo,
-				 final ClassLoader cl1,
-				 final ClassLoader cl2)
+    private static <T> T unwrap(final MarshalledObject mo,
+				final ClassLoader cl1,
+				final ClassLoader cl2,
+                                final Class<T> wrappedClass)
         throws IOException {
         if (mo == null) {
             return null;
         }
         try {
-            return AccessController.doPrivileged(
-                   new PrivilegedExceptionAction() {
-                       public Object run()
-                           throws IOException {
-                           return unwrap(mo, new OrderClassLoaders(cl1, cl2));
-                       }
-                   });
+            ClassLoader orderCL = AccessController.doPrivileged(
+                new PrivilegedExceptionAction<ClassLoader>() {
+                    public ClassLoader run() throws Exception {
+                        return new CombinedClassLoader(Thread.currentThread().getContextClassLoader(),
+                                new OrderClassLoaders(cl1, cl2));
+                    }
+                }
+            );
+            return unwrap(mo, orderCL, wrappedClass);
         } catch (PrivilegedActionException pe) {
             Exception e = extractException(pe);
             if (e instanceof IOException) {
@@ -1654,7 +1606,7 @@ public class RMIConnectionImpl implements RMIConnection, Unreferenced {
     private static IOException newIOException(String message, 
                                               Throwable cause) {
         final IOException x = new IOException(message);
-        return (IOException) EnvHelp.initCause(x,cause);
+        return EnvHelp.initCause(x,cause);
     }
 
     /**
@@ -1710,6 +1662,8 @@ public class RMIConnectionImpl implements RMIConnection, Unreferenced {
 
     private final SubjectDelegator subjectDelegator;
 
+    private final boolean removeCallerContext;
+
     private final AccessControlContext acc;
 
     private final RMIServerImpl rmiServer;
@@ -1718,6 +1672,8 @@ public class RMIConnectionImpl implements RMIConnection, Unreferenced {
 
     private final ClassLoader defaultClassLoader;
 
+    private final ClassLoader defaultContextClassLoader;
+
     private final ClassLoaderWithRepository classLoaderWithRepository;
     
     private boolean terminated = false;
@@ -1725,6 +1681,7 @@ public class RMIConnectionImpl implements RMIConnection, Unreferenced {
     private final String connectionId;
 
     private final ServerCommunicatorAdmin serverCommunicatorAdmin;
+
     // Method IDs for doOperation
     //---------------------------
 
@@ -1781,6 +1738,7 @@ public class RMIConnectionImpl implements RMIConnection, Unreferenced {
 
     // SERVER NOTIFICATION
     //--------------------
+
     private ServerNotifForwarder serverNotifForwarder;
     private Map env;
     
@@ -1800,4 +1758,43 @@ public class RMIConnectionImpl implements RMIConnection, Unreferenced {
 
     private static final ClassLogger logger =
 	new ClassLogger("javax.management.remote.rmi", "RMIConnectionImpl");
+    
+    private static final class CombinedClassLoader extends ClassLoader {
+        
+        private final static class ClassLoaderWrapper extends ClassLoader {
+            ClassLoaderWrapper(ClassLoader cl) {
+                super(cl);
+            }
+            
+            @Override
+            protected Class<?> loadClass(String name, boolean resolve) 
+                    throws ClassNotFoundException {
+                return super.loadClass(name, resolve);
+            }
+        };
+        
+        final ClassLoaderWrapper defaultCL;
+        
+        private CombinedClassLoader(ClassLoader parent, ClassLoader defaultCL) {
+            super(parent);
+            this.defaultCL = new ClassLoaderWrapper(defaultCL);
+        }
+        
+        @Override
+        protected Class<?> loadClass(String name, boolean resolve)
+        throws ClassNotFoundException {
+            try {
+                super.loadClass(name, resolve);
+            } catch(Exception e) {
+                for(Throwable t = e; t != null; t = t.getCause()) {
+                    if(t instanceof SecurityException) {
+                        throw t==e?(SecurityException)t:new SecurityException(t.getMessage(), e);
+                    }
+                }
+            }
+            final Class<?> cl = defaultCL.loadClass(name, resolve);
+            return cl;
+        }
+        
+    }
 }

@@ -1,13 +1,12 @@
 /*
- * @(#)StringBuilder.java	1.9 04/07/16
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang;
 
-import sun.misc.FloatingDecimal;
 
 /**
  * A mutable sequence of characters.  This class provides an API compatible
@@ -48,7 +47,7 @@ import sun.misc.FloatingDecimal;
  * recommended that {@link java.lang.StringBuffer} be used. 
  *
  * @author	Michael McCloskey
- * @version 	1.9, 07/16/04
+ * @version 	%I%, %G%
  * @see         java.lang.StringBuffer
  * @see         java.lang.String
  * @since	1.5

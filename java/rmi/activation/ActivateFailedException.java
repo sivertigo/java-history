@@ -1,8 +1,8 @@
 /*
- * @(#)ActivateFailedException.java	1.10 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.rmi.activation;
@@ -12,7 +12,7 @@ package java.rmi.activation;
  * fails during a remote call to an activatable object.
  *
  * @author 	Ann Wollrath
- * @version	1.10, 12/19/03
+ * @version	%I%, %G%
  * @since 	1.2
  */
 public class ActivateFailedException extends java.rmi.RemoteException {

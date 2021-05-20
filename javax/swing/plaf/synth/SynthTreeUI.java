@@ -1,30 +1,42 @@
 /*
- * @(#)SynthTreeUI.java	1.23 04/05/27
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package javax.swing.plaf.synth;
 
-import javax.swing.*;
-import javax.swing.event.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.datatransfer.*;
-import java.awt.dnd.*;
-import java.beans.*;
-import java.io.*;
-import java.util.*;
-import javax.swing.plaf.*;
-import javax.swing.plaf.basic.*;
-import javax.swing.tree.*;
-import javax.swing.text.Position;
-import sun.swing.plaf.synth.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Insets;
+import java.awt.Rectangle;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.Enumeration;
+import javax.swing.DefaultCellEditor;
+import javax.swing.Icon;
+import javax.swing.JComponent;
+import javax.swing.JTextField;
+import javax.swing.JTree;
+import javax.swing.LookAndFeel;
+import javax.swing.plaf.ComponentUI;
+import javax.swing.plaf.UIResource;
+import javax.swing.plaf.basic.BasicTreeUI;
+import javax.swing.tree.DefaultTreeCellEditor;
+import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.TreeCellEditor;
+import javax.swing.tree.TreeCellRenderer;
+import javax.swing.tree.TreeModel;
+import javax.swing.tree.TreePath;
+import sun.swing.plaf.synth.SynthIcon;
+import sun.swing.plaf.synth.SynthUI;
 
 /**
  * Skinnable TreeUI.
  *
- * @version 1.23, 05/27/04
+ * @version %I%, %G%
  * @author Scott Violet
  */
 class SynthTreeUI extends BasicTreeUI implements PropertyChangeListener,
@@ -36,6 +48,8 @@ class SynthTreeUI extends BasicTreeUI implements PropertyChangeListener,
 
     private boolean drawHorizontalLines;
     private boolean drawVerticalLines;
+    
+    private Object linesStyle;
 
     private int leadRow;
 
@@ -45,7 +59,6 @@ class SynthTreeUI extends BasicTreeUI implements PropertyChangeListener,
 
     private Icon expandedIconWrapper;
 
-
     public static ComponentUI createUI(JComponent x) {
 	return new SynthTreeUI();
     }
@@ -54,10 +67,12 @@ class SynthTreeUI extends BasicTreeUI implements PropertyChangeListener,
         expandedIconWrapper = new ExpandedIconWrapper();
     }
 
+    @Override
     public Icon getExpandedIcon() {
 	return expandedIconWrapper;
     }
 
+    @Override
     protected void installDefaults() {
         updateStyle(tree);
     }
@@ -82,6 +97,7 @@ class SynthTreeUI extends BasicTreeUI implements PropertyChangeListener,
                           context, "Tree.drawHorizontalLines",true);
             drawVerticalLines = style.getBoolean(
                         context, "Tree.drawVerticalLines", true);
+            linesStyle = style.get(context, "Tree.linesStyle");
 
 	        value = style.get(context, "Tree.rowHeight");
 	        if (value != null) {
@@ -116,11 +132,13 @@ class SynthTreeUI extends BasicTreeUI implements PropertyChangeListener,
         context.dispose();
     }
 
+    @Override
     protected void installListeners() {
         super.installListeners();
         tree.addPropertyChangeListener(this);
     }
 
+    @Override
     public SynthContext getContext(JComponent c) {
         return getContext(c, getComponentState(c));
     }
@@ -153,6 +171,7 @@ class SynthTreeUI extends BasicTreeUI implements PropertyChangeListener,
         return ENABLED | SELECTED;
     }
 
+    @Override
     protected TreeCellEditor createDefaultCellEditor() {
         TreeCellRenderer renderer = tree.getCellRenderer();
         DefaultTreeCellEditor editor;
@@ -167,10 +186,12 @@ class SynthTreeUI extends BasicTreeUI implements PropertyChangeListener,
         return editor;
     }
 
+    @Override
     protected TreeCellRenderer createDefaultCellRenderer() {
         return new SynthTreeCellRenderer();
     }
 
+    @Override
     protected void uninstallDefaults() {
         SynthContext context = getContext(tree, ENABLED);
 
@@ -189,11 +210,13 @@ class SynthTreeUI extends BasicTreeUI implements PropertyChangeListener,
 	}
     }
 
+    @Override
     protected void uninstallListeners() {
         super.uninstallListeners();
         tree.removePropertyChangeListener(this);
     }
 
+    @Override
     public void update(Graphics g, JComponent c) {
         SynthContext context = getContext(c);
 
@@ -209,21 +232,12 @@ class SynthTreeUI extends BasicTreeUI implements PropertyChangeListener,
         context.getPainter().paintTreeBorder(context, g, x, y, w, h);
     }
 
+    @Override
     public void paint(Graphics g, JComponent c) {
         SynthContext context = getContext(c);
 
         paint(context, g);
         context.dispose();
-    }
-
-    private void adjustCellBounds(JTree tree, Rectangle bounds, Insets i){
-        if (bounds != null) {
-            if (i == null) {
-                i = SynthLookAndFeel.EMPTY_UIRESOURCE_INSETS;
-            }
-            bounds.x += i.left;
-            bounds.y += i.top;
-        }
     }
 
     private void updateLeadRow() {
@@ -279,8 +293,7 @@ class SynthTreeUI extends BasicTreeUI implements PropertyChangeListener,
 			isExpanded = treeState.getExpandedState(path);
 			hasBeenExpanded = tree.hasBeenExpanded(path);
 		    }
-		    bounds = treeState.getBounds(path, boundsBuffer);
-                    adjustCellBounds(tree, bounds, insets);
+                    bounds = getPathBounds(tree, path);
                     rowBounds.y = bounds.y;
                     rowBounds.height = bounds.height;
 		    paintRow(renderer, dtcr, context, cellContext, g,
@@ -319,8 +332,7 @@ class SynthTreeUI extends BasicTreeUI implements PropertyChangeListener,
 			isExpanded = treeState.getExpandedState(path);
 			hasBeenExpanded = tree.hasBeenExpanded(path);
 		    }
-		    bounds = treeState.getBounds(path, boundsBuffer);
-                    adjustCellBounds(tree, bounds, insets);
+                    bounds = getPathBounds(tree, path);
 		    // See if the vertical line to the parent has been drawn.
 		    parentPath = path.getParentPath();
 		    if (parentPath != null) {
@@ -357,8 +369,88 @@ class SynthTreeUI extends BasicTreeUI implements PropertyChangeListener,
 	    }
 	}
         cellContext.dispose();
+        
+        paintDropLine(g);
+        
 	// Empty out the renderer pane, allowing renderers to be gc'ed.
 	rendererPane.removeAll();
+    }
+
+    private boolean isDropLine(JTree.DropLocation loc) {
+        return loc != null && loc.getPath() != null && loc.getChildIndex() != -1;
+    }
+
+    private void paintDropLine(Graphics g) {
+        JTree.DropLocation loc = tree.getDropLocation();
+        if (!isDropLine(loc)) {
+            return;
+        }
+
+        Color c = (Color)style.get(paintContext, "Tree.dropLineColor");
+        if (c != null) {
+            g.setColor(c);
+            Rectangle rect = getDropLineRect(loc);
+            g.fillRect(rect.x, rect.y, rect.width, rect.height);
+        }
+    }
+
+    private Rectangle getDropLineRect(JTree.DropLocation loc) {
+        Rectangle rect = null;
+        TreePath path = loc.getPath();
+        int index = loc.getChildIndex();
+        boolean ltr = tree.getComponentOrientation().isLeftToRight();
+
+        Insets insets = tree.getInsets();
+
+        if (tree.getRowCount() == 0) {
+            rect = new Rectangle(insets.left,
+                                 insets.top,
+                                 tree.getWidth() - insets.left - insets.right,
+                                 0);
+        } else {
+            int row = tree.getRowForPath(path);
+            TreeModel model = getModel();
+            Object root = model.getRoot();
+
+            if (path.getLastPathComponent() == root
+                    && index >= model.getChildCount(root)) {
+
+                rect = tree.getRowBounds(tree.getRowCount() - 1);
+                rect.y = rect.y + rect.height;
+                Rectangle xRect;
+
+                if (!tree.isRootVisible()) {
+                    xRect = tree.getRowBounds(0);
+                } else if (model.getChildCount(root) == 0){
+                    xRect = tree.getRowBounds(0);
+                    xRect.x += totalChildIndent;
+                    xRect.width -= totalChildIndent + totalChildIndent;
+                } else {
+                    TreePath lastChildPath = path.pathByAddingChild(
+                        model.getChild(root, model.getChildCount(root) - 1));
+                    xRect = tree.getPathBounds(lastChildPath);
+                }
+
+                rect.x = xRect.x;
+                rect.width = xRect.width;
+            } else {
+                rect = tree.getPathBounds(path.pathByAddingChild(
+                    model.getChild(path.getLastPathComponent(), index)));
+            }
+        }
+
+        if (rect.y != 0) {
+            rect.y--;
+        }
+
+        if (!ltr) {
+            rect.x = rect.x + rect.width - 100;
+        }
+
+        rect.width = 100;
+        rect.height = 2;
+
+        return rect;
     }
 
     private void configureRenderer(SynthContext context) {
@@ -383,17 +475,18 @@ class SynthTreeUI extends BasicTreeUI implements PropertyChangeListener,
             context.setComponentState(ENABLED);
             color = r.getTextNonSelectionColor();
             if (color == null || color instanceof UIResource) {
-                r.setTextNonSelectionColor(style.getColor(
+                r.setTextNonSelectionColor(style.getColorForState(
                                         context, ColorType.TEXT_FOREGROUND));
             }
             color = r.getBackgroundNonSelectionColor();
-            if (color instanceof UIResource) {
-                r.setBackgroundNonSelectionColor(style.getColor(
+            if (color == null || color instanceof UIResource) {
+                r.setBackgroundNonSelectionColor(style.getColorForState(
                                   context, ColorType.TEXT_BACKGROUND));
             }
         }
     }
 
+    @Override
     protected void paintHorizontalPartOfLeg(Graphics g, Rectangle clipBounds,
 					    Insets insets, Rectangle bounds,
 					    TreePath path, int row,
@@ -407,12 +500,14 @@ class SynthTreeUI extends BasicTreeUI implements PropertyChangeListener,
         }
     }
 
+    @Override
     protected void paintHorizontalLine(Graphics g, JComponent c, int y,
 				      int left, int right) {
         paintContext.getStyle().getGraphicsUtils(paintContext).drawLine(
-            paintContext, "Tree.horizontalLine", g, left, y, right, y);
+            paintContext, "Tree.horizontalLine", g, left, y, right, y, linesStyle);
     }
 
+    @Override
     protected void paintVerticalPartOfLeg(Graphics g,
                                           Rectangle clipBounds, Insets insets,
                                           TreePath path) {
@@ -421,10 +516,11 @@ class SynthTreeUI extends BasicTreeUI implements PropertyChangeListener,
         }
     }
 
+    @Override
     protected void paintVerticalLine(Graphics g, JComponent c, int x, int top,
 				    int bottom) {
         paintContext.getStyle().getGraphicsUtils(paintContext).drawLine(
-            paintContext, "Tree.verticalLine", g, x, top, x, bottom);
+            paintContext, "Tree.verticalLine", g, x, top, x, bottom, linesStyle);
     }
 
     protected void paintRow(TreeCellRenderer renderer,
@@ -436,12 +532,22 @@ class SynthTreeUI extends BasicTreeUI implements PropertyChangeListener,
 	// Don't paint the renderer if editing this row.
         boolean selected = tree.isRowSelected(row);
 
-        if (selected) {
-            cellContext.setComponentState(ENABLED | SELECTED);
+        JTree.DropLocation dropLocation = (JTree.DropLocation)tree.getDropLocation();
+        boolean isDrop = dropLocation != null
+                         && dropLocation.getChildIndex() == -1
+                         && path == dropLocation.getPath();
+
+        int state = ENABLED;
+        if (selected || isDrop) {
+            state |= SELECTED;
         }
-        else {
-            cellContext.setComponentState(ENABLED);
+
+        if (tree.isFocusOwner() && row == leadRow) {
+            state |= FOCUSED;
         }
+
+        cellContext.setComponentState(state);
+
         if (dtcr != null && (dtcr.getBorderSelectionColor() instanceof
                              UIResource)) {
             dtcr.setBorderSelectionColor(style.getColor(
@@ -476,21 +582,82 @@ class SynthTreeUI extends BasicTreeUI implements PropertyChangeListener,
 				    bounds.width, bounds.height, true);
     }
 
+    private int findCenteredX(int x, int iconWidth) {
+        return tree.getComponentOrientation().isLeftToRight()
+               ? x - (int)Math.ceil(iconWidth / 2.0)
+               : x - (int)Math.floor(iconWidth / 2.0);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    @Override
+    protected void paintExpandControl(Graphics g,
+				      Rectangle clipBounds, Insets insets,
+				      Rectangle bounds, TreePath path,
+				      int row, boolean isExpanded,
+				      boolean hasBeenExpanded,
+				      boolean isLeaf) {
+        //modify the paintContext's state to match the state for the row
+        //this is a hack in that it requires knowledge of the subsequent
+        //method calls. The point is, the context used in drawCentered
+        //should reflect the state of the row, not of the tree.
+        boolean isSelected = tree.getSelectionModel().isPathSelected(path);
+        int state = paintContext.getComponentState();
+        if (isSelected) {
+            paintContext.setComponentState(state | SynthConstants.SELECTED);
+        }
+        super.paintExpandControl(g, clipBounds, insets, bounds, path, row,
+                isExpanded, hasBeenExpanded, isLeaf);
+        paintContext.setComponentState(state);
+    }
+
+    @Override
     protected void drawCentered(Component c, Graphics graphics, Icon icon,
 				int x, int y) {
         int w = SynthIcon.getIconWidth(icon, paintContext);
         int h = SynthIcon.getIconHeight(icon, paintContext);
 
-	SynthIcon.paintIcon(icon, paintContext, graphics, x - w/2, y - h/2, w,
-                            h);
+	SynthIcon.paintIcon(icon, paintContext, graphics,
+                            findCenteredX(x, w),
+                            y - h/2, w, h);
     }
 
     public void propertyChange(PropertyChangeEvent event) {
         if (SynthLookAndFeel.shouldUpdateStyle(event)) {
             updateStyle((JTree)event.getSource());
         }
+
+        if ("dropLocation" == event.getPropertyName()) {
+            JTree.DropLocation oldValue = (JTree.DropLocation)event.getOldValue();
+            repaintDropLocation(oldValue);
+            repaintDropLocation(tree.getDropLocation());
+        }
     }
 
+    private void repaintDropLocation(JTree.DropLocation loc) {
+        if (loc == null) {
+            return;
+        }
+
+        Rectangle r;
+
+        if (isDropLine(loc)) {
+            r = getDropLineRect(loc);
+        } else {
+            r = tree.getPathBounds(loc.getPath());
+            if (r != null) {
+                r.x = 0;
+                r.width = tree.getWidth();
+            }
+        }
+
+        if (r != null) {
+            tree.repaint(r);
+        }
+    }
+
+    @Override
     protected int getRowX(int row, int depth) {
         return super.getRowX(row, depth) + padding;
     }
@@ -500,9 +667,13 @@ class SynthTreeUI extends BasicTreeUI implements PropertyChangeListener,
                                implements UIResource {
         SynthTreeCellRenderer() {
         }
+        
+        @Override
         public String getName() {
             return "Tree.cellRenderer";
         }
+        
+        @Override
         public Component getTreeCellRendererComponent(JTree tree, Object value,
                                                       boolean sel,
                                                       boolean expanded,
@@ -511,7 +682,7 @@ class SynthTreeUI extends BasicTreeUI implements PropertyChangeListener,
             if (!useTreeColors && (sel || hasFocus)) {
                 SynthLookAndFeel.setSelectedUI((SynthLabelUI)SynthLookAndFeel.
                              getUIOfType(getUI(), SynthLabelUI.class),
-                                   sel, hasFocus, tree.isEnabled());
+                                   sel, hasFocus, tree.isEnabled(), false);
             }
             else {
                 SynthLookAndFeel.resetSelectedUI();
@@ -519,6 +690,8 @@ class SynthTreeUI extends BasicTreeUI implements PropertyChangeListener,
             return super.getTreeCellRendererComponent(tree, value, sel,
                                                       expanded, leaf, row, hasFocus);
         }
+        
+        @Override
         public void paint(Graphics g) {
             paintComponent(g);
             if (hasFocus) {
@@ -565,8 +738,10 @@ class SynthTreeUI extends BasicTreeUI implements PropertyChangeListener,
             setBorderSelectionColor(null);
         }
 
+        @Override
         protected TreeCellEditor createTreeCellEditor() {
             JTextField tf = new JTextField() {
+                @Override
                 public String getName() {
                     return "Tree.cellEditor";
                 }
@@ -578,7 +753,6 @@ class SynthTreeUI extends BasicTreeUI implements PropertyChangeListener,
             return editor;
         }
     }
-
 
     //
     // BasicTreeUI directly uses expandIcon outside of the Synth methods.

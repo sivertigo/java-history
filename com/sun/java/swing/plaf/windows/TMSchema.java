@@ -1,8 +1,8 @@
 /*
- * @(#)TMSchema.java	1.3 07/01/18
+ * %W% %E%
  *
- * Copyright 2005 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 /*
@@ -33,8 +33,9 @@ import sun.awt.windows.ThemeReader;
  * Implements Windows Parts and their States and Properties for the Windows Look and Feel.
  *
  * See http://msdn.microsoft.com/library/default.asp?url=/library/en-us/shellcc/platform/commctls/userex/topics/partsandstates.asp
+ * See tmschema.h (or vssym32.h & vsstyle.h for MS Vista)
  *
- * @version 1.3 01/18/07
+ * @version %I% %G%
  * @author Leif Samuelsson
  */
 class TMSchema {
@@ -93,6 +94,7 @@ class TMSchema {
         CP_DROPDOWNBUTTONRIGHT   (Control.COMBOBOX, 6),
         CP_DROPDOWNBUTTONLEFT    (Control.COMBOBOX, 7),
         CP_CUEBANNER             (Control.COMBOBOX, 8),
+ 
 
         EP_EDIT    (Control.EDIT, 0),
         EP_EDITTEXT(Control.EDIT, 1),
@@ -125,8 +127,8 @@ class TMSchema {
         SBP_GRIPPERVERT   (Control.SCROLLBAR,  9),
         SBP_SIZEBOX	  (Control.SCROLLBAR, 10),
 
-        SPNP_SPINUP  (Control.SPIN, 1),
-        SPNP_SPINDOWN(Control.SPIN, 2),
+        SPNP_UP  (Control.SPIN, 1),
+        SPNP_DOWN(Control.SPIN, 2),
 
         TABP_TABITEM         (Control.TAB, 1),
         TABP_TABITEMLEFTEDGE (Control.TAB, 2),
@@ -227,6 +229,12 @@ class TMSchema {
         FOCUSED,
         HOT,
         HOTCHECKED,
+        ICONHOT,
+        ICONNORMAL,
+        ICONPRESSED,
+        ICONSORTEDHOT,
+        ICONSORTEDNORMAL,
+        ICONSORTEDPRESSED,
         INACTIVE,
 	INACTIVENORMAL,		// See note 1
 	INACTIVEHOT,		// See note 1
@@ -257,7 +265,17 @@ class TMSchema {
         UPDISABLED,
         UPHOT,
         UPNORMAL,
-        UPPRESSED;
+        UPPRESSED,
+        HOVER,
+        UPHOVER, 
+        DOWNHOVER, 
+        LEFTHOVER, 
+        RIGHTHOVER,
+        SORTEDDOWN,
+        SORTEDHOT,
+        SORTEDNORMAL,
+        SORTEDPRESSED,
+        SORTEDUP;
 
 
 	/**
@@ -289,20 +307,26 @@ class TMSchema {
 			MIXEDNORMAL,     MIXEDHOT,     MIXEDPRESSED,     MIXEDDISABLED
 	    });
 
-            State[] comboBoxStates = new State[] { NORMAL, HOT, PRESSED, DISABLED }; 
-            stateMap.put(Part.CP_COMBOBOX, comboBoxStates); 
-            stateMap.put(Part.CP_DROPDOWNBUTTON, comboBoxStates); 
-            stateMap.put(Part.CP_BACKGROUND, comboBoxStates); 
-            stateMap.put(Part.CP_TRANSPARENTBACKGROUND, comboBoxStates); 
-            stateMap.put(Part.CP_BORDER, comboBoxStates); 
-            stateMap.put(Part.CP_READONLY, comboBoxStates); 
-            stateMap.put(Part.CP_DROPDOWNBUTTONRIGHT, comboBoxStates); 
-            stateMap.put(Part.CP_DROPDOWNBUTTONLEFT, comboBoxStates); 
-            stateMap.put(Part.CP_CUEBANNER, comboBoxStates); 
+            State[] comboBoxStates = new State[] { NORMAL, HOT, PRESSED, DISABLED };
+            stateMap.put(Part.CP_COMBOBOX, comboBoxStates);
+            stateMap.put(Part.CP_DROPDOWNBUTTON, comboBoxStates);
+            stateMap.put(Part.CP_BACKGROUND, comboBoxStates);
+            stateMap.put(Part.CP_TRANSPARENTBACKGROUND, comboBoxStates);
+            stateMap.put(Part.CP_BORDER, comboBoxStates);
+            stateMap.put(Part.CP_READONLY, comboBoxStates);
+            stateMap.put(Part.CP_DROPDOWNBUTTONRIGHT, comboBoxStates);
+            stateMap.put(Part.CP_DROPDOWNBUTTONLEFT, comboBoxStates);
+            stateMap.put(Part.CP_CUEBANNER, comboBoxStates);
 
-	    stateMap.put(Part.HP_HEADERITEM, new State[] { NORMAL, HOT, PRESSED });
+            stateMap.put(Part.HP_HEADERITEM, new State[] { NORMAL, HOT, PRESSED,
+                          SORTEDNORMAL, SORTEDHOT, SORTEDPRESSED,
+                          ICONNORMAL, ICONHOT, ICONPRESSED,
+                          ICONSORTEDNORMAL, ICONSORTEDHOT, ICONSORTEDPRESSED });
 
-	    State[] scrollBarStates = new State[] { NORMAL, HOT, PRESSED, DISABLED };
+            stateMap.put(Part.HP_HEADERSORTARROW,
+                         new State[] {SORTEDDOWN, SORTEDUP});
+
+            State[] scrollBarStates = new State[] { NORMAL, HOT, PRESSED, DISABLED, HOVER };
 	    stateMap.put(Part.SBP_SCROLLBAR,    scrollBarStates);
 	    stateMap.put(Part.SBP_THUMBBTNVERT, scrollBarStates);
 	    stateMap.put(Part.SBP_THUMBBTNHORZ, scrollBarStates);
@@ -311,16 +335,17 @@ class TMSchema {
 
 	    stateMap.put(Part.SBP_ARROWBTN,
 		       new State[] {
-			UPNORMAL,    UPHOT,    UPPRESSED,    UPDISABLED,
-			DOWNNORMAL,  DOWNHOT,  DOWNPRESSED,  DOWNDISABLED,
-			LEFTNORMAL,  LEFTHOT,  LEFTPRESSED,  LEFTDISABLED,
-			RIGHTNORMAL, RIGHTHOT, RIGHTPRESSED, RIGHTDISABLED
+                UPNORMAL,    UPHOT,     UPPRESSED,    UPDISABLED,
+                DOWNNORMAL,  DOWNHOT,   DOWNPRESSED,  DOWNDISABLED,
+                LEFTNORMAL,  LEFTHOT,   LEFTPRESSED,  LEFTDISABLED,
+                RIGHTNORMAL, RIGHTHOT,  RIGHTPRESSED, RIGHTDISABLED,
+                UPHOVER,     DOWNHOVER, LEFTHOVER,    RIGHTHOVER
 	    });
 
 
 	    State[] spinnerStates = new State[] { NORMAL, HOT, PRESSED, DISABLED };
-	    stateMap.put(Part.SPNP_SPINUP,   spinnerStates);
-	    stateMap.put(Part.SPNP_SPINDOWN, spinnerStates);
+            stateMap.put(Part.SPNP_UP,   spinnerStates);
+            stateMap.put(Part.SPNP_DOWN, spinnerStates);
 
 	    stateMap.put(Part.TVP_GLYPH, new State[] { CLOSED, OPENED });
 
@@ -458,9 +483,9 @@ class TMSchema {
 
         BGTYPE(Integer.class,		 4001),	// basic drawing type for each part
 
-        TEXTSHADOWTYPE(Integer.class,	 4010);	// type of shadow to draw with text
+        TEXTSHADOWTYPE(Integer.class,	 4010),	// type of shadow to draw with text
 
-
+        TRANSITIONDURATIONS(Integer.class, 6000);
 
         private final Class type;
         private final int value;
@@ -487,6 +512,7 @@ class TMSchema {
         BT_IMAGEFILE (Prop.BGTYPE, "imagefile",  0),
         BT_BORDERFILL(Prop.BGTYPE, "borderfill", 1),
 
+        TST_NONE(Prop.TEXTSHADOWTYPE, "none", 0),
         TST_SINGLE(Prop.TEXTSHADOWTYPE, "single", 1),
         TST_CONTINUOUS(Prop.TEXTSHADOWTYPE, "continuous", 2);
 

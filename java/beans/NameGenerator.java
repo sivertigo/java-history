@@ -1,8 +1,8 @@
 /*
- * @(#)NameGenerator.java	1.10 08/03/31
+ * %W% %E%
  *
- * Copyright 2008 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package java.beans;
 
@@ -21,7 +21,7 @@ import static java.util.Locale.ENGLISH;
  * is passed into <code>instanceName</code> then the returned
  * string identifier will be &quot;JButton0&quot;.
  * 
- * @version 1.10 03/31/08
+ * @version %I% %G%
  * @author Philip Milne
  */
 class NameGenerator { 

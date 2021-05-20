@@ -1,8 +1,8 @@
 /*
- * @(#)DriverPropertyInfo.java	1.21 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.sql;
@@ -18,8 +18,10 @@ package java.sql;
 public class DriverPropertyInfo {
 
     /**
-     * Constructs a <code>DriverPropertyInfo</code> object with a name and value;
-	 * other members default to their initial values.
+     * Constructs a <code>DriverPropertyInfo</code> object with a  given
+     * name and value.  The <code>description</code> and <code>choices</code>
+     * are intialized to <code>null</code> and <code>required</code> is initialized
+     * to <code>false</code>.
      *
      * @param name the name of the property
      * @param value the current value, which may be null

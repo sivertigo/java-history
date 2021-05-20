@@ -1,8 +1,8 @@
 /*
- * @(#)RMIServerImpl.java	1.58 07/08/14
- * 
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * %W% %E%
+ *
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.management.remote.rmi;
@@ -11,6 +11,7 @@ import com.sun.jmx.remote.internal.ArrayNotificationBuffer;
 import com.sun.jmx.remote.internal.NotificationBuffer;
 import com.sun.jmx.remote.security.JMXPluggableAuthenticator;
 import com.sun.jmx.remote.util.ClassLogger;
+import java.io.Closeable;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.rmi.Remote;
@@ -46,7 +47,7 @@ import javax.security.auth.Subject;
  * @since 1.5
  * @since.unbundled 1.0
  */
-public abstract class RMIServerImpl implements RMIServer {
+public abstract class RMIServerImpl implements Closeable, RMIServer {
     /**
      * <p>Constructs a new <code>RMIServerImpl</code>.</p>
      *

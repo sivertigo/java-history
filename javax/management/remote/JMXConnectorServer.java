@@ -1,8 +1,8 @@
 /*
- * @(#)JMXConnectorServer.java	1.30 04/05/05
+ * %W% %E%
  * 
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 
@@ -48,7 +48,7 @@ import javax.management.ObjectName;
  */
 public abstract class JMXConnectorServer
 	extends NotificationBroadcasterSupport
-	implements JMXConnectorServerMBean, MBeanRegistration {
+	implements JMXConnectorServerMBean, MBeanRegistration, JMXAddressable {
 
     /**
      * <p>Name of the attribute that specifies the authenticator for a

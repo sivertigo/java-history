@@ -1,8 +1,8 @@
 /*
- * @(#)CertPathValidatorException.java	1.10 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.security.cert;
@@ -34,7 +34,7 @@ import java.security.GeneralSecurityException;
  *
  * @see CertPathValidator
  *
- * @version 	1.10 12/19/03
+ * @version 	%I% %G%
  * @since	1.4
  * @author 	Yassir Elley
  */
@@ -114,7 +114,7 @@ public class CertPathValidatorException extends GeneralSecurityException {
      * @param index the index of the certificate in the certification path
      * that caused the error (or -1 if not applicable). Note that 
      * the list of certificates in a <code>CertPath</code> is zero based.
-     * @throws IndexOutofBoundsException if the index is out of range
+     * @throws IndexOutOfBoundsException if the index is out of range
      * <code>(index < -1 || (certPath != null && index >=
      * certPath.getCertificates().size())</code>
      * @throws IllegalArgumentException if <code>certPath</code> is 

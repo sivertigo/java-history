@@ -1,21 +1,29 @@
 /*
- * @(#)DefaultTreeCellRenderer.java	1.51 04/01/23
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing.tree;
 
-import javax.swing.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Insets;
+import java.awt.Rectangle;
 import javax.swing.plaf.ColorUIResource;
 import javax.swing.plaf.FontUIResource;
 import javax.swing.plaf.basic.BasicGraphicsUtils;
-import java.awt.*;
-import java.awt.event.*;
-import java.beans.*;
-import java.io.*;
-import java.util.*;
+import javax.swing.Icon;
+import javax.swing.JLabel;
+import javax.swing.JTree;
+import javax.swing.LookAndFeel;
+import javax.swing.UIManager;
+import javax.swing.border.EmptyBorder;
+import sun.swing.DefaultLookup;
 
 /**
  * Displays an entry in a tree.
@@ -52,7 +60,7 @@ import java.util.*;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  * 
- * @version 1.51 01/23/04
+ * @version %I% %G%
  * @author Rob Davis
  * @author Ray Ryan
  * @author Scott Violet
@@ -108,29 +116,35 @@ public class DefaultTreeCellRenderer extends JLabel implements TreeCellRenderer
     /** Color to use for the focus indicator when the node has focus. */
     protected Color borderSelectionColor;
 
+    private boolean isDropCell;
+    private boolean fillBackground = true;
+
     /**
       * Returns a new instance of DefaultTreeCellRenderer.  Alignment is
       * set to left aligned. Icons and text color are determined from the
       * UIManager.
       */
     public DefaultTreeCellRenderer() {
-	setHorizontalAlignment(JLabel.LEFT);
+	setLeafIcon(DefaultLookup.getIcon(this, ui, "Tree.leafIcon"));
+	setClosedIcon(DefaultLookup.getIcon(this, ui, "Tree.closedIcon"));
+	setOpenIcon(DefaultLookup.getIcon(this, ui, "Tree.openIcon"));
 
-	setLeafIcon(UIManager.getIcon("Tree.leafIcon"));
-	setClosedIcon(UIManager.getIcon("Tree.closedIcon"));
-	setOpenIcon(UIManager.getIcon("Tree.openIcon"));
-
-	setTextSelectionColor(UIManager.getColor("Tree.selectionForeground"));
-	setTextNonSelectionColor(UIManager.getColor("Tree.textForeground"));
-	setBackgroundSelectionColor(UIManager.getColor("Tree.selectionBackground"));
-	setBackgroundNonSelectionColor(UIManager.getColor("Tree.textBackground"));
-	setBorderSelectionColor(UIManager.getColor("Tree.selectionBorderColor"));
-	Object value = UIManager.get("Tree.drawsFocusBorderAroundIcon");
-	drawsFocusBorderAroundIcon = (value != null && ((Boolean)value).
-				      booleanValue());
-	value = UIManager.get("Tree.drawDashedFocusIndicator");
-	drawDashedFocusIndicator = (value != null && ((Boolean)value).
-				    booleanValue());
+	setTextSelectionColor(DefaultLookup.getColor(this, ui, "Tree.selectionForeground"));
+	setTextNonSelectionColor(DefaultLookup.getColor(this, ui, "Tree.textForeground"));
+	setBackgroundSelectionColor(DefaultLookup.getColor(this, ui, "Tree.selectionBackground"));
+	setBackgroundNonSelectionColor(DefaultLookup.getColor(this, ui, "Tree.textBackground"));
+	setBorderSelectionColor(DefaultLookup.getColor(this, ui, "Tree.selectionBorderColor"));
+	drawsFocusBorderAroundIcon = DefaultLookup.getBoolean(this, ui, "Tree.drawsFocusBorderAroundIcon", false);
+	drawDashedFocusIndicator = DefaultLookup.getBoolean(this, ui, "Tree.drawDashedFocusIndicator", false);
+        
+        fillBackground = DefaultLookup.getBoolean(this, ui, "Tree.rendererFillBackground", true);
+        Insets margins = DefaultLookup.getInsets(this, ui, "Tree.rendererMargins");
+        if (margins != null) {
+            setBorder(new EmptyBorder(margins.top, margins.left,
+                    margins.bottom, margins.right));
+        }
+        
+        setName("Tree.cellRenderer");
     }
 
 
@@ -139,7 +153,7 @@ public class DefaultTreeCellRenderer extends JLabel implements TreeCellRenderer
       * represent non-leaf nodes that are expanded.
       */
     public Icon getDefaultOpenIcon() {
-	return UIManager.getIcon("Tree.openIcon");
+	return DefaultLookup.getIcon(this, ui, "Tree.openIcon");
     }
 
     /**
@@ -147,7 +161,7 @@ public class DefaultTreeCellRenderer extends JLabel implements TreeCellRenderer
       * represent non-leaf nodes that are not expanded.
       */
     public Icon getDefaultClosedIcon() {
-	return UIManager.getIcon("Tree.closedIcon");
+	return DefaultLookup.getIcon(this, ui, "Tree.closedIcon");
     }
 
     /**
@@ -155,7 +169,7 @@ public class DefaultTreeCellRenderer extends JLabel implements TreeCellRenderer
       * represent leaf nodes.
       */
     public Icon getDefaultLeafIcon() {
-	return UIManager.getIcon("Tree.leafIcon");
+	return DefaultLookup.getIcon(this, ui, "Tree.leafIcon");
     }
 
     /**
@@ -321,43 +335,63 @@ public class DefaultTreeCellRenderer extends JLabel implements TreeCellRenderer
       * <code>convertValueToText</code>, which ultimately invokes
       * <code>toString</code> on <code>value</code>.
       * The foreground color is set based on the selection and the icon
-      * is set based on on leaf and expanded.
+      * is set based on the <code>leaf</code> and <code>expanded</code>
+      * parameters.
       */
     public Component getTreeCellRendererComponent(JTree tree, Object value,
 						  boolean sel,
 						  boolean expanded,
 						  boolean leaf, int row,
 						  boolean hasFocus) {
-	String         stringValue = tree.convertValueToText(value, sel,
-					  expanded, leaf, row, hasFocus);
+	String stringValue = tree.convertValueToText(
+                value, sel, expanded, leaf, row, hasFocus);
 
         this.tree = tree;
 	this.hasFocus = hasFocus;
 	setText(stringValue);
-	if(sel)
-	    setForeground(getTextSelectionColor());
-	else
-	    setForeground(getTextNonSelectionColor());
-	// There needs to be a way to specify disabled icons.
+
+        Color fg = null;
+        isDropCell = false;
+
+        JTree.DropLocation dropLocation = tree.getDropLocation();
+        if (dropLocation != null
+                && dropLocation.getChildIndex() == -1
+                && tree.getRowForPath(dropLocation.getPath()) == row) {
+
+            Color col = DefaultLookup.getColor(this, ui, "Tree.dropCellForeground");
+            if (col != null) {
+                fg = col;
+            } else {
+                fg = getTextSelectionColor();
+            }
+
+            isDropCell = true;
+        } else if (sel) {
+            fg = getTextSelectionColor();
+        } else {
+            fg = getTextNonSelectionColor();
+        }
+
+        setForeground(fg);
+
+        Icon icon = null;
+        if (leaf) {
+            icon = getLeafIcon();
+        } else if (expanded) {
+            icon = getOpenIcon();
+        } else {
+            icon = getClosedIcon();
+        }
+        
 	if (!tree.isEnabled()) {
 	    setEnabled(false);
-	    if (leaf) {
-		setDisabledIcon(getLeafIcon());
-	    } else if (expanded) {
-		setDisabledIcon(getOpenIcon());
-	    } else {
-		setDisabledIcon(getClosedIcon());
-	    }
-	}
-	else {
+            LookAndFeel laf = UIManager.getLookAndFeel();
+            Icon disabledIcon = laf.getDisabledIcon(tree, icon);
+            if (disabledIcon != null) icon = disabledIcon;
+            setDisabledIcon(icon);
+	} else {
 	    setEnabled(true);
-	    if (leaf) {
-		setIcon(getLeafIcon());
-	    } else if (expanded) {
-		setIcon(getOpenIcon());
-	    } else {
-		setIcon(getClosedIcon());
-	    }
+            setIcon(icon);
 	}
         setComponentOrientation(tree.getComponentOrientation());
 	    
@@ -372,15 +406,22 @@ public class DefaultTreeCellRenderer extends JLabel implements TreeCellRenderer
     public void paint(Graphics g) {
 	Color bColor;
 
-	if(selected) {
-	    bColor = getBackgroundSelectionColor();
+        if (isDropCell) {
+            bColor = DefaultLookup.getColor(this, ui, "Tree.dropCellBackground");
+            if (bColor == null) {
+                bColor = getBackgroundSelectionColor();
+            }
+        } else if (selected) {
+            bColor = getBackgroundSelectionColor();
 	} else {
 	    bColor = getBackgroundNonSelectionColor();
-	    if(bColor == null)
-		bColor = getBackground();
+            if (bColor == null) {
+                bColor = getBackground();
+            }
 	}
+
 	int imageOffset = -1;
-	if(bColor != null) {
+	if(bColor != null && fillBackground) {
 	    Icon currentI = getIcon();
 
 	    imageOffset = getLabelStart();
@@ -403,35 +444,25 @@ public class DefaultTreeCellRenderer extends JLabel implements TreeCellRenderer
 	    }
 	    if(getComponentOrientation().isLeftToRight()) {
 		paintFocus(g, imageOffset, 0, getWidth() - imageOffset,
-			   getHeight());
+			   getHeight(), bColor);
 	    } else {
-		paintFocus(g, 0, 0, getWidth() - imageOffset, getHeight());
+		paintFocus(g, 0, 0, getWidth() - imageOffset, getHeight(), bColor);
 	    }
 	}
 	super.paint(g);
     }
 
-    private void paintFocus(Graphics g, int x, int y, int w, int h) {
+    private void paintFocus(Graphics g, int x, int y, int w, int h, Color notColor) {
 	Color       bsColor = getBorderSelectionColor();
 
 	if (bsColor != null && (selected || !drawDashedFocusIndicator)) {
 	    g.setColor(bsColor);
 	    g.drawRect(x, y, w - 1, h - 1);
 	}
-	if (drawDashedFocusIndicator) {
-	    Color color;
-	    if (selected) {
-		color = getBackgroundSelectionColor();
-	    } else {
-		color = getBackgroundNonSelectionColor();
-		if(color == null) {
-		    color = getBackground();
-		}
-	    }
-	    
-	    if (treeBGColor != color) {
-		treeBGColor = color;
-		focusBGColor = new Color(~color.getRGB());
+        if (drawDashedFocusIndicator && notColor != null) {
+	    if (treeBGColor != notColor) {
+                treeBGColor = notColor;
+                focusBGColor = new Color(~notColor.getRGB());
 	    }
 	    g.setColor(focusBGColor);
 	    BasicGraphicsUtils.drawDashedRect(g, x, y, w, h);
@@ -512,8 +543,13 @@ public class DefaultTreeCellRenderer extends JLabel implements TreeCellRenderer
     */
     protected void firePropertyChange(String propertyName, Object oldValue, Object newValue) {	
 	// Strings get interned...
-	if (propertyName=="text")
+	if (propertyName == "text"
+                || ((propertyName == "font" || propertyName == "foreground")
+                    && oldValue != newValue
+                    && getClientProperty(javax.swing.plaf.basic.BasicHTML.propertyKey) != null)) {
+
 	    super.firePropertyChange(propertyName, oldValue, newValue);
+        }
     }
 
    /**

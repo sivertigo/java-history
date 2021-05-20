@@ -1,8 +1,8 @@
 /*
- * @(#)PlainDatagramSocketImpl.java	1.39 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.net;
@@ -11,6 +11,7 @@ import java.io.FileDescriptor;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.util.Enumeration;
+import sun.net.ResourceManager;
 
 /**
  * Concrete datagram and multicast socket implementation base class.
@@ -70,7 +71,15 @@ class PlainDatagramSocketImpl extends DatagramSocketImpl
     protected synchronized void create() throws SocketException {
 	fd = new FileDescriptor();
 	fd1 = new FileDescriptor();
-	datagramSocketCreate();
+        ResourceManager.beforeUdpCreate();
+        try {
+	    datagramSocketCreate();
+        } catch (SocketException ioe) {
+            ResourceManager.afterUdpClose();
+            fd = null;
+            fd1 = null;
+            throw ioe;
+        }
     }
 
     /**
@@ -114,7 +123,7 @@ class PlainDatagramSocketImpl extends DatagramSocketImpl
      * not connected already.
      */
     protected void disconnect() {
-	disconnect0(connectedAddress.family);
+	disconnect0(connectedAddress.holder().getFamily());
 	connected = false;
 	connectedAddress = null;
 	connectedPort = -1;
@@ -223,6 +232,7 @@ class PlainDatagramSocketImpl extends DatagramSocketImpl
     protected void close() {
 	if (fd != null || fd1 != null) {
 	    datagramSocketClose();
+	    ResourceManager.afterUdpClose();
 	    fd = null;
 	    fd1 = null;
 	}

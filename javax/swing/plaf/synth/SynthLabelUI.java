@@ -1,8 +1,8 @@
 /*
- * @(#)SynthLabelUI.java	1.18 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing.plaf.synth;
@@ -30,7 +30,7 @@ import sun.swing.plaf.synth.SynthUI;
 /**
  * Synth's LabelUI.
  *
- * @version 1.18, 12/19/03
+ * @version %I%, %G%
  * @author Scott Violet
  */
 class SynthLabelUI extends BasicLabelUI implements SynthUI {
@@ -77,11 +77,58 @@ class SynthLabelUI extends BasicLabelUI implements SynthUI {
 
     private int getComponentState(JComponent c) {
         int state = SynthLookAndFeel.getComponentState(c);
-        if (SynthLookAndFeel.selectedUI == this &&
+        if (SynthLookAndFeel.getSelectedUI() == this &&
                         state == SynthConstants.ENABLED) {
-            state = SynthLookAndFeel.selectedUIState | SynthConstants.ENABLED;
+            state = SynthLookAndFeel.getSelectedUIState() | SynthConstants.ENABLED;
         }
         return state;
+    }
+
+    public int getBaseline(JComponent c, int width, int height) {
+        if (c == null) {
+            throw new NullPointerException("Component must be non-null");
+        }
+        if (width < 0 || height < 0) {
+            throw new IllegalArgumentException(
+                    "Width and height must be >= 0");
+        }
+        JLabel label = (JLabel)c;
+        String text = label.getText();
+        if (text == null || "".equals(text)) {
+            return -1;
+        }
+        Insets i = label.getInsets();
+        Rectangle viewRect = new Rectangle();
+        Rectangle textRect = new Rectangle();
+        Rectangle iconRect = new Rectangle();
+        viewRect.x = i.left;
+        viewRect.y = i.top;
+        viewRect.width = width - (i.right + viewRect.x);
+        viewRect.height = height - (i.bottom + viewRect.y);
+
+        // layout the text and icon
+        SynthContext context = getContext(label);
+        FontMetrics fm = context.getComponent().getFontMetrics(
+            context.getStyle().getFont(context));
+        context.getStyle().getGraphicsUtils(context).layoutText(
+            context, fm, label.getText(), label.getIcon(), 
+            label.getHorizontalAlignment(), label.getVerticalAlignment(),
+            label.getHorizontalTextPosition(), label.getVerticalTextPosition(),
+            viewRect, iconRect, textRect, label.getIconTextGap());
+        View view = (View)label.getClientProperty(BasicHTML.propertyKey);
+        int baseline;
+        if (view != null) {
+            baseline = BasicHTML.getHTMLBaseline(view, textRect.width,
+                                                 textRect.height);
+            if (baseline >= 0) {
+                baseline += textRect.y;
+            }
+        }
+        else {
+            baseline = textRect.y + fm.getAscent();
+        }
+        context.dispose();
+        return baseline;
     }
 
     /**

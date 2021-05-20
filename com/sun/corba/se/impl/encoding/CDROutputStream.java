@@ -1,8 +1,6 @@
 /*
- * @(#)CDROutputStream.java	1.28 04/06/21
- *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2000, 2011, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package com.sun.corba.se.impl.encoding;
 
@@ -337,6 +335,13 @@ public abstract class CDROutputStream
 
     protected final void setByteBuffer(ByteBuffer byteBuffer) {
         impl.setByteBuffer(byteBuffer);
+    }
+
+    /**
+     * return true if our ByteBuffer is sharing/equal to bb
+     */
+    protected final boolean isSharing(ByteBuffer bb) {
+        return (getByteBuffer() ==  bb);
     }
 
     public final boolean isLittleEndian() {

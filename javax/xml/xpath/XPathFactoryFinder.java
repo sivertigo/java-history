@@ -1,20 +1,44 @@
 
-// $Id: XPathFactoryFinder.java,v 1.2.8.1.2.1 2004/09/16 09:25:16 nb131165 Exp $
+/*
+ * The contents of this file are subject to the terms
+ * of the Common Development and Distribution License
+ * (the "License").  You may not use this file except
+ * in compliance with the License.
+ *
+ * You can obtain a copy of the license at
+ * https://jaxp.dev.java.net/CDDLv1.0.html.
+ * See the License for the specific language governing
+ * permissions and limitations under the License.
+ *
+ * When distributing Covered Code, include this CDDL
+ * HEADER in each file and include the License file at
+ * https://jaxp.dev.java.net/CDDLv1.0.html
+ * If applicable add the following below this CDDL HEADER
+ * with the fields enclosed by brackets "[]" replaced with
+ * your own identifying information: Portions Copyright
+ * [year] [name of copyright owner]
+ */
 
 /*
- * @(#)XPathFactoryFinder.java	1.5 05/01/04
- * 
- * Copyright 2005 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * $Id: XMLEntityReader.java,v 1.3 2005/11/03 17:02:21 jeffsuttor Exp $
+ * %W% %E%
+ *
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
  */
 
 package javax.xml.xpath;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.reflect.Method;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
@@ -25,10 +49,11 @@ import java.util.Properties;
  * Implementation of {@link XPathFactory#newInstance(String)}.
  * 
  * @author <a href="Kohsuke.Kawaguchi@Sun.com">Kohsuke Kawaguchi</a>
- * @version $Revision: 1.2.8.1.2.1 $, $Date: 2004/09/16 09:25:16 $
+ * @version $Revision: 1.4 $, $Date: 2005/10/06 05:39:24 $
  * @since 1.5
  */
 class XPathFactoryFinder  {
+    private static final String DEFAULT_PACKAGE = "com.sun.org.apache.xpath.internal";
 
     private static SecuritySupport ss = new SecuritySupport() ;
     /** debug support code. */
@@ -64,16 +89,16 @@ class XPathFactoryFinder  {
     }
     
     /**
-     * <p><code>ClassLoader</code> to use to find <code>SchemaFactory</code>.</p>
+     * <p><code>ClassLoader</code> to use to find <code>XPathFactory</code>.</p>
      */
     private final ClassLoader classLoader;
     
     /**
      * <p>Constructor that specifies <code>ClassLoader</code> to use
-     * to find <code>SchemaFactory</code>.</p>
+     * to find <code>XPathFactory</code>.</p>
      * 
      * @param loader
-     *      to be used to load resource, {@link SchemaFactory}, and
+     *      to be used to load resource, {@link XPathFactory}, and
      *      {@link SchemaFactoryLoader} implementations during
      *      the resolution process.
      *      If this parameter is null, the default system class loader
@@ -135,7 +160,7 @@ class XPathFactoryFinder  {
      * @return {@link XPathFactory} for the given object model.
      */
     private XPathFactory _newFactory(String uri) {
-        XPathFactory sf;
+        XPathFactory xpathFactory;
         
         String propertyName = SERVICE_CLASS.getName() + ":" + uri;
         
@@ -145,8 +170,8 @@ class XPathFactoryFinder  {
             String r = ss.getSystemProperty(propertyName);
             if(r!=null) {
                 debugPrintln("The value is '"+r+"'");
-                sf = createInstance(r);
-                if(sf!=null)    return sf;
+                xpathFactory = createInstance(r, true);
+                if(xpathFactory != null)    return xpathFactory;
             } else
                 debugPrintln("The property is undefined.");
         } catch( Throwable t ) {
@@ -180,9 +205,9 @@ class XPathFactoryFinder  {
             debugPrintln("found " + factoryClassName + " in $java.home/jaxp.properties"); 
 
             if (factoryClassName != null) {
-                sf = createInstance(factoryClassName);
-                if(sf != null){
-                    return sf;
+                xpathFactory = createInstance(factoryClassName, true);
+                if(xpathFactory != null){
+                    return xpathFactory;
                 }
             }
         } catch (Exception ex) {
@@ -197,9 +222,11 @@ class XPathFactoryFinder  {
             URL resource = (URL)sitr.next();
             debugPrintln("looking into " + resource);
             try {
-                //sf = loadFromProperty(uri,resource.toExternalForm(),resource.openStream());
-                sf = loadFromProperty(uri,resource.toExternalForm(),ss.getURLInputStream(resource));
-                if(sf!=null)    return sf;
+                xpathFactory = loadFromService(uri, resource.toExternalForm(),
+						ss.getURLInputStream(resource));
+		if (xpathFactory != null) {
+                    return xpathFactory;
+		} 
             } catch(IOException e) {
                 if( debug ) {
                     debugPrintln("failed to read "+resource);
@@ -211,13 +238,43 @@ class XPathFactoryFinder  {
         // platform default
         if(uri.equals(XPathFactory.DEFAULT_OBJECT_MODEL_URI)) {
             debugPrintln("attempting to use the platform default W3C DOM XPath lib");
-            return createInstance("com.sun.org.apache.xpath.internal.jaxp.XPathFactoryImpl");
+            return createInstance("com.sun.org.apache.xpath.internal.jaxp.XPathFactoryImpl", true);
         }
         
         debugPrintln("all things were tried, but none was found. bailing out.");
         return null;
     }
     
+    /** <p>Create class using appropriate ClassLoader.</p>
+     * 
+     * @param className Name of class to create.
+     * @return Created class or <code>null</code>.
+     */
+    private Class createClass(String className) {
+            Class clazz;
+        // make sure we have access to restricted packages
+        boolean internal = false;
+        if (System.getSecurityManager() != null) {
+            if (className != null && className.startsWith(DEFAULT_PACKAGE)) {
+                internal = true;
+            }            
+        }
+
+            // use approprite ClassLoader
+            try {
+                    if (classLoader != null && !internal) {
+                            clazz = classLoader.loadClass(className);
+                    } else {
+                            clazz = Class.forName(className);
+                    }
+            } catch (Throwable t) {
+                if(debug)   t.printStackTrace();
+                    return null;
+            }
+
+            return clazz;
+    }
+        
     /**
      * <p>Creates an instance of the specified and returns it.</p>
      * 
@@ -227,28 +284,167 @@ class XPathFactoryFinder  {
      * @return null
      *      if it fails. Error messages will be printed by this method. 
      */
-    private XPathFactory createInstance( String className ) {
-        try {
-            debugPrintln("instanciating "+className);
-            Class clazz;
-            if( classLoader!=null )
-                clazz = classLoader.loadClass(className);
-            else
-                clazz = Class.forName(className);
-            if(debug)       debugPrintln("loaded it from "+which(clazz));
-            Object o = clazz.newInstance();
-            
-            if( o instanceof XPathFactory )
-                return (XPathFactory)o;
-            
-            debugPrintln(className+" is not assignable to "+SERVICE_CLASS.getName());
-        } catch( Throwable t ) {
-            debugPrintln("failed to instanciate "+className);
-            if(debug)   t.printStackTrace();
+    XPathFactory createInstance( String className ) {
+        return createInstance( className, false );
+    }
+    XPathFactory createInstance( String className, boolean useServicesMechanism  ) {
+        XPathFactory xPathFactory = null;
+
+        debugPrintln("createInstance(" + className + ")");
+
+        // get Class from className		
+        Class clazz = createClass(className);
+        if (clazz == null) {
+                debugPrintln("failed to getClass(" + className + ")");
+                return null;	
         }
-        return null;
+        debugPrintln("loaded " + className + " from " + which(clazz));
+
+        // instantiate Class as a XPathFactory
+        try {
+            if (!useServicesMechanism) {
+                xPathFactory = (XPathFactory) newInstanceNoServiceLoader(clazz);
+            }
+            if (xPathFactory == null) {
+                xPathFactory = (XPathFactory) clazz.newInstance();
+            }
+        } catch (ClassCastException classCastException) {
+                debugPrintln("could not instantiate " + clazz.getName());
+                if (debug) {
+                        classCastException.printStackTrace();
+                }
+                return null;
+        } catch (IllegalAccessException illegalAccessException) {
+                debugPrintln("could not instantiate " + clazz.getName());
+                if (debug) {
+                        illegalAccessException.printStackTrace();
+                }
+                return null;
+        } catch (InstantiationException instantiationException) {
+                debugPrintln("could not instantiate " + clazz.getName());
+                if (debug) {
+                        instantiationException.printStackTrace();
+                }
+                return null;
+        }
+
+        return xPathFactory;
+    }
+    /**
+     * Try to construct using newXPathFactoryNoServiceLoader
+     *   method if available.
+     */
+    private static Object newInstanceNoServiceLoader(
+         Class<?> providerClass
+    ) {
+        // Retain maximum compatibility if no security manager.
+        if (System.getSecurityManager() == null) {
+            return null;
+        }
+        try {
+            Method creationMethod =
+                providerClass.getDeclaredMethod(
+                    "newXPathFactoryNoServiceLoader"
+                );
+                return creationMethod.invoke(null, null);
+            } catch (NoSuchMethodException exc) {
+                return null;
+            } catch (Exception exc) {
+                return null;
+        }
     }
     
+    /**
+     * <p>Look up a value in a property file.</p>
+     * 
+     * <p>Set <code>debug</code> to <code>true</code> to trace property evaluation.</p>
+     *
+     * @param objectModel URI of object model to support.
+     * @param inputName Name of <code>InputStream</code>.
+     * @param in <code>InputStream</code> of properties.
+     * 
+     * @return <code>XPathFactory</code> as determined by <code>keyName</code> value or <code>null</code> if there was an error.
+     * 
+     * @throws IOException If IO error reading from <code>in</code>.
+     */
+    private XPathFactory loadFromService(
+            String objectModel,
+            String inputName,
+            InputStream in)
+            throws IOException {
+
+            XPathFactory xPathFactory = null;
+            final Class[] stringClassArray = {"".getClass()};
+            final Object[] objectModelObjectArray = {objectModel};
+            final String isObjectModelSupportedMethod = "isObjectModelSupported";
+
+            debugPrintln("Reading " + inputName);
+
+            // read from InputStream until a match is found
+            BufferedReader configFile = new BufferedReader(new InputStreamReader(in));
+            String line = null;
+            while ((line = configFile.readLine()) != null) {
+                    // '#' is comment char
+                    int comment = line.indexOf("#");
+                    switch (comment) {
+                            case -1: break; // no comment
+                            case 0: line = ""; break; // entire line is a comment
+                            default: line = line.substring(0, comment); break; // trim comment
+                    }
+
+                    // trim whitespace
+                    line = line.trim();
+
+                    // any content left on line?
+                    if (line.length() == 0) {
+                            continue;
+                    }
+
+                    // line content is now the name of the class
+                    Class clazz = createClass(line);
+                    if (clazz == null) {
+                            continue;
+                    }
+                    
+                    // create an instance of the Class
+                    try {
+                            xPathFactory = (XPathFactory) clazz.newInstance();
+                    } catch (ClassCastException classCastExcpetion) {
+                            xPathFactory = null;
+                            continue;
+                    } catch (InstantiationException instantiationException) {
+                            xPathFactory = null;
+                            continue;
+                    } catch (IllegalAccessException illegalAccessException) {
+                            xPathFactory = null;
+                            continue;
+                    }
+                                     
+                    // does this Class support desired object model?
+                    try {
+                            Method isObjectModelSupported = clazz.getMethod(isObjectModelSupportedMethod, stringClassArray);
+                            Boolean supported = (Boolean) isObjectModelSupported.invoke(xPathFactory, objectModelObjectArray);
+                            if (supported.booleanValue()) {
+                                    break;
+                            }
+                            
+                    } catch (NoSuchMethodException noSuchMethodException) {
+                           
+                    } catch (IllegalAccessException illegalAccessException) {
+                            
+                    } catch (InvocationTargetException invocationTargetException) {
+                            
+                    }
+                    xPathFactory = null;				
+            }
+
+            // clean up
+            configFile.close();
+
+            // return new instance of XPathFactory or null
+            return xPathFactory;
+    }
+
     /** Iterator that lazily computes one value and returns it. */
     private static abstract class SingleIterator implements Iterator {
         private boolean seen = false;
@@ -281,7 +477,7 @@ class XPathFactoryFinder  {
         String factoryClassName = props.getProperty(keyName);
         if(factoryClassName != null){
             debugPrintln("found "+keyName+" = " + factoryClassName);
-            return createInstance(factoryClassName);
+            return createInstance(factoryClassName, true);
         } else {
             debugPrintln(keyName+" is not in the property file");
             return null;
@@ -305,24 +501,28 @@ class XPathFactoryFinder  {
             try {
                 //final Enumeration e = classLoader.getResources(SERVICE_ID);
                 final Enumeration e = ss.getResources(classLoader, SERVICE_ID);
-                if(!e.hasMoreElements()) {
-                    debugPrintln("no "+SERVICE_ID+" file was found");
-                }
-                
-                // wrap it into an Iterator.
-                return new Iterator() {
-                    public void remove() {
-                        throw new UnsupportedOperationException();
-                    }
+                return (Iterator)
+                AccessController.doPrivileged(new PrivilegedAction() {
+                    public Object run() {
+                        if(!e.hasMoreElements()) {
+                            debugPrintln("no "+SERVICE_ID+" file was found");
+                        }
+                        // wrap it into an Iterator.
+                        return new Iterator() {
+                            public void remove() {
+                                throw new UnsupportedOperationException();
+                            }
 
-                    public boolean hasNext() {
-                        return e.hasMoreElements();
-                    }
+                            public boolean hasNext() {
+                                return e.hasMoreElements();
+                            }
 
-                    public Object next() {
-                        return e.nextElement();
+                            public Object next() {
+                                return e.nextElement();
+                            }
+                        };
                     }
-                };
+                });
             } catch (IOException e) {
                 debugPrintln("failed to enumerate resources "+SERVICE_ID);
                 if(debug)   e.printStackTrace();

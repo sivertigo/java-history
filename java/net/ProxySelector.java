@@ -1,8 +1,8 @@
 /*
  * @(#)ProxySelector.java	1.3 03/08/09
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.net;
@@ -78,7 +78,7 @@ public abstract class ProxySelector {
     /**
      * Sets (or unsets) the system-wide proxy selector.
      *
-     * Note: non-standard procotol handlers may ignore this setting.
+     * Note: non-standard protocol handlers may ignore this setting.
      *
      * @param ps The HTTP proxy selector, or
      *		<code>null</code> to unset the proxy selector.

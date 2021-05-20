@@ -1,8 +1,8 @@
 /*
- * @(#)BasicMenuUI.java	1.158 04/02/26
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, 2010, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing.plaf.basic;
@@ -24,7 +24,7 @@ import java.util.ArrayList;
  * A default L&F implementation of MenuUI.  This implementation 
  * is a "combined" view/controller.
  *
- * @version 1.158 02/26/04
+ * @version %I% %G%
  * @author Georges Saab
  * @author David Karlton
  * @author Arnaud Weber
@@ -32,7 +32,6 @@ import java.util.ArrayList;
 public class BasicMenuUI extends BasicMenuItemUI 
 {
     protected ChangeListener         changeListener;
-    protected PropertyChangeListener propertyChangeListener;
     protected MenuListener           menuListener;
 
     private int lastMnemonic = 0;
@@ -77,12 +76,6 @@ public class BasicMenuUI extends BasicMenuItemUI
 	if (changeListener != null)
 	    menuItem.addChangeListener(changeListener);
 
-	if (propertyChangeListener == null)
-	    propertyChangeListener = createPropertyChangeListener(menuItem);
-
-	if (propertyChangeListener != null)
-	    menuItem.addPropertyChangeListener(propertyChangeListener);
-	    
 	if (menuListener == null)
 	    menuListener = createMenuListener(menuItem);
 
@@ -175,14 +168,10 @@ public class BasicMenuUI extends BasicMenuItemUI
 	if (changeListener != null)
 	    menuItem.removeChangeListener(changeListener);
 
-	if (propertyChangeListener != null)
-	    menuItem.removePropertyChangeListener(propertyChangeListener);
-
 	if (menuListener != null)
 	    ((JMenu)menuItem).removeMenuListener(menuListener);
 
 	changeListener = null;
-	propertyChangeListener = null;
 	menuListener = null;
         handler = null;
     }
@@ -190,11 +179,11 @@ public class BasicMenuUI extends BasicMenuItemUI
     protected MenuDragMouseListener createMenuDragMouseListener(JComponent c) {
 	return getHandler();
     }
-    
-    protected MenuKeyListener createMenuKeyListener(JComponent c) {
-	return (MenuKeyListener)getHandler();
-    }
 
+    protected MenuKeyListener createMenuKeyListener(JComponent c) {
+        return (MenuKeyListener)getHandler();
+    }
+    
     public Dimension getMaximumSize(JComponent c) {
 	if (((JMenu)menuItem).isTopLevelMenu() == true) {
 	    Dimension d = c.getPreferredSize();
@@ -396,8 +385,7 @@ public class BasicMenuUI extends BasicMenuItemUI
         public void stateChanged(ChangeEvent e) { }
     }
 
-    private class Handler extends BasicMenuItemUI.Handler implements
-            MenuKeyListener {
+    private class Handler extends BasicMenuItemUI.Handler implements MenuKeyListener {
         //
         // PropertyChangeListener
         //
@@ -488,8 +476,11 @@ public class BasicMenuUI extends BasicMenuItemUI
 	 */ 
 	public void mouseEntered(MouseEvent e) {
 	    JMenu menu = (JMenu)menuItem;
-	    if (!menu.isEnabled())
-		return;
+            // only disable the menu highlighting if it's disabled and the property isn't
+            // true. This allows disabled rollovers to work in WinL&F
+            if (!menu.isEnabled() && !UIManager.getBoolean("MenuItem.disabledAreNavigable")) {
+                return;
+            }
 
 	    MenuSelectionManager manager = 
 		MenuSelectionManager.defaultManager();
@@ -576,19 +567,25 @@ public class BasicMenuUI extends BasicMenuItemUI
 	public void menuDragMouseExited(MenuDragMouseEvent e) {}
 	public void menuDragMouseReleased(MenuDragMouseEvent e) {}	    
 
-
         //
         // MenuKeyListener
         //
-	/**
-	 * Open the Menu
-	 */
-	public void menuKeyTyped(MenuKeyEvent e) {
+        /**
+         * Open the Menu
+         */
+        public void menuKeyTyped(MenuKeyEvent e) {
             if (!crossMenuMnemonic && BasicPopupMenuUI.getLastPopup() != null) {
                 // when crossMenuMnemonic is not set, we don't open a toplevel
                 // menu if another toplevel menu is already open
-                    return;
-                }
+                return;
+            }
+
+            if (BasicPopupMenuUI.getPopups().size() != 0) {
+                //Fix 6939261: to return in case not on the main menu
+                //and has a pop-up. 
+                //after return code will be handled in BasicPopupMenuUI.java
+                return;
+            }
 
             char key = Character.toLowerCase((char)menuItem.getMnemonic());
             MenuElement path[] = e.getPath();
@@ -611,6 +608,7 @@ public class BasicMenuUI extends BasicMenuItemUI
         }
 
         public void menuKeyPressed(MenuKeyEvent e) {}
-	public void menuKeyReleased(MenuKeyEvent e) {}
+        public void menuKeyReleased(MenuKeyEvent e) {}
+
     }
 }

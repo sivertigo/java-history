@@ -1,8 +1,8 @@
 /*
- * @(#)JLayeredPane.java	1.54 04/05/05
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package javax.swing;
 
@@ -12,6 +12,7 @@ import java.util.Hashtable;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Rectangle;
+import sun.awt.SunToolkit;
 
 import javax.accessibility.*;
 
@@ -119,6 +120,11 @@ import javax.accessibility.*;
  * will affect all child components of this container without regard for
  * layer settings.
  * <p>
+ * <strong>Warning:</strong> Swing is not thread safe. For more
+ * information see <a
+ * href="package-summary.html#threading">Swing's Threading
+ * Policy</a>.
+ * <p>
  * <strong>Warning:</strong>
  * Serialized objects of this class will not be compatible with
  * future Swing releases. The current serialization support is
@@ -173,9 +179,11 @@ public class JLayeredPane extends JComponent implements Accessible {
 
             for (Component c : getComponents()) {
                 layer = null;
-                if(c instanceof JInternalFrame || (c instanceof JComponent &&
-                         (layer = (Integer)((JComponent)c).getClientProperty(
-                          LAYER_PROPERTY)) != null)) {
+                if(SunToolkit.isInstanceOf(c, "javax.swing.JInternalFrame") ||
+                       (c instanceof JComponent &&
+                        (layer = (Integer)((JComponent)c).
+                                     getClientProperty(LAYER_PROPERTY)) != null))
+                {
                     if(layer != null && layer.equals(FRAME_CONTENT_LAYER))
                         continue;
                     layeredComponentFound = true;

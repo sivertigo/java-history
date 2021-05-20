@@ -1,8 +1,8 @@
 /*
- * @(#)UnixLoginModule.java	1.7 04/05/05
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.security.auth.module;
@@ -28,7 +28,7 @@ import com.sun.security.auth.UnixNumericGroupPrincipal;
  * If set to true in the login Configuration,
  * debug messages will be output to the output stream, System.out.
  *
- * @version 1.7, 05/05/04
+ * @version %I%, %G%
  */
 public class UnixLoginModule implements LoginModule {
 
@@ -114,7 +114,7 @@ public class UnixLoginModule implements LoginModule {
 	    userPrincipal = new UnixPrincipal(ss.getUsername());
 	    UIDPrincipal = new UnixNumericUserPrincipal(ss.getUid());
 	    GIDPrincipal = new UnixNumericGroupPrincipal(ss.getGid(), true);
-	    if (ss.getGroups() != null && ss.getGroups().length > 0)
+	    if (ss.getGroups() != null && ss.getGroups().length > 0) {
 		unixGroups = ss.getGroups();
 		for (int i = 0; i < unixGroups.length; i++) {
 		    UnixNumericGroupPrincipal ngp =
@@ -123,6 +123,7 @@ public class UnixLoginModule implements LoginModule {
 		    if (!ngp.getName().equals(GIDPrincipal.getName()))
 			supplementaryGroups.add(ngp);
 		}
+	    }
 	    if (debug) {
 		System.out.println("\t\t[UnixLoginModule]: " +
 			"succeeded importing info: ");

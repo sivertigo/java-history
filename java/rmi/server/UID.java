@@ -1,17 +1,13 @@
 /*
- * @(#)UID.java	1.22 03/12/19
- *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 1996, 2011, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package java.rmi.server;
 
 import java.io.DataInput;
 import java.io.DataOutput;
-import java.io.EOFException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.Serializable;
 import java.security.SecureRandom;
 
 /**
@@ -50,12 +46,10 @@ import java.security.SecureRandom;
  *
  * @author	Ann Wollrath
  * @author	Peter Jones
- * @version	1.22, 03/12/19
  * @since	JDK1.1
  */
-public final class UID implements java.io.Serializable {
+public final class UID implements Serializable {
 
-    private static final long  ONE_SECOND = 1000; // in milliseconds
     private static int hostUnique;
     private static boolean hostUniqueSet = false;
 
@@ -100,21 +94,27 @@ public final class UID implements java.io.Serializable {
 	    }
 	    unique = hostUnique;
 	    if (lastCount == Short.MAX_VALUE) {
+		boolean interrupted = Thread.interrupted();
 		boolean done = false;
 		while (!done) {
 		    long now = System.currentTimeMillis();
-		    if (now < lastTime + ONE_SECOND) {
-			// pause for a second to wait for time to change
+		    if (now == lastTime) {
+			// wait for time to change
 			try {
-			    Thread.currentThread().sleep(ONE_SECOND);
-			} catch (java.lang.InterruptedException e) {
-			}	// ignore exception
-			continue;
+			    Thread.sleep(1);
+			} catch (InterruptedException e) {
+			    interrupted = true;
+			}
 		    } else {
-			lastTime = now;
+                        // If system time has gone backwards increase
+                        // original by 1ms to maintain uniqueness
+                        lastTime = (now < lastTime) ? lastTime+1 : now;
 			lastCount = Short.MIN_VALUE;
 			done = true;
 		    }
+		}
+		if (interrupted) {
+		    Thread.currentThread().interrupt();
 		}
 	    }
 	    time = lastTime;
@@ -173,7 +173,7 @@ public final class UID implements java.io.Serializable {
      */
     public boolean equals(Object obj) {
 	if (obj instanceof UID) {
-	    UID uid = (UID)obj;
+	    UID uid = (UID) obj;
 	    return (unique == uid.unique &&
 		    count == uid.count &&
 		    time == uid.time);

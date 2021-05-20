@@ -60,7 +60,7 @@ package com.sun.org.apache.xerces.internal.impl.dtd.models;
 import com.sun.org.apache.xerces.internal.xni.QName;
 
 /**
- * @version $Id: ContentModelValidator.java,v 1.4 2002/01/29 01:15:10 lehors Exp $
+ * @version $Id: ContentModelValidator.java,v 1.3 2007/07/19 04:38:28 ofung Exp $
  */
 public interface ContentModelValidator {
 

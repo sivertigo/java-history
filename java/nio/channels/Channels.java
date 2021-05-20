@@ -1,8 +1,8 @@
 /*
- * @(#)Channels.java	1.24 08/02/21
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006,2010 Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.nio.channels;
@@ -40,50 +40,51 @@ import sun.nio.cs.StreamEncoder;
  * @author Mark Reinhold
  * @author Mike McCloskey
  * @author JSR-51 Expert Group
- * @version 1.24, 08/02/21
+ * @version %I%, %E%
  * @since 1.4
  */
 
 public final class Channels {
 
     private Channels() { }		// No instantiation
-
-
-     /* Write all remaining bytes in buffer to the given channel.
-      * If the channel is selectable then it must be configured blocking.
-      */
-     private static void writeFullyImpl(WritableByteChannel ch, ByteBuffer bb)
-     throws IOException
-       {
-            while (bb.remaining() > 0) {
-                int n = ch.write(bb);
-                if (n <= 0)
-                    throw new RuntimeException("no bytes written");
-            }
-       }
-
-
-
-     /**
-      * Write all remaining bytes in buffer to the given channel.
-      *
-      * @throws  IllegalBlockingException
-      *          If the channel is selectable and configured non-blocking.
-      */
-      private static void writeFully(WritableByteChannel ch, ByteBuffer bb)
+   
+   /** 
+    * Write all remaining bytes in buffer to the given channel. 
+    * If the channel is selectable then it must be configured blocking. 
+    */ 
+    private static void writeFullyImpl(WritableByteChannel ch, ByteBuffer bb)
+	throws IOException
+    {
+        while (bb.remaining() > 0) {
+            int n = ch.write(bb);
+            if (n <= 0)
+                throw new RuntimeException("no bytes written");
+        }
+    }
+ 
+ 
+ 
+   /**
+    * Write all remaining bytes in buffer to the given channel.
+    *
+    * @throws  IllegalBlockingException
+    *          If the channel is selectable and configured non-blocking.
+    */
+    private static void writeFully(WritableByteChannel ch, ByteBuffer bb)
           throws IOException
-      {
-          if (ch instanceof SelectableChannel) {
-              SelectableChannel sc = (SelectableChannel)ch;
-              synchronized (sc.blockingLock()) {
-                  if (!sc.isBlocking())
-                      throw new IllegalBlockingModeException();
-                      writeFullyImpl(ch, bb);
-              }
-          } else {
-              writeFullyImpl(ch, bb);
-          }
-      }
+    {        
+        if (ch instanceof SelectableChannel) {
+            SelectableChannel sc = (SelectableChannel)ch;
+            synchronized (sc.blockingLock()) {
+                if (!sc.isBlocking())
+                    throw new IllegalBlockingModeException();
+                writeFullyImpl(ch, bb);	
+            }
+        } else {
+             writeFullyImpl(ch, bb);
+        }
+    }
+
 
     // -- Byte streams from channels --
 
@@ -177,11 +178,15 @@ public final class Channels {
      * @return  A new readable byte channel
      */
     public static ReadableByteChannel newChannel(final InputStream in) {
-        if (in instanceof FileInputStream) {
-            String inClass = in.getClass().toString();
-            if (inClass.equals("java.io.FileInputStream"))
-               return ((FileInputStream)in).getChannel();
+	if (in == null) {
+	    throw new NullPointerException();
+	}
+	
+	if (in instanceof FileInputStream &&
+	    FileInputStream.class.equals(in.getClass())) {
+	    return ((FileInputStream)in).getChannel();
         }
+
 	return new ReadableByteChannelImpl(in);
     }
 
@@ -250,11 +255,15 @@ public final class Channels {
      * @return  A new writable byte channel
      */
     public static WritableByteChannel newChannel(final OutputStream out) {
-        if (out instanceof FileOutputStream) {
-            String outClass = out.getClass().toString();
-            if (outClass.equals("java.io.FileOutputStream"))
+	if (out == null) {
+	    throw new NullPointerException();
+	}
+
+        if (out instanceof FileOutputStream &&
+	    FileOutputStream.class.equals(out.getClass())) {
                 return ((FileOutputStream)out).getChannel();
         }
+
 	return new WritableByteChannelImpl(out);
     }
 

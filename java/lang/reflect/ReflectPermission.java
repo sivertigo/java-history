@@ -1,8 +1,8 @@
 /*
- * @(#)ReflectPermission.java	1.21 04/03/01
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang.reflect;
@@ -58,11 +58,8 @@ class ReflectPermission extends java.security.BasicPermission {
      *
      * @param name the name of the ReflectPermission
      *
-     * @throws  NullPointerException
-     *          If <tt>name</tt> is <tt>null</tt>
-     *
-     * @throws  IllegalArgumentException
-     *          If <tt>name</tt> is empty
+     * @throws NullPointerException if <code>name</code> is <code>null</code>.
+     * @throws IllegalArgumentException if <code>name</code> is empty.
      */
     public ReflectPermission(String name) {
 	super(name);
@@ -76,11 +73,8 @@ class ReflectPermission extends java.security.BasicPermission {
      *
      * @param actions should be null
      *
-     * @throws  NullPointerException
-     *          If <tt>name</tt> is <tt>null</tt>
-     *
-     * @throws  IllegalArgumentException
-     *          If <tt>name</tt> is empty
+     * @throws NullPointerException if <code>name</code> is <code>null</code>.
+     * @throws IllegalArgumentException if <code>name</code> is empty.
      */
     public ReflectPermission(String name, String actions) {
 	super(name, actions);

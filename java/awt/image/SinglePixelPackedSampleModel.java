@@ -1,8 +1,8 @@
 /*
- * @(#)SinglePixelPackedSampleModel.java	1.42 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 /* ****************************************************************
@@ -258,7 +258,8 @@ public class SinglePixelPackedSampleModel extends SampleModel
      * <pre>
      *        data.getElem(sppsm.getOffset(x, y));
      * </pre>
-     * @param x,&nbsp;y the coordinates of the specified pixel
+     * @param x the X coordinate of the specified pixel
+     * @param y the Y coordinate of the specified pixel
      * @return the offset of the specified pixel.
      */
     public int getOffset(int x, int y) {

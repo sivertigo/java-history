@@ -1,8 +1,8 @@
 /*
- * @(#)JInternalFrame.java	1.148 09/08/10
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing;
@@ -20,6 +20,9 @@ import javax.accessibility.*;
 
 import java.io.ObjectOutputStream;
 import java.io.IOException;
+import java.beans.PropertyChangeListener;
+import sun.awt.AppContext;
+import sun.swing.SwingUtilities2;
 
 
 /**
@@ -58,6 +61,11 @@ import java.io.IOException;
  * for details on adding, removing and setting the <code>LayoutManager</code>
  * of a <code>JInternalFrame</code>.
  * <p>
+ * <strong>Warning:</strong> Swing is not thread safe. For more
+ * information see <a
+ * href="package-summary.html#threading">Swing's Threading
+ * Policy</a>.
+ * <p>
  * <strong>Warning:</strong>
  * Serialized objects of this class will not be compatible with
  * future Swing releases. The current serialization support is
@@ -74,7 +82,7 @@ import java.io.IOException;
  * @see JRootPane
  * @see javax.swing.RootPaneContainer
  *
- * @version 1.148 08/10/09
+ * @version %I% %G%
  * @author David Kloba
  * @author Rich Schiavi
  * @beaninfo
@@ -153,6 +161,8 @@ public class JInternalFrame extends JComponent implements
      */
     protected JDesktopIcon desktopIcon;
 
+    private Cursor lastCursor;
+
     private boolean opened;
   
     private Rectangle normalBounds = null;
@@ -194,6 +204,43 @@ public class JInternalFrame extends JComponent implements
     /** Constrained property name indicating that the internal frame is iconified. */
     public final static String IS_ICON_PROPERTY = "icon";
 
+    private static final Object PROPERTY_CHANGE_LISTENER_KEY = new Object(); // InternalFramePropertyChangeListener
+
+    private static void addPropertyChangeListenerIfNecessary() {
+        if (AppContext.getAppContext().get(PROPERTY_CHANGE_LISTENER_KEY) ==
+            null) {
+            PropertyChangeListener focusListener = 
+                new FocusPropertyChangeListener();
+
+            AppContext.getAppContext().put(PROPERTY_CHANGE_LISTENER_KEY, 
+                focusListener);
+
+            KeyboardFocusManager.getCurrentKeyboardFocusManager().
+                addPropertyChangeListener(focusListener);
+        }
+    }
+
+    private static class FocusPropertyChangeListener implements 
+        PropertyChangeListener {
+        public void propertyChange(PropertyChangeEvent e) {
+            if (e.getPropertyName() == "permanentFocusOwner") {
+                updateLastFocusOwner((Component)e.getNewValue());
+            }
+        }
+    }
+
+    private static void updateLastFocusOwner(Component component) {
+        if (component != null) {
+            Component parent = component;
+            while (parent != null && !(parent instanceof Window)) {
+                if (parent instanceof JInternalFrame) {
+                    // Update lastFocusOwner for parent.
+                    ((JInternalFrame)parent).setLastFocusOwner(component);
+                }
+                parent = parent.getParent();
+            }
+        }
+    }
 
     /** 
      * Creates a non-resizable, non-closable, non-maximizable,
@@ -271,7 +318,6 @@ public class JInternalFrame extends JComponent implements
                                 boolean maximizable, boolean iconifiable) {
         
         setRootPane(createRootPane());
-	getGlassPane().setVisible(true);
         setLayout(new BorderLayout());
         this.title = title;
         this.resizable = resizable;
@@ -285,6 +331,7 @@ public class JInternalFrame extends JComponent implements
         desktopIcon = new JDesktopIcon(this);
 	updateUI();
         sun.awt.SunToolkit.checkAndSetPolicy(this, true);
+        addPropertyChangeListenerIfNecessary();
     }
 
     /** 
@@ -412,7 +459,7 @@ public class JInternalFrame extends JComponent implements
 
     /**
      * Adds the specified child <code>Component</code>.
-     * This method is overridden to conditionally forwad calls to the
+     * This method is overridden to conditionally forward calls to the
      * <code>contentPane</code>.
      * By default, children are added to the <code>contentPane</code> instead
      * of the frame, refer to {@link javax.swing.RootPaneContainer} for
@@ -757,6 +804,9 @@ public class JInternalFrame extends JComponent implements
 	}
         fireVetoableChange(IS_CLOSED_PROPERTY, oldValue, newValue);
         isClosed = b;
+        if (isClosed) {
+          setVisible(false);
+        }
 	firePropertyChange(IS_CLOSED_PROPERTY, oldValue, newValue);
         if (isClosed) {
 	  dispose();
@@ -1013,6 +1063,13 @@ public class JInternalFrame extends JComponent implements
      *                  the active frame.
      */
     public void setSelected(boolean selected) throws PropertyVetoException {
+       // The InternalFrame may already be selected, but the focus
+       // may be outside it, so restore the focus to the subcomponent
+       // which previously had it. See Bug 4302764.
+        if (selected && isSelected) {
+            restoreSubcomponentFocus();
+            return;
+        }
         // The internal frame or the desktop icon must be showing to allow
         // selection.  We may deselect even if neither is showing.
         if ((isSelected == selected) || (selected && 
@@ -1035,12 +1092,9 @@ public class JInternalFrame extends JComponent implements
 	   NPE if you try to request focus on a lightweight before its
 	   parent has been made visible */
 
-        lastFocusOwner = null;
 	if (selected) {
 	    restoreSubcomponentFocus();
-	} else {
-	    getRootPane().setMostRecentFocusOwner(getFocusOwner());
-	}
+	} 
 
         isSelected = selected;
         firePropertyChange(IS_SELECTED_PROPERTY, oldValue, newValue);
@@ -1048,7 +1102,6 @@ public class JInternalFrame extends JComponent implements
 	  fireInternalFrameEvent(InternalFrameEvent.INTERNAL_FRAME_ACTIVATED);
 	else
 	  fireInternalFrameEvent(InternalFrameEvent.INTERNAL_FRAME_DEACTIVATED);	  
-        lastFocusOwner = null;
         repaint();
     }
 
@@ -1104,27 +1157,14 @@ public class JInternalFrame extends JComponent implements
       * parent is a <code>JLayeredPane</code>.
       */
     public void moveToFront() {
-        if(getParent() != null && getParent() instanceof JLayeredPane) {
-            JLayeredPane l =  (JLayeredPane)getParent();
-            // Because move to front typically involves adding and removing
-            // Components, it will often times result in focus changes. We
-            // either install focus to the lastFocusOwner, or our desendant
-            // that has focus. We use the ivar for lastFocusOwner as in
-            // some cases requestFocus is async and won't have completed from
-            // the requestFocus call in setSelected so that getFocusOwner
-            // will return the wrong component.
-            Component focusOwner = (lastFocusOwner != null) ? lastFocusOwner :
-                         KeyboardFocusManager.getCurrentKeyboardFocusManager().
-                         getFocusOwner();
-
-            if (focusOwner != null &&
-                     !SwingUtilities.isDescendingFrom(focusOwner, this)) {
-                focusOwner = null;
+        if (isIcon()) {
+            if (getDesktopIcon().getParent() instanceof JLayeredPane) {
+                ((JLayeredPane)getDesktopIcon().getParent()).
+                    moveToFront(getDesktopIcon());
             }
-            l.moveToFront(this);
-            if (focusOwner != null) {
-                focusOwner.requestFocus();
-            }
+        }
+        else if (getParent() instanceof JLayeredPane) {
+            ((JLayeredPane)getParent()).moveToFront(this);
         }
     }
 
@@ -1133,10 +1173,51 @@ public class JInternalFrame extends JComponent implements
       * parent is a <code>JLayeredPane</code>.
       */
     public void moveToBack() {
-        if(getParent() != null && getParent() instanceof JLayeredPane) {
-            JLayeredPane l =  (JLayeredPane)getParent();
-            l.moveToBack(this);
+        if (isIcon()) {
+            if (getDesktopIcon().getParent() instanceof JLayeredPane) {
+                ((JLayeredPane)getDesktopIcon().getParent()).
+                    moveToBack(getDesktopIcon());
+            }
         }
+        else if (getParent() instanceof JLayeredPane) {
+            ((JLayeredPane)getParent()).moveToBack(this);
+        }
+    }
+
+    /**
+     * Returns the last <code>Cursor</code> that was set by the
+     * <code>setCursor</code> method that is not a resizable
+     * <code>Cursor</code>.
+     *
+     * @return the last non-resizable <code>Cursor</code>
+     * @since 1.6
+     */
+    public Cursor getLastCursor() {
+        return lastCursor;
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 1.6
+     */
+    public void setCursor(Cursor cursor) {
+        if (cursor == null) {
+            lastCursor = null;
+            super.setCursor(cursor);
+            return;
+        }
+        int type = cursor.getType();
+        if (!(type == Cursor.SW_RESIZE_CURSOR  || 
+              type == Cursor.SE_RESIZE_CURSOR  ||
+              type == Cursor.NW_RESIZE_CURSOR  ||
+              type == Cursor.NE_RESIZE_CURSOR  ||
+              type == Cursor.N_RESIZE_CURSOR   ||
+              type == Cursor.S_RESIZE_CURSOR   ||
+              type == Cursor.W_RESIZE_CURSOR   ||
+              type == Cursor.E_RESIZE_CURSOR)) {
+            lastCursor = cursor;
+        }
+        super.setCursor(cursor);
     }
 
     /** 
@@ -1294,15 +1375,7 @@ public class JInternalFrame extends JComponent implements
      */
     public Component getFocusOwner() {
         if (isSelected()) {
-            Component focusOwner = KeyboardFocusManager.
-                           getCurrentKeyboardFocusManager().getFocusOwner();
-
-            if (focusOwner != null && !SwingUtilities.
-                                        isDescendingFrom(focusOwner, this)) {
-                // Sanity check, may sure we don't return a bogus value here.
-                focusOwner = null;
-            }
-            return focusOwner;
+            return lastFocusOwner;
         }
         return null;
     }
@@ -1329,23 +1402,25 @@ public class JInternalFrame extends JComponent implements
      * @since 1.4
      */
     public Component getMostRecentFocusOwner() {
-	if (isSelected()) {
-	    return getFocusOwner();
-	}
- 
-	Component mostRecentFocusOwner =
-	    getRootPane().getMostRecentFocusOwner();
-	if (mostRecentFocusOwner != null) {
-	    return mostRecentFocusOwner;
-	}
- 
-	FocusTraversalPolicy policy = getFocusTraversalPolicy();
-	if (policy instanceof InternalFrameFocusTraversalPolicy) {
-	    return ((InternalFrameFocusTraversalPolicy)policy).
-		getInitialComponent(this);
-	}
-	
-	return policy.getDefaultComponent(this);
+        if (isSelected()) {
+            return getFocusOwner();
+        }
+
+        if (lastFocusOwner != null) {
+            return lastFocusOwner;
+        }
+
+        FocusTraversalPolicy policy = getFocusTraversalPolicy();
+        if (policy instanceof InternalFrameFocusTraversalPolicy) {
+            return ((InternalFrameFocusTraversalPolicy)policy).
+                getInitialComponent(this);
+        }
+
+        Component toFocus = policy.getDefaultComponent(this);
+        if (toFocus != null) {
+            return toFocus;
+        }
+        return getContentPane();
     }
  
     /**
@@ -1357,14 +1432,28 @@ public class JInternalFrame extends JComponent implements
      * @since 1.3
      */
     public void restoreSubcomponentFocus() {
-        lastFocusOwner = getMostRecentFocusOwner();
-        if (lastFocusOwner == null) {
-            // Make sure focus is restored somewhere, so that
-            // we don't leave a focused component in another frame while
-            // this frame is selected.
-            lastFocusOwner = getContentPane();
+        if (isIcon()) {
+            SwingUtilities2.compositeRequestFocus(getDesktopIcon());
         }
-        lastFocusOwner.requestFocus();
+        else {
+            // FocusPropertyChangeListener will eventually update
+            // lastFocusOwner. As focus requests are asynchronous
+            // lastFocusOwner may be accessed before it has been correctly
+            // updated. To avoid any problems, lastFocusOwner is immediately
+            // set, assuming the request will succeed.
+            lastFocusOwner = getMostRecentFocusOwner();
+            if (lastFocusOwner == null) {
+                // Make sure focus is restored somewhere, so that
+                // we don't leave a focused component in another frame while
+                // this frame is selected.
+                lastFocusOwner = getContentPane();
+            }
+            lastFocusOwner.requestFocus();
+        }
+    }
+
+    private void setLastFocusOwner(Component component) {
+        lastFocusOwner = component;
     }
 
     /**
@@ -1519,6 +1608,7 @@ public class JInternalFrame extends JComponent implements
 		fireVetoableChange(IS_CLOSED_PROPERTY, Boolean.FALSE,
 				   Boolean.TRUE);
 		isClosed = true;
+                setVisible(false);
 		firePropertyChange(IS_CLOSED_PROPERTY, Boolean.FALSE,
 				   Boolean.TRUE);
 		dispose();
@@ -1933,11 +2023,15 @@ public class JInternalFrame extends JComponent implements
          * @see #setAccessibleName
          */
         public String getAccessibleName() {
-            if (accessibleName != null) {
-                return accessibleName;
-            } else {
-                return getTitle();
+            String name = accessibleName;
+
+            if (name == null) {
+                name = (String)getClientProperty(AccessibleContext.ACCESSIBLE_NAME_PROPERTY);
             }
+            if (name == null) {
+                name = getTitle();
+            }
+            return name;
         }
 
         /**

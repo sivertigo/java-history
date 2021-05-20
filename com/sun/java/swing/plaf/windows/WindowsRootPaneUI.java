@@ -1,8 +1,6 @@
 /*
- * @(#)WindowsRootPaneUI.java	1.15 04/04/16
- *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, 2011, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.java.swing.plaf.windows;
@@ -12,6 +10,9 @@ import java.awt.Container;
 import java.awt.Event;
 import java.awt.KeyEventPostProcessor;
 import java.awt.Window;
+import java.awt.Toolkit;
+
+import sun.awt.SunToolkit;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
@@ -43,7 +44,7 @@ import javax.swing.plaf.basic.ComboPopup;
  * Windows implementation of RootPaneUI, there is one shared between all
  * JRootPane instances.
  *
- * @version 1.15 04/16/04
+ * @version %I% %G%
  * @author Mark Davidson
  * @since 1.4
  */
@@ -73,12 +74,12 @@ public class WindowsRootPaneUI extends BasicRootPaneUI {
             } else if(path.length > 0) { // We are in ComboBox
                 menuCanceledOnPress = false;
                 WindowsLookAndFeel.setMnemonicHidden(false);
-                WindowsUtils.repaintMnemonicsInWindow(winAncestor);
+                WindowsGraphicsUtils.repaintMnemonicsInWindow(winAncestor);
                 ev.consume();
             } else {
                 menuCanceledOnPress = false;
 	        WindowsLookAndFeel.setMnemonicHidden(false);
-                WindowsUtils.repaintMnemonicsInWindow(winAncestor);
+                WindowsGraphicsUtils.repaintMnemonicsInWindow(winAncestor);
                 JMenuBar mbar = root != null ? root.getJMenuBar() : null;
                 if(mbar == null && winAncestor instanceof JFrame) {
                     mbar = ((JFrame)winAncestor).getJMenuBar();
@@ -93,7 +94,7 @@ public class WindowsRootPaneUI extends BasicRootPaneUI {
         void altReleased(KeyEvent ev) {
             if (menuCanceledOnPress) {
 	        WindowsLookAndFeel.setMnemonicHidden(true);
-                WindowsUtils.repaintMnemonicsInWindow(winAncestor);
+                WindowsGraphicsUtils.repaintMnemonicsInWindow(winAncestor);
                 return;
             }
 
@@ -108,25 +109,37 @@ public class WindowsRootPaneUI extends BasicRootPaneUI {
                 }
                 JMenu menu = mbar != null ? mbar.getMenu(0) : null;
 
-                if (menu != null) {
+		// Skip menu activation if the KeyEvent originated before
+		// the latest window deactivation.
+		boolean skip = false;
+		Toolkit tk = Toolkit.getDefaultToolkit();
+		if (tk instanceof SunToolkit) {
+		    skip = ev.getWhen() <= ((SunToolkit)tk).getDeactivationTime(winAncestor);
+		}
+
+                if (menu != null && !skip) {
                     MenuElement[] path = new MenuElement[2];
                     path[0] = mbar;
                     path[1] = menu;
                     msm.setSelectedPath(path);
                 } else if(!WindowsLookAndFeel.isMnemonicHidden()) {
                     WindowsLookAndFeel.setMnemonicHidden(true);
-                    WindowsUtils.repaintMnemonicsInWindow(winAncestor);
+                    WindowsGraphicsUtils.repaintMnemonicsInWindow(winAncestor);
                 }
             } else {
                 if((msm.getSelectedPath())[0] instanceof ComboPopup) {
                     WindowsLookAndFeel.setMnemonicHidden(true);
-                    WindowsUtils.repaintMnemonicsInWindow(winAncestor);
+                    WindowsGraphicsUtils.repaintMnemonicsInWindow(winAncestor);
                 }
             }
 
         }
 
         public boolean postProcessKeyEvent(KeyEvent ev) {
+            if(ev.isConsumed()) {
+                // do not manage consumed event
+                return false;
+            }
             if (ev.getKeyCode() == KeyEvent.VK_ALT) {
                 root = SwingUtilities.getRootPane(ev.getComponent());
                 winAncestor = (root == null ? null : 
@@ -147,7 +160,7 @@ public class WindowsRootPaneUI extends BasicRootPaneUI {
                         MenuElement[] path = msm.getSelectedPath();
                         if (path.length <= 0) {
                             WindowsLookAndFeel.setMnemonicHidden(true);
-                            WindowsUtils.repaintMnemonicsInWindow(winAncestor);
+                            WindowsGraphicsUtils.repaintMnemonicsInWindow(winAncestor);
                         }
                     }
                     altKeyPressed = false;

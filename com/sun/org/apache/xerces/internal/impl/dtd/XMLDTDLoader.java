@@ -95,10 +95,12 @@ import java.io.EOFException;
  *  <li>http://apache.org/xml/properties/internal/grammar-pool</li>
  *  <li>http://apache.org/xml/properties/internal/datatype-validator-factory</li>
  * </ul>
+ * 
+ * @xerces.internal
  *
  * @author Neil Graham, IBM
  *
- * @version $Id: XMLDTDLoader.java,v 1.9 2003/10/14 14:34:26 mrglavas Exp $
+ * @version $Id: XMLDTDLoader.java,v 1.3 2007/07/19 04:38:24 ofung Exp $
  */
 public class XMLDTDLoader
         extends XMLDTDProcessor 

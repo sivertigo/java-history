@@ -1,8 +1,8 @@
 /*
- * @(#)MidiFileReader.java	1.13 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.sound.midi.spi;	
@@ -22,7 +22,7 @@ import javax.sound.midi.InvalidMidiDataException;
  * MIDI file, and can produce a <code>Sequence</code> object from files of these types.
  *
  * @author Kara Kytle
- * @version 1.13 03/12/19
+ * @version %I% %E%
  * @since 1.3
  */
 public abstract class MidiFileReader {

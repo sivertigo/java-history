@@ -1,10 +1,12 @@
 /*
- * @(#)HTMLEditorKit.java	1.132 09/06/24
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, 2010 Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package javax.swing.text.html;
+
+import sun.awt.AppContext;
 
 import java.lang.reflect.Method;
 import java.awt.*;
@@ -26,14 +28,14 @@ import java.lang.ref.*;
  * of content via a plug-in mechanism called an EditorKit.  Because
  * HTML is a very popular format of content, some support is provided
  * by default.  The default support is provided by this class, which
- * supports HTML version 3.2 (with some extensions), and is migrating
+ * supports HTML version 3.2 (with some extensions), and is migrating 
  * toward version 4.0.
  * The &lt;applet&gt; tag is not supported, but some support is provided
  * for the &lt;object&gt; tag.
  * <p>
  * There are several goals of the HTML EditorKit provided, that have
  * an effect upon the way that HTML is modeled.  These
- * have influenced its design in a substantial way.
+ * have influenced its design in a substantial way.  
  * <dl>
  * <p>
  * <dt>
@@ -46,7 +48,7 @@ import java.lang.ref.*;
  * These must be normalized somewhat into a correct form if one
  * is to edit them.  Additionally, users don't like to be presented
  * with an excessive amount of structure editing, so using traditional
- * text editing gestures is preferred over using the HTML structure
+ * text editing gestures is preferred over using the HTML structure 
  * exactly as defined in the HTML document.
  * <p>
  * The modeling of HTML is provided by the class <code>HTMLDocument</code>.
@@ -64,7 +66,7 @@ import java.lang.ref.*;
  *   The parser is replacable.  The default parser is the Hot Java
  *   parser which is DTD based.  A different DTD can be used, or an
  *   entirely different parser can be used.  To change the parser,
- *   reimplement the getParser method.  The default parser is
+ *   reimplement the getParser method.  The default parser is 
  *   dynamically loaded when first asked for, so the class files
  *   will never be loaded if an alternative parser is used.  The
  *   default parser is in a separate package called parser below
@@ -83,11 +85,11 @@ import java.lang.ref.*;
  *   element is displayed or add capabilities for new kinds of elements
  *   by providing new View implementations.  The default set of views
  *   are provided by the <code>HTMLFactory</code> class.  This can
- *   be easily changed by subclassing or replacing the HTMLFactory
+ *   be easily changed by subclassing or replacing the HTMLFactory 
  *   and reimplementing the getViewFactory method to return the alternative
  *   factory.
  *   <li>
- *   The View implementations work primarily off of CSS attributes,
+ *   The View implementations work primarily off of CSS attributes, 
  *   which are kept in the views.  This makes it possible to have
  *   multiple views mapped over the same model that appear substantially
  *   different.  This can be especially useful for printing.  For
@@ -132,7 +134,7 @@ import java.lang.ref.*;
  * will be to store things not recognized or not necessarily visible
  * so they can be subsequently written out.  The model of the HTML document
  * should therefore contain all information discovered while reading the
- * document.  This is constrained in some ways by the need to support
+ * document.  This is constrained in some ways by the need to support 
  * editing (i.e. incorrect documents sometimes must be normalized).
  * The guiding principle is that information shouldn't be lost, but
  * some might be synthesized to produce a more correct model or it might
@@ -140,12 +142,12 @@ import java.lang.ref.*;
  * </dl>
  *
  * @author  Timothy Prinzing
- * @version 1.132 06/24/09
+ * @version %I% %G%
  */
 public class HTMLEditorKit extends StyledEditorKit implements Accessible {
 
     private JEditorPane theEditor;
-
+   
     /**
      * Constructs an HTMLEditorKit, creates a StyleContext,
      * and loads the style sheet.
@@ -166,9 +168,9 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
     }
 
     /**
-     * Fetch a factory that is suitable for producing
+     * Fetch a factory that is suitable for producing 
      * views of any models that are produced by this
-     * kit.
+     * kit.  
      *
      * @return the factory
      */
@@ -202,7 +204,7 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
      * the body Element, if you do not insert into the body an exception will
      * be thrown. When inserting into a non-empty document all tags outside
      * of the body (head, title) will be dropped.
-     *
+     * 
      * @param in  the stream to read from
      * @param doc the destination for the insertion
      * @param pos the location in the document to place the
@@ -272,7 +274,7 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
     /**
      * Write content from a document to the given stream
      * in a format appropriate for this kind of content handler.
-     *
+     * 
      * @param out  the stream to write to
      * @param doc  the source for the write
      * @param pos  the location in the document to fetch the
@@ -282,7 +284,7 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
      * @exception BadLocationException if pos represents an invalid
      *   location within the document
      */
-    public void write(Writer out, Document doc, int pos, int len)
+    public void write(Writer out, Document doc, int pos, int len) 
 	throws IOException, BadLocationException {
 
 	if (doc instanceof HTMLDocument) {
@@ -298,7 +300,7 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
 
     /**
      * Called when the kit is being installed into the
-     * a JEditorPane.
+     * a JEditorPane. 
      *
      * @param c the JEditorPane
      */
@@ -312,7 +314,7 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
 
     /**
      * Called when the kit is being removed from the
-     * JEditorPane.  This is used to unregister any
+     * JEditorPane.  This is used to unregister any 
      * listeners that were attached.
      *
      * @param c the JEditorPane
@@ -335,25 +337,33 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
      * Set the set of styles to be used to render the various
      * HTML elements.  These styles are specified in terms of
      * CSS specifications.  Each document produced by the kit
-     * will have a copy of the sheet which it can add the
+     * will have a copy of the sheet which it can add the 
      * document specific styles to.  By default, the StyleSheet
      * specified is shared by all HTMLEditorKit instances.
      * This should be reimplemented to provide a finer granularity
      * if desired.
      */
     public void setStyleSheet(StyleSheet s) {
-	defaultStyles = s;
+        if (s == null) {
+            AppContext.getAppContext().remove(DEFAULT_STYLES_KEY);
+        } else {
+            AppContext.getAppContext().put(DEFAULT_STYLES_KEY, s);
+        }
     }
 
     /**
      * Get the set of styles currently being used to render the
      * HTML elements.  By default the resource specified by
-     * DEFAULT_CSS gets loaded, and is shared by all HTMLEditorKit
+     * DEFAULT_CSS gets loaded, and is shared by all HTMLEditorKit 
      * instances.
      */
     public StyleSheet getStyleSheet() {
+        AppContext appContext = AppContext.getAppContext();
+        StyleSheet defaultStyles = (StyleSheet) appContext.get(DEFAULT_STYLES_KEY);
+
 	if (defaultStyles == null) {
 	    defaultStyles = new StyleSheet();
+            appContext.put(DEFAULT_STYLES_KEY, defaultStyles);
 	    try {
 		InputStream is = HTMLEditorKit.getResourceAsStream(DEFAULT_CSS);
 		Reader r = new BufferedReader(
@@ -367,7 +377,7 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
 	}
 	return defaultStyles;
     }
-
+    
     /**
      * Fetch a resource relative to the HTMLEditorKit classfile.
      * If this is called on 1.2 the loading will occur under the
@@ -382,7 +392,7 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
 	try {
             return ResourceLoader.getResourceAsStream(name);
 	} catch (Throwable e) {
-	    // If the class doesn't exist or we have some other
+	    // If the class doesn't exist or we have some other 
 	    // problem we just try to call getResourceAsStream directly.
 	    return HTMLEditorKit.class.getResourceAsStream(name);
 	}
@@ -455,7 +465,7 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
     }
 
     /**
-     * Gets the input attributes used for the styled
+     * Gets the input attributes used for the styled 
      * editing actions.
      *
      * @return the attribute set
@@ -496,13 +506,14 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
 
     /**
      * Returns the cursor to use over hyper links.
+     * @since 1.3
      */
     public Cursor getLinkCursor() {
 	return linkCursor;
     }
 
     /**
-     * Indicates whether an html form submission is processed automatically
+     * Indicates whether an html form submission is processed automatically 
      * or only <code>FormSubmitEvent</code> is fired.
      *
      * @return true  if html form submission is processed automatically,
@@ -592,7 +603,7 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
     private static final ViewFactory defaultFactory = new HTMLFactory();
 
     MutableAttributeSet input;
-    private static StyleSheet defaultStyles = null;
+    private static final Object DEFAULT_STYLES_KEY = new Object();
     private LinkController linkHandler = new LinkController();
     private static Parser defaultParser = null;
     private Cursor defaultCursor = DefaultCursor;
@@ -612,7 +623,7 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
 	private String href = null;
 	/** This is used by viewToModel to avoid allocing a new array each
 	 * time. */
-	private Position.Bias[] bias = new Position.Bias[1];
+        private transient Position.Bias[] bias = new Position.Bias[1];
         /**
          * Current offset.
          */
@@ -620,7 +631,7 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
 
 	/**
          * Called for a mouse click event.
-	 * If the component is read-only (ie a browser) then
+	 * If the component is read-only (ie a browser) then 
 	 * the clicked event is used to drive an attempt to
 	 * follow the reference specified by a link.
 	 *
@@ -915,7 +926,7 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
      */
     public static abstract class Parser {
 	/**
-	 * Parse the given stream and drive the given callback
+	 * Parse the given stream and drive the given callback 
 	 * with the results of the parse.  This method should
 	 * be implemented to be thread-safe.
 	 */
@@ -938,7 +949,7 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
     public static class ParserCallback {
 	/**
 	 * This is passed as an attribute in the attributeset to indicate
-	 * the element is implied eg, the string '&lt;&gt;foo&lt;\t&gt;'
+	 * the element is implied eg, the string '&lt;&gt;foo&lt;\t&gt;' 
 	 * contains an implied html element and an implied body element.
 	 *
 	 * @since 1.3
@@ -980,7 +991,7 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
     }
 
     /**
-     * A factory to build views for HTML.  The following
+     * A factory to build views for HTML.  The following 
      * table describes what this factory will build by
      * default.
      *
@@ -1061,7 +1072,7 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
      * </table>
      */
     public static class HTMLFactory implements ViewFactory {
-
+    
 	/**
 	 * Creates a view from an element.
 	 *
@@ -1069,14 +1080,12 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
 	 * @return the view
 	 */
         public View create(Element elem) {
-
-    	   AttributeSet attrs = elem.getAttributes();
-	 	    Object elementName =
-               attrs.getAttribute(AbstractDocument.ElementNameAttribute);
-		    Object o = (elementName != null) ?
-        		null : attrs.getAttribute(StyleConstants.NameAttribute);
-
- 	    if (o instanceof HTML.Tag) {
+            AttributeSet attrs = elem.getAttributes();
+ 	    Object elementName = 
+                attrs.getAttribute(AbstractDocument.ElementNameAttribute);
+	    Object o = (elementName != null) ? 
+		null : attrs.getAttribute(StyleConstants.NameAttribute);
+	    if (o instanceof HTML.Tag) {
 		HTML.Tag kind = (HTML.Tag) o;
 		if (kind == HTML.Tag.CONTENT) {
 		    return new InlineView(elem);
@@ -1097,21 +1106,21 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
 			   (kind == HTML.Tag.DT)) {
 		    // paragraph
 		    return new javax.swing.text.html.ParagraphView(elem);
-		} else if ((kind == HTML.Tag.MENU) ||
+		} else if ((kind == HTML.Tag.MENU) || 
 			   (kind == HTML.Tag.DIR) ||
-			   (kind == HTML.Tag.UL)   ||
+			   (kind == HTML.Tag.UL)   || 
 			   (kind == HTML.Tag.OL)) {
 		    return new ListView(elem);
 		} else if (kind == HTML.Tag.BODY) {
 		    return new BodyBlockView(elem);
 		} else if (kind == HTML.Tag.HTML) {
 		    return new BlockView(elem, View.Y_AXIS);
-		} else if ((kind == HTML.Tag.LI) ||
+		} else if ((kind == HTML.Tag.LI) || 
 			   (kind == HTML.Tag.CENTER) ||
 			   (kind == HTML.Tag.DL) ||
-			   (kind == HTML.Tag.DD) ||
+			   (kind == HTML.Tag.DD) || 
 			   (kind == HTML.Tag.DIV) ||
-			   (kind == HTML.Tag.BLOCKQUOTE) ||
+			   (kind == HTML.Tag.BLOCKQUOTE) || 
 			   (kind == HTML.Tag.PRE) ||
                            (kind == HTML.Tag.FORM)) {
 		    // vertical box
@@ -1170,7 +1179,7 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
                             return a;
                         }
 			public int getNextVisualPositionFrom(int pos,
-				     Position.Bias b, Shape a,
+				     Position.Bias b, Shape a, 
 				     int direction, Position.Bias[] biasRet) {
 			    return getElement().getEndOffset();
 			}
@@ -1189,7 +1198,8 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
 	    }
 	    // If we get here, it's either an element we don't know about
 	    // or something from StyledDocument that doesn't have a mapping to HTML.
-	    String nm = (elementName != null) ? (String)elementName : elem.getName();
+	    String nm = (elementName != null) ? (String)elementName : 
+                                                elem.getName();
 	    if (nm != null) {
 		if (nm.equals(AbstractDocument.ContentElementName)) {
 		    return new LabelView(elem);
@@ -1203,7 +1213,7 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
 		    return new IconView(elem);
 		}
 	    }
-
+	
 	    // default to text display
 	    return new LabelView(elem);
 	}
@@ -1225,14 +1235,14 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
 		Container container = getContainer();
 		Container parentContainer;
 		if (container != null
-		    && (container instanceof javax.swing.JEditorPane)
+		    && (container instanceof javax.swing.JEditorPane) 
 		    && (parentContainer = container.getParent()) != null
 		    && (parentContainer instanceof javax.swing.JViewport)) {
 		    JViewport viewPort = (JViewport)parentContainer;
 		    Object cachedObject;
 		    if (cachedViewPort != null) {
 			if ((cachedObject = cachedViewPort.get()) != null) {
-			    if (cachedObject != viewPort) {
+			    if (cachedObject != viewPort) { 
 				((JComponent)cachedObject).removeComponentListener(this);
 			    }
 			} else {
@@ -1247,7 +1257,7 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
 		    componentVisibleWidth = viewPort.getExtentSize().width;
                     if (componentVisibleWidth > 0) {
 		    Insets insets = container.getInsets();
-		    viewVisibleWidth = componentVisibleWidth - insets.left - getLeftInset();
+		    viewVisibleWidth = componentVisibleWidth - insets.left - getLeftInset(); 
 		    //try to use viewVisibleWidth if it is smaller than targetSpan
 		    targetSpan = Math.min(targetSpan, viewVisibleWidth);
 		    }
@@ -1293,7 +1303,7 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
 			} finally {
 			    document.readUnlock();
 			}
-
+			
 		    }
 		}
 	    }
@@ -1307,16 +1317,16 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
              * we keep weak reference to viewPort if and only if BodyBoxView is listening for ComponentEvents
 	     * only in that case cachedViewPort is not equal to null.
 	     * we need to keep this reference in order to remove BodyBoxView from viewPort listeners.
-	     *
+	     * 
 	     */
-	    private Reference cachedViewPort = null;
+	    private Reference cachedViewPort = null; 
 	    private boolean isListening = false;
 	    private int viewVisibleWidth = Integer.MAX_VALUE;
 	    private int componentVisibleWidth = Integer.MAX_VALUE;
 	}
-
+	
     }
-
+    
     // --- Action implementations ------------------------------
 
 /** The bold action identifier
@@ -1381,15 +1391,15 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
     /** HTML used when inserting pre. */
     private static final String INSERT_PRE_HTML = "<pre></pre>";
 
-    private static NavigateLinkAction nextLinkAction =
+    private static NavigateLinkAction nextLinkAction = 
 	new NavigateLinkAction("next-link-action");
 
-    private static NavigateLinkAction previousLinkAction =
+    private static NavigateLinkAction previousLinkAction = 
 	new NavigateLinkAction("previous-link-action");
 
-    private static ActivateLinkAction activateLinkAction =
+    private static ActivateLinkAction activateLinkAction = 
 	new ActivateLinkAction("activate-link-action");
-
+	
     private static final Action[] defaultActions = {
 	new InsertHTMLTextAction("InsertTable", INSERT_TABLE_HTML,
 				 HTML.Tag.BODY, HTML.Tag.TABLE),
@@ -1412,7 +1422,10 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
 	new InsertHRAction(),
 	new InsertHTMLTextAction("InsertPre", INSERT_PRE_HTML,
 				 HTML.Tag.BODY, HTML.Tag.PRE),
-	nextLinkAction, previousLinkAction, activateLinkAction
+	nextLinkAction, previousLinkAction, activateLinkAction,
+    
+        new BeginAction(beginAction, false),
+        new BeginAction(selectionBeginAction, true)
     };
 
 
@@ -1688,7 +1701,7 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
 	 * Called after an insertion to adjust the selection.
 	 */
 	/* protected */
-	void adjustSelection(JEditorPane pane, HTMLDocument doc,
+	void adjustSelection(JEditorPane pane, HTMLDocument doc, 
 			     int startOffset, int oldLength) {
 	    int newLength = doc.getLength();
 	    if (newLength != oldLength && startOffset < newLength) {
@@ -1789,7 +1802,7 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
 		}
 	    }
 	}
-
+	
     }
 
     /*
@@ -1807,29 +1820,29 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
 		}
 	    } else if (nextKey == key) {
 		return nextVal;
-	    }
+	    }	
 	}
 	return null;
     }
 
     /*
-     * Action to move the focus on the next or previous hypertext link
-     * or object. TODO: This method relies on support from the
+     * Action to move the focus on the next or previous hypertext link 
+     * or object. TODO: This method relies on support from the 
      * javax.accessibility package.  The text package should support
      * keyboard navigation of text elements directly.
      */
-    static class NavigateLinkAction extends TextAction
+    static class NavigateLinkAction extends TextAction 
         implements CaretListener {
 
 	private static int prevHypertextOffset = -1;
 	private static boolean foundLink = false;
-	private FocusHighlightPainter focusPainter =
+        private static FocusHighlightPainter focusPainter =
 	    new FocusHighlightPainter(null);
 	private Object selectionTag;
 	private boolean focusBack = false;
 
         /*
-         * Create this action with the appropriate identifier.
+         * Create this action with the appropriate identifier. 
          */
         public NavigateLinkAction(String actionName) {
             super(actionName);
@@ -1837,7 +1850,7 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
 		focusBack = true;
 	    }
         }
-
+	
 	/**
 	 * Called when the caret position is updated.
 	 *
@@ -1860,7 +1873,7 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
 	}
 
         /*
-	 * The operation to perform when this action is triggered.
+	 * The operation to perform when this action is triggered. 
 	 */
         public void actionPerformed(ActionEvent e) {
             JTextComponent comp = getTextComponent(e);
@@ -1878,18 +1891,18 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
 	    int currentOffset = comp.getCaretPosition();
 	    int prevStartOffset = -1;
 	    int prevEndOffset = -1;
-
+		
 	    // highlight the next link or object after the current caret position
 	    Element nextElement = null;
 	    while ((nextElement = ei.next()) != null) {
 		String name = nextElement.getName();
 		AttributeSet attr = nextElement.getAttributes();
-
+		
 		Object href = getAttrValue(attr, HTML.Attribute.HREF);
 		if (!(name.equals(HTML.Tag.OBJECT.toString())) && href == null) {
 		    continue;
 		}
-
+		
 		int elementOffset = nextElement.getStartOffset();
 		if (focusBack) {
 		    if (elementOffset >= currentOffset &&
@@ -1897,7 +1910,7 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
 
 			foundLink = true;
 			comp.setCaretPosition(prevStartOffset);
-			moveCaretPosition(comp, prevStartOffset,
+			moveCaretPosition(comp, prevStartOffset, 
 					  prevEndOffset);
 			prevHypertextOffset = prevStartOffset;
 			return;
@@ -1911,7 +1924,7 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
 					  nextElement.getEndOffset());
 			prevHypertextOffset = elementOffset;
 			return;
-		    }
+		    } 
 		}
 		prevStartOffset = nextElement.getStartOffset();
 		prevEndOffset = nextElement.getEndOffset();
@@ -1919,13 +1932,13 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
             if (focusBack && prevStartOffset >= 0) {
                 foundLink = true;
                 comp.setCaretPosition(prevStartOffset);
-                moveCaretPosition(comp, prevStartOffset,
+                moveCaretPosition(comp, prevStartOffset, 
                                   prevEndOffset);
                 prevHypertextOffset = prevStartOffset;
                 return;
             }
         }
-
+	
 	/*
 	 * Moves the caret from mark to dot
 	 */
@@ -1949,14 +1962,14 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
 	/**
 	 * A highlight painter that draws a one-pixel border around
 	 * the highlighted area.
-	 */
-	class FocusHighlightPainter extends
+	 */ 
+        static class FocusHighlightPainter extends 
 	    DefaultHighlighter.DefaultHighlightPainter {
 
 	    FocusHighlightPainter(Color color) {
 		super(color);
 	    }
-
+	    
 	    /**
 	     * Paints a portion of a highlight.
 	     *
@@ -1971,9 +1984,9 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
 	     */
 	    public Shape paintLayer(Graphics g, int offs0, int offs1,
 				    Shape bounds, JTextComponent c, View view) {
-
+		
 		Color color = getColor();
-
+		
 		if (color == null) {
 		    g.setColor(c.getSelectionColor());
 		}
@@ -2015,15 +2028,15 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
     }
 
     /*
-     * Action to activate the hypertext link that has focus.
-     * TODO: This method relies on support from the
+     * Action to activate the hypertext link that has focus. 
+     * TODO: This method relies on support from the 
      * javax.accessibility package.  The text package should support
      * keyboard navigation of text elements directly.
      */
     static class ActivateLinkAction extends TextAction {
 
-        /**
-         * Create this action with the appropriate identifier.
+        /** 
+         * Create this action with the appropriate identifier. 
          */
         public ActivateLinkAction(String actionName) {
             super(actionName);
@@ -2032,19 +2045,19 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
 	/*
 	 * activates the hyperlink at offset
 	 */
-	private void activateLink(String href, HTMLDocument doc,
+	private void activateLink(String href, HTMLDocument doc, 
 				  JEditorPane editor, int offset) {
 	    try {
-		URL page =
+		URL page = 
 		    (URL)doc.getProperty(Document.StreamDescriptionProperty);
 		URL url = new URL(page, href);
 		HyperlinkEvent linkEvent = new HyperlinkEvent
 		    (editor, HyperlinkEvent.EventType.
-		     ACTIVATED, url, url.toExternalForm(),
+		     ACTIVATED, url, url.toExternalForm(), 
 		     doc.getCharacterElement(offset));
 		editor.fireHyperlinkUpdate(linkEvent);
 	    } catch (MalformedURLException m) {
-	    }
+	    }			
 	}
 
 	/*
@@ -2065,7 +2078,7 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
 		}
 	    }
 	}
-
+	
 	/*
 	 * Returns the root view for a document
 	 */
@@ -2095,7 +2108,7 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
                 return parent;
             }
             int index = parent.getViewIndex(start, Position.Bias.Forward);
-
+	    
             if (index != -1 && index < parent.getViewCount()) {
                 return getView(parent.getView(index), elem, start);
             }
@@ -2109,14 +2122,14 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
 	 */
 	private Object lock(JEditorPane editor) {
 	    Document document = editor.getDocument();
-
+	    
 	    if (document instanceof AbstractDocument) {
 		((AbstractDocument)document).readLock();
 		return document;
 	    }
 	    return null;
 	}
-
+	
 	/*
 	 * Releases a lock previously obtained via <code>lock</code>.
 	 */
@@ -2127,7 +2140,7 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
 	}
 
         /*
-	 * The operation to perform when this action is triggered.
+	 * The operation to perform when this action is triggered. 
 	 */
         public void actionPerformed(ActionEvent e) {
 
@@ -2136,7 +2149,7 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
 		return;
 	    }
 	    JEditorPane editor = (JEditorPane)c;
-
+	    
 	    Document d = editor.getDocument();
 	    if (d == null || !(d instanceof HTMLDocument)) {
 		return;
@@ -2153,12 +2166,12 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
 	    while ((currentElement = ei.next()) != null) {
 		String name = currentElement.getName();
 		AttributeSet attr = currentElement.getAttributes();
-
+		
 		Object href = getAttrValue(attr, HTML.Attribute.HREF);
 		if (href != null) {
 		    if (currentOffset >= currentElement.getStartOffset() &&
 			currentOffset <= currentElement.getEndOffset()) {
-
+			
 			activateLink((String)href, doc, editor, currentOffset);
 			return;
 		    }
@@ -2167,7 +2180,7 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
 		    if (obj != null) {
 			if (currentOffset >= currentElement.getStartOffset() &&
 			    currentOffset <= currentElement.getEndOffset()) {
-
+			    
 			    doObjectAction(editor, currentElement);
 			    return;
 			}
@@ -2175,5 +2188,47 @@ public class HTMLEditorKit extends StyledEditorKit implements Accessible {
 		}
 	    }
 	}
+    }
+
+    private static int getBodyElementStart(JTextComponent comp) {
+        Element rootElement = comp.getDocument().getRootElements()[0];
+        for (int i = 0; i < rootElement.getElementCount(); i++) {
+            Element currElement = rootElement.getElement(i); 
+            if("body".equals(currElement.getName())) {
+                return currElement.getStartOffset();
+            }
+        }
+        return 0;
+    }
+    
+    /*
+     * Move the caret to the beginning of the document.
+     * @see DefaultEditorKit#beginAction
+     * @see HTMLEditorKit#getActions
+     */
+    
+    static class BeginAction extends TextAction {
+
+        /* Create this object with the appropriate identifier. */
+        BeginAction(String nm, boolean select) {
+            super(nm);
+            this.select = select;
+        }
+
+        /** The operation to perform when this action is triggered. */
+        public void actionPerformed(ActionEvent e) {
+            JTextComponent target = getTextComponent(e);
+            int bodyStart = getBodyElementStart(target);
+            
+            if (target != null) {
+                if (select) {
+                    target.moveCaretPosition(bodyStart);
+                } else {
+                    target.setCaretPosition(bodyStart);
+                }
+            }
+        }
+
+        private boolean select;
     }
 }

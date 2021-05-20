@@ -1,8 +1,8 @@
 /*
- * @(#)BasicSplitPaneUI.java	1.81 09/08/10
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 
@@ -22,12 +22,13 @@ import java.util.*;
 import javax.swing.plaf.SplitPaneUI;
 import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.UIResource;
+import sun.swing.SwingUtilities2;
 
 
 /**
  * A Basic L&F implementation of the SplitPaneUI.
  *
- * @version 1.81 08/10/09
+ * @version %I% %G%
  * @author Scott Violet
  * @author Steve Wilson
  * @author Ralph Kar
@@ -327,8 +328,9 @@ public class BasicSplitPaneUI extends SplitPaneUI
 	// This plus 2 here is to provide backwards consistancy. Previously,
 	// the old size did not include the 2 pixel border around the divider,
 	// it now does.
-        LookAndFeel.installProperty(splitPane, "dividerSize", 
-				    UIManager.get("SplitPane.dividerSize"));
+        Integer dividerSize = (Integer)UIManager.get("SplitPane.dividerSize");
+        if (divider == null) dividerSize = 10;
+        LookAndFeel.installProperty(splitPane, "dividerSize", dividerSize);
 
         divider.setDividerSize(splitPane.getDividerSize());
 	dividerSize = divider.getDividerSize();
@@ -350,7 +352,7 @@ public class BasicSplitPaneUI extends SplitPaneUI
 
 	// focus forward traversal key
 	if (managingFocusForwardTraversalKeys==null) {
-	    managingFocusForwardTraversalKeys = new TreeSet();
+	    managingFocusForwardTraversalKeys = new HashSet();
 	    managingFocusForwardTraversalKeys.add(
 		KeyStroke.getKeyStroke(KeyEvent.VK_TAB, 0));
 	}
@@ -358,7 +360,7 @@ public class BasicSplitPaneUI extends SplitPaneUI
 					managingFocusForwardTraversalKeys);
 	// focus backward traversal key
 	if (managingFocusBackwardTraversalKeys==null) {
-	    managingFocusBackwardTraversalKeys = new TreeSet();
+	    managingFocusBackwardTraversalKeys = new HashSet();
 	    managingFocusBackwardTraversalKeys.add(
 		KeyStroke.getKeyStroke(KeyEvent.VK_TAB, InputEvent.SHIFT_MASK));
 	}
@@ -2185,7 +2187,7 @@ public class BasicSplitPaneUI extends SplitPaneUI
 			SwingUtilities.isDescendingFrom(focusOn, right)) ) ) {
 		    return;
 		}
- 		BasicLookAndFeel.compositeRequestFocus(focusOn);
+ 		SwingUtilities2.compositeRequestFocus(focusOn);
 	    }
 	}
 

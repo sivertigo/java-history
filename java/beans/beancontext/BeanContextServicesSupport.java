@@ -1,8 +1,8 @@
 /*
- * @(#)BeanContextServicesSupport.java	1.23 04/04/15
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.beans.beancontext;
@@ -37,7 +37,7 @@ import java.util.Locale;
  * </p>
  *
  * @author Laurence P. G. Cable
- * @version 1.23, 04/15/04
+ * @version %I%, %G%
  * @since 1.2
  */
 

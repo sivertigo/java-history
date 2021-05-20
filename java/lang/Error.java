@@ -1,49 +1,86 @@
 /*
- * @(#)Error.java	1.5 95/08/16  
+ * %W% %E%
  *
- * Copyright (c) 1995 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang;
 
 /**
- * Error is a subtype of Throwable for abnormal events that should not occur.
+ * An <code>Error</code> is a subclass of <code>Throwable</code> 
+ * that indicates serious problems that a reasonable application 
+ * should not try to catch. Most such errors are abnormal conditions. 
+ * The <code>ThreadDeath</code> error, though a "normal" condition,
+ * is also a subclass of <code>Error</code> because most applications
+ * should not try to catch it. 
+ * <p>
+ * A method is not required to declare in its <code>throws</code> 
+ * clause any subclasses of <code>Error</code> that might be thrown 
+ * during the execution of the method but not caught, since these 
+ * errors are abnormal conditions that should never occur. 
  *
- * Do not try to catch Error's unless you really know what you're
- * doing.
- *
- * @version 	1.5, 08/16/95
- * @author      Frank Yellin
+ * @author  Frank Yellin
+ * @version %I%, %G%
+ * @see     java.lang.ThreadDeath
+ * @since   JDK1.0
  */
-public
-class Error extends Throwable {
+public class Error extends Throwable {
+    static final long serialVersionUID = 4980196508277280342L;
+
     /**
-     * Constructs an Error with no specified detail message.
-     * A detail message is a String that describes this particular error.
+     * Constructs a new error with <code>null</code> as its detail message.
+     * The cause is not initialized, and may subsequently be initialized by a
+     * call to {@link #initCause}.
      */
     public Error() {
 	super();
     }
 
     /**
-     * Constructs an Error with the specified detail message.
-     * A detail message is a String that describes this particular error
-     * @param s the detail message
+     * Constructs a new error with the specified detail message.  The
+     * cause is not initialized, and may subsequently be initialized by
+     * a call to {@link #initCause}.
+     *
+     * @param   message   the detail message. The detail message is saved for 
+     *          later retrieval by the {@link #getMessage()} method.
      */
-    public Error(String s) {
-	super(s);
+    public Error(String message) {
+	super(message);
+    }
+
+    /**
+     * Constructs a new error with the specified detail message and
+     * cause.  <p>Note that the detail message associated with
+     * <code>cause</code> is <i>not</i> automatically incorporated in
+     * this error's detail message.
+     *
+     * @param  message the detail message (which is saved for later retrieval
+     *         by the {@link #getMessage()} method).
+     * @param  cause the cause (which is saved for later retrieval by the
+     *         {@link #getCause()} method).  (A <tt>null</tt> value is
+     *         permitted, and indicates that the cause is nonexistent or
+     *         unknown.)
+     * @since  1.4
+     */
+    public Error(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    /**
+     * Constructs a new error with the specified cause and a detail
+     * message of <tt>(cause==null ? null : cause.toString())</tt> (which
+     * typically contains the class and detail message of <tt>cause</tt>).
+     * This constructor is useful for errors that are little more than
+     * wrappers for other throwables.
+     *
+     * @param  cause the cause (which is saved for later retrieval by the
+     *         {@link #getCause()} method).  (A <tt>null</tt> value is
+     *         permitted, and indicates that the cause is nonexistent or
+     *         unknown.)
+     * @since  1.4
+     */
+    public Error(Throwable cause) {
+        super(cause);
     }
 }

@@ -1,8 +1,8 @@
 /*
- * @(#)MotifMenuUI.java	1.32 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package com.sun.java.swing.plaf.motif;
 
@@ -21,7 +21,7 @@ import javax.swing.plaf.basic.BasicMenuUI;
  * A Motif L&F implementation of MenuUI.  
  * <p>
  *
- * @version 1.32 12/19/03
+ * @version %I% %G%
  * @author Georges Saab
  * @author Rich Schiavi
  */
@@ -47,12 +47,6 @@ public class MotifMenuUI extends BasicMenuUI
 
     protected ChangeListener createChangeListener(JComponent c) {
         return new MotifChangeHandler((JMenu)c, this);
-    }
-
-    public void paint(Graphics g, JComponent c){
-	MotifGraphicsUtils.paintMenuItem(g,c,checkIcon,arrowIcon,
-					 selectionBackground, selectionForeground,
-					 defaultTextIconGap);
     }
 
     private boolean popupIsOpen(JMenu m,MenuElement me[]) {

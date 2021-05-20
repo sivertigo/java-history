@@ -1,8 +1,8 @@
 /*
- * @(#)MatchResult.java	1.5 04/06/28
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.util.regex;
@@ -16,7 +16,7 @@ package java.util.regex;
  * a <code>MatchResult</code>.
  *
  * @author  Michael McCloskey
- * @version 1.5 06/28/04
+ * @version %I% %G%
  * @see Matcher
  * @since 1.5
  */

@@ -1,8 +1,8 @@
 /*
- * @(#)ComponentOrientation.java	1.14 04/05/18
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 /*
@@ -44,7 +44,7 @@ import java.util.ResourceBundle;
   * (In the header, the two-letter abbreviation represents the item direction
   * in the first letter, and the line direction in the second. For example,
   * LT means "items left-to-right, lines top-to-bottom",
-  * BL means "items bottom-to-top, lines bottom-to-top", and so on.)
+  * TL means "items top-to-bottom, lines left-to-right", and so on.)
   * <p>
   * The orientations are:
   * <ul>
@@ -72,6 +72,11 @@ import java.util.ResourceBundle;
   */
 public final class ComponentOrientation implements java.io.Serializable
 {
+    /*
+     * serialVersionUID
+     */
+    private static final long serialVersionUID = -4113291392143563828L;
+
     // Internal constants used in the implementation
     private static final int UNK_BIT      = 1;
     private static final int HORIZ_BIT    = 2;

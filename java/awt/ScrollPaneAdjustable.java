@@ -1,10 +1,12 @@
 /*
- * @(#)ScrollPaneAdjustable.java	1.9 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package java.awt;
+
+import sun.awt.AWTAccessor;
 
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
@@ -17,7 +19,7 @@ import java.io.Serializable;
  * scrollbar of a <code>ScrollPane</code>.  Objects of this class are
  * returned by <code>ScrollPane</code> methods.
  *
- * @version     1.9 12/19/03
+ * @version     %I% %G%
  * @since	1.4
  */
 public class ScrollPaneAdjustable implements Adjustable, Serializable {
@@ -139,6 +141,12 @@ public class ScrollPaneAdjustable implements Adjustable, Serializable {
         if (!GraphicsEnvironment.isHeadless()) {
             initIDs();
         }
+        AWTAccessor.setScrollPaneAdjustableAccessor(new AWTAccessor.ScrollPaneAdjustableAccessor() {
+            public void setTypedValue(final ScrollPaneAdjustable adj,
+                                      final int v, final int type) {
+                adj.setTypedValue(v, type);
+            }
+        });
     }
 
     /**
@@ -339,6 +347,8 @@ public class ScrollPaneAdjustable implements Adjustable, Serializable {
      * events from this <code>ScrollPaneAdjustable</code>.
      * If <code>l</code> is <code>null</code>, no exception is thrown
      * and no action is performed.
+     * <p>Refer to <a href="doc-files/AWTThreadIssues.html#ListenersThreads"
+     * >AWT Threading Issues</a> for details on AWT's threading model.
      *
      * @param    l   the adjustment listener.
      * @see      #removeAdjustmentListener
@@ -358,6 +368,8 @@ public class ScrollPaneAdjustable implements Adjustable, Serializable {
      * receives adjustment events from this <code>ScrollPaneAdjustable</code>.
      * If <code>l</code> is <code>null</code>, no exception is thrown
      * and no action is performed.
+     * <p>Refer to <a href="doc-files/AWTThreadIssues.html#ListenersThreads"
+     * >AWT Threading Issues</a> for details on AWT's threading model.
      *
      * @param         l     the adjustment listener.
      * @see           #addAdjustmentListener

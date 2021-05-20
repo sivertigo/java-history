@@ -1,8 +1,8 @@
 /*
- * @(#)PopupFactory.java	1.25 09/08/10
+ * @(#)PopupFactory.java	1.26 05/02/22
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing;
@@ -34,7 +34,7 @@ import java.util.Map;
  *
  * @see Popup
  *
- * @version 1.25 08/10/09
+ * @version 1.26 02/22/05
  * @since 1.4
  */
 public class PopupFactory {
@@ -76,7 +76,7 @@ public class PopupFactory {
      */
     static final Object forceHeavyWeightPopupKey = new Object(); // __force_heavy_weight_popup__
 
- 
+
     /**
      * Sets the <code>PopupFactory</code> that will be used to obtain
      * <code>Popup</code>s.
@@ -555,8 +555,10 @@ public class PopupFactory {
                         r.y += i.top;
                         r.width -= (i.left + i.right);
                         r.height -= (i.top + i.bottom);
-                        return SwingUtilities.isRectangleContainingRectangle(
-                                   r, new Rectangle(x, y, width, height));
+
+                        GraphicsConfiguration gc = parent.getGraphicsConfiguration();
+                        Rectangle popupArea = getContainerPopupArea(gc);
+                        return r.intersection(popupArea).contains(x, y, width, height);
                                                   
                     } else if (parent instanceof JApplet) {
                         Rectangle r = parent.getBounds();
@@ -564,8 +566,7 @@ public class PopupFactory {
 
                         r.x = p.x;
                         r.y = p.y;
-                        return SwingUtilities.isRectangleContainingRectangle(
-                            r, new Rectangle(x, y, width, height));
+                        return r.contains(x, y, width, height);
                     } else if (parent instanceof Window || 
 			       parent instanceof Applet) {
 			// No suitable swing component found
@@ -574,6 +575,28 @@ public class PopupFactory {
                 }
             }
             return false;
+        }
+
+        Rectangle getContainerPopupArea(GraphicsConfiguration gc) { 
+            Rectangle screenBounds;
+            Toolkit toolkit = Toolkit.getDefaultToolkit();
+            Insets insets;
+            if(gc != null) {
+                // If we have GraphicsConfiguration use it 
+                // to get screen bounds 
+                screenBounds = gc.getBounds();
+                insets = toolkit.getScreenInsets(gc);
+            } else {
+                // If we don't have GraphicsConfiguration use primary screen
+                screenBounds = new Rectangle(toolkit.getScreenSize());
+                insets = new Insets(0, 0, 0, 0);
+            }
+            // Take insets into account
+            screenBounds.x += insets.left;
+            screenBounds.y += insets.top;
+            screenBounds.width -= (insets.left + insets.right);
+            screenBounds.height -= (insets.top + insets.bottom);
+            return screenBounds;
         }
     }
 
@@ -744,7 +767,8 @@ public class PopupFactory {
             super.reset(owner, contents, ownerX, ownerY);
 
             JComponent component = (JComponent)getComponent();
-
+            
+            component.setOpaque(contents.isOpaque());
             component.setLocation(ownerX, ownerY);
             component.add(contents, BorderLayout.CENTER);
             contents.invalidate();
@@ -879,7 +903,7 @@ public class PopupFactory {
         }
 
         Component createComponent(Component owner) {
-            Panel component = new Panel(new BorderLayout());
+            Panel component = new MediumWeightComponent();
 
 	    rootPane = new JRootPane();
             // NOTE: this uses setOpaque vs LookAndFeel.installProperty as
@@ -905,6 +929,16 @@ public class PopupFactory {
             contents.invalidate();
             component.validate();
             pack();
+        }
+
+
+        // This implements SwingHeavyWeight so that repaints on it
+        // are processed by the RepaintManager and SwingPaintEventDispatcher.
+        private static class MediumWeightComponent extends Panel implements
+                                                           SwingHeavyWeight {
+            MediumWeightComponent() {
+                super(new BorderLayout());
+            }
         }
     }
 }

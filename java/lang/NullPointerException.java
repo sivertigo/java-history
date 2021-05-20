@@ -1,45 +1,48 @@
 /*
- * @(#)NullPointerException.java	1.9 95/07/30  
+ * %W% %E%
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang;
 
 /**
- * Signals the illegal use of a null pointer.
- * @version 	1.9, 07/30/95
+ * Thrown when an application attempts to use <code>null</code> in a 
+ * case where an object is required. These include: 
+ * <ul>
+ * <li>Calling the instance method of a <code>null</code> object. 
+ * <li>Accessing or modifying the field of a <code>null</code> object. 
+ * <li>Taking the length of <code>null</code> as if it were an array. 
+ * <li>Accessing or modifying the slots of <code>null</code> as if it 
+ *     were an array. 
+ * <li>Throwing <code>null</code> as if it were a <code>Throwable</code> 
+ *     value. 
+ * </ul>
+ * <p>
+ * Applications should throw instances of this class to indicate 
+ * other illegal uses of the <code>null</code> object. 
+ *
+ * @author  unascribed
+ * @version %I%, %G%
+ * @since   JDK1.0
  */
 public
 class NullPointerException extends RuntimeException {
     /**
-     * Constructs a NullPointerException with no detail message.
-     * A detail message is a String that describes this particular exception.
+     * Constructs a <code>NullPointerException</code> with no detail message.
      */
     public NullPointerException() {
 	super();
     }
 
     /**
-     * Constructs a NullPointerException with the specified detail message.
-     * A detail message is a String that describes this particular exception.
-     * @param s the detail message
+     * Constructs a <code>NullPointerException</code> with the specified 
+     * detail message. 
+     *
+     * @param   s   the detail message.
      */
     public NullPointerException(String s) {
 	super(s);
     }
 }
-

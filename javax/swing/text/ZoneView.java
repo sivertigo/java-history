@@ -1,8 +1,8 @@
 /*
- * @(#)ZoneView.java	1.17 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package javax.swing.text;
 
@@ -21,7 +21,7 @@ import javax.swing.event.*;
  * only the result being saved.
  * <p>
  * ZoneView extends BoxView to provide a box that implements
- * zones for it's children.  The zones are special View implementations
+ * zones for its children.  The zones are special View implementations
  * (the children of an instance of this class) that represent only a 
  * portion of the model that an instance of ZoneView is responsible
  * for.  The zones don't create child views until an attempt is made 
@@ -54,7 +54,7 @@ import javax.swing.event.*;
  * large zones efficiently.
  *
  * @author  Timothy Prinzing
- * @version 1.17 12/19/03
+ * @version %I% %G%
  * @see     View
  * @since   1.3
  */

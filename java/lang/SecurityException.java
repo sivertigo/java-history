@@ -1,41 +1,67 @@
 /*
- * @(#)SecurityException.java	1.4 95/08/10 Sami Shaio
+ * %W% %E%
  *
- * Copyright (c) 1995 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package java.lang;
 
 /**
- * Signals that a security exception has occurred.
+ * Thrown by the security manager to indicate a security violation. 
+ *
+ * @author  unascribed
+ * @version %I%, %G%
+ * @see     java.lang.SecurityManager
+ * @since   JDK1.0
  */
 public class SecurityException extends RuntimeException {
+
+    private static final long serialVersionUID = 6878364983674394167L;
+
     /**
-     * Constructs a SecurityException with no detail message.
-     * A detail message is a String that describes this particular exception.
+     * Constructs a <code>SecurityException</code> with no detail  message.
      */
     public SecurityException() {
 	super();
     }
 
     /**
-     * Constructs a SecurityException with the specified detail message.
-     * A detail message is a String that describes this particular exception.
-     * @param s the detail message
+     * Constructs a <code>SecurityException</code> with the specified 
+     * detail message. 
+     *
+     * @param   s   the detail message.
      */
     public SecurityException(String s) {
 	super(s);
+    }
+
+    /**
+     * Creates a <code>SecurityException</code> with the specified
+     * detail message and cause.
+     *
+     * @param message the detail message (which is saved for later retrieval
+     *        by the {@link #getMessage()} method).
+     * @param cause the cause (which is saved for later retrieval by the
+     *        {@link #getCause()} method).  (A <tt>null</tt> value is permitted,
+     *        and indicates that the cause is nonexistent or unknown.)
+     * @since 1.5
+     */
+    public SecurityException(String message, Throwable cause) {
+	super(message, cause);
+    }
+
+    /**
+     * Creates a <code>SecurityException</code> with the specified cause
+     * and a detail message of <tt>(cause==null ? null : cause.toString())</tt>
+     * (which typically contains the class and detail message of
+     * <tt>cause</tt>).
+     *
+     * @param cause the cause (which is saved for later retrieval by the
+     *        {@link #getCause()} method).  (A <tt>null</tt> value is permitted,
+     *        and indicates that the cause is nonexistent or unknown.)
+     * @since 1.5
+     */
+    public SecurityException(Throwable cause) {
+	super(cause);
     }
 }

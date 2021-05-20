@@ -1,14 +1,15 @@
 /*
- * @(#)ValueHandlerMultiFormat.java	1.2 03/12/19
+ * %W% %E%
  * 
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.rmi.CORBA;
 
 /**
  * Java to IDL ptc 02-01-12 1.5.1.5
+ * @since 1.5
  */
 public interface ValueHandlerMultiFormat extends ValueHandler {
 

@@ -1,8 +1,8 @@
 /*
- * @(#)DefaultMenuLayout.java	1.8 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing.plaf.basic;
@@ -19,7 +19,7 @@ import java.awt.Dimension;
  * so that plauggable L&Fs can distinguish it from user-installed
  * layout managers on menus.
  *
- * @version 1.8 12/19/03
+ * @version %I% %G%
  * @author Georges Saab
  */
 
@@ -30,11 +30,16 @@ public class DefaultMenuLayout extends BoxLayout implements UIResource {
 
     public Dimension preferredLayoutSize(Container target) {
         if (target instanceof JPopupMenu) {
-          ((JPopupMenu)target).putClientProperty(
-                                 BasicMenuItemUI.MAX_TEXT_WIDTH, null); 
-          ((JPopupMenu)target).putClientProperty(
-                                 BasicMenuItemUI.MAX_ACC_WIDTH, null);
+         JPopupMenu popupMenu = (JPopupMenu) target;
+            sun.swing.MenuItemLayoutHelper.clearUsedClientProperties(popupMenu);
+	 if (popupMenu.getComponentCount() == 0) {
+	     return new Dimension(0, 0);
+	 }
         }
+
+        // Make BoxLayout recalculate cached preferred sizes
+        super.invalidateLayout(target);
+
         return super.preferredLayoutSize(target);
     }
 }

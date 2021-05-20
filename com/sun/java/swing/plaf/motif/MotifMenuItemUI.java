@@ -1,8 +1,8 @@
 /*
- * @(#)MotifMenuItemUI.java	1.50 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
  
 package com.sun.java.swing.plaf.motif;
@@ -50,12 +50,6 @@ public class MotifMenuItemUI extends BasicMenuItemUI
 
     protected MouseInputListener createMouseInputListener(JComponent c) {
 	return new MouseInputHandler();
-    }
-
-    public void paint(Graphics g, JComponent c) {
-	MotifGraphicsUtils.paintMenuItem(g, c, checkIcon,arrowIcon,
-					 selectionBackground, selectionForeground,
-					 defaultTextIconGap);
     }
 
     protected class ChangeHandler implements ChangeListener {

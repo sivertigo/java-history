@@ -1,8 +1,8 @@
 /*
- * @(#)SpinnerDateModel.java	1.11 04/05/12
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing;
@@ -65,7 +65,7 @@ import java.io.Serializable;
  * @see SpinnerNumberModel
  * @see Calendar#add
  *
- * @version 1.11 05/12/04
+ * @version %I% %G%
  * @author Hans Muller
  * @since 1.4
  */
@@ -437,7 +437,7 @@ public class SpinnerDateModel extends AbstractSpinnerModel implements Serializab
      */
     public void setValue(Object value) {
 	if ((value == null) || !(value instanceof Date)) {
-	    throw new IllegalArgumentException("null value");
+	    throw new IllegalArgumentException("illegal value");
 	}
 	if (!value.equals(this.value.getTime())) {
 	    this.value.setTime((Date)value);

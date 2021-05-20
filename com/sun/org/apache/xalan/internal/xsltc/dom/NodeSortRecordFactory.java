@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /*
- * $Id: NodeSortRecordFactory.java,v 1.14 2004/02/27 01:58:29 zongaro Exp $
+ * $Id: NodeSortRecordFactory.java,v 1.2.4.1 2005/09/06 09:53:40 pvedula Exp $
  */
 
 package com.sun.org.apache.xalan.internal.xsltc.dom;
@@ -24,6 +24,7 @@ import com.sun.org.apache.xalan.internal.xsltc.Translet;
 import com.sun.org.apache.xalan.internal.xsltc.TransletException;
 import com.sun.org.apache.xalan.internal.xsltc.runtime.AbstractTranslet;
 import com.sun.org.apache.xml.internal.utils.LocaleUtility;
+import com.sun.org.apache.xalan.internal.utils.ObjectFactory;
 import java.util.Locale;
 import java.text.Collator;
 
@@ -78,8 +79,7 @@ public class NodeSortRecordFactory {
              _class = translet.getAuxiliaryClass(className);
              // This code is only run when the native API is used
              if (_class == null) {
-                 _class = ObjectFactory.findProviderClass(
-                      className, ObjectFactory.findClassLoader(), true);
+                 _class = ObjectFactory.findProviderClass(className, true);
              } 
 
              int levels = order.length;

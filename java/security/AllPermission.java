@@ -1,8 +1,8 @@
 /*
- * @(#)AllPermission.java	1.20 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
  
 package java.security;
@@ -31,7 +31,7 @@ import sun.security.util.SecurityConstants;
  * @see java.security.PermissionCollection
  * @see java.lang.SecurityManager
  *
- * @version 1.20 03/12/19
+ * @version %I% %E%
  *
  * @author Roland Schemers
  *
@@ -133,7 +133,7 @@ public final class AllPermission extends Permission {
  * @see java.security.Permission
  * @see java.security.Permissions
  *
- * @version 1.20 12/19/03
+ * @version %I% %G%
  *
  * @author Roland Schemers
  *

@@ -1,8 +1,8 @@
 /*
- * @(#)InputMethod.java	1.29 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.awt.im.spi;
@@ -27,7 +27,7 @@ import java.lang.Character.Subset;
  *
  * @since 1.3
  *
- * @version 	1.29, 12/19/03
+ * @version 	%I%, %G%
  * @author JavaSoft International
  */
 
@@ -335,7 +335,7 @@ public interface InputMethod {
     public void endComposition();
 
     /**
-     * Disposes of the input method and releases the resources used by it.
+     * Releases the resources used by this input method.
      * In particular, the input method should dispose windows and close files that are no
      * longer needed.
      * <p>

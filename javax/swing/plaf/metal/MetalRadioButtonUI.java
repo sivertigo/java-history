@@ -1,13 +1,13 @@
 /*
- * @(#)MetalRadioButtonUI.java	1.30 09/07/30
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing.plaf.metal;
 
-import com.sun.java.swing.SwingUtilities2;
+import sun.swing.SwingUtilities2;
 import sun.awt.AppContext;
 
 import java.awt.*;
@@ -32,7 +32,7 @@ import javax.swing.text.View;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
- * @version 1.30 07/30/09
+ * @version %I% %G%
  * @author Michael C. Albers (Metal modifications)
  * @author Jeff Dinkins (original BasicRadioButtonCode)
  */
@@ -57,7 +57,7 @@ public class MetalRadioButtonUI extends BasicRadioButtonUI {
             metalRadioButtonUI = new MetalRadioButtonUI();
             appContext.put(METAL_RADIO_BUTTON_UI_KEY, metalRadioButtonUI);
         }
-	return metalRadioButtonUI;
+        return metalRadioButtonUI;
     }
 
     // ********************************

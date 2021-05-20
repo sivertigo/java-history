@@ -88,10 +88,12 @@ import com.sun.org.apache.xerces.internal.xni.parser.XMLDocumentSource;
  *  <li>http://apache.org/xml/properties/internal/symbol-table</li>
  *  <li>http://apache.org/xml/properties/internal/error-reporter</li>
  * </ul>
+ * 
+ * @xerces.internal
  *
  * @author Andy Clark, IBM
  *
- * @version $Id: XMLNamespaceBinder.java,v 1.33 2004/02/24 23:03:46 mrglavas Exp $
+ * @version $Id: XMLNamespaceBinder.java,v 1.3 2007/07/19 04:38:24 ofung Exp $
  */
 public class XMLNamespaceBinder
     implements XMLComponent, XMLDocumentFilter {

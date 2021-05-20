@@ -1,8 +1,8 @@
 /*
- * @(#)ZipConstants.java	1.18 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.util.zip;
@@ -11,7 +11,7 @@ package java.util.zip;
  * This interface defines the constants that are used by the classes
  * which manipulate ZIP files.
  *
- * @version	1.18, 12/19/03
+ * @version	%I%, %G%
  * @author	David Connelly
  */
 interface ZipConstants {

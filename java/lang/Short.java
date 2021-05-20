@@ -1,8 +1,8 @@
 /*
- * @(#)Short.java	1.43 04/05/11
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang;
@@ -21,7 +21,7 @@ package java.lang;
  * constants and methods useful when dealing with a <code>short</code>.
  *
  * @author  Nakul Saraiya
- * @version 1.43, 05/11/04
+ * @version %I%, %G%
  * @see     java.lang.Number
  * @since   JDK1.1
  */
@@ -437,6 +437,7 @@ public final class Short extends Number implements Comparable<Short> {
     /**
      * The number of bits used to represent a <tt>short</tt> value in two's
      * complement binary form.
+     * @since 1.5
      */
     public static final int SIZE = 16;
  

@@ -1,8 +1,8 @@
 /*
- * @(#)PrefixParserAction.java	1.17 03/12/19
+ * %W% %E%
  * 
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.corba.se.impl.orb ;
@@ -92,7 +92,7 @@ public class PrefixParserAction extends ParserActionBase {
 		    throw wrapper.couldNotSetArray( thr,
 			getPropertyName(), new Integer(ctr), 
 			componentType, new Integer(size),
-			ObjectUtility.compactObjectToString( obj )) ;
+			obj.toString() ) ;
 		}
 		ctr++ ;
 	    }

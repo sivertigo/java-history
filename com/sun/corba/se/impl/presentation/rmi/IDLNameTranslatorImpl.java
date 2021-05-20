@@ -1,8 +1,8 @@
 /*
- * @(#)IDLNameTranslatorImpl.java	1.13 07/04/17
+ * %W% %E%
  *
- * Copyright 2007 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.corba.se.impl.presentation.rmi ;
@@ -183,10 +183,11 @@ public class IDLNameTranslatorImpl implements IDLNameTranslator {
      */
     private IDLNameTranslatorImpl(Class[] interfaces) 
     {
-        SecurityManager s = System.getSecurityManager();
+
+	SecurityManager s = System.getSecurityManager();
         if (s != null) {
             s.checkPermission(new DynamicAccessPermission("access"));
-        }
+	}
         try {
             IDLTypesUtil idlTypesUtil = new IDLTypesUtil();
 	    for (int ctr=0; ctr<interfaces.length; ctr++)

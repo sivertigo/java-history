@@ -1,8 +1,8 @@
 /*
  * @(#)CookieHandler.java	1.4 03/08/09
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.net;
@@ -96,7 +96,7 @@ public abstract class CookieHandler {
      *            field names "Cookie" or "Cookie2" to a list of
      *            cookies containing state information
      *
-     * @throws IOException if an I/O * error occurs
+     * @throws IOException if an I/O error occurs
      * @throws IllegalArgumentException if either argument is null
      * @see #put(URI, Map)
      */

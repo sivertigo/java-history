@@ -1,8 +1,8 @@
 /*
- * @(#)ShortMessage.java	1.24 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.sound.midi;
@@ -29,7 +29,7 @@ package javax.sound.midi;
  * @see SysexMessage
  * @see MetaMessage
  *
- * @version 1.24, 03/12/19
+ * @version %I%, %E%
  * @author David Rivas
  * @author Kara Kytle
  * @author Florian Bomers
@@ -126,7 +126,7 @@ public class ShortMessage extends MidiMessage {
     public static final int NOTE_ON						= 0x90;  // 144
 
     /**
-     * Command value for Polyphonic Key Pressure (Aftertouch) message (0xA0, or 128)
+     * Command value for Polyphonic Key Pressure (Aftertouch) message (0xA0, or 160)
      */
     public static final int POLY_PRESSURE				= 0xA0;  // 160
 

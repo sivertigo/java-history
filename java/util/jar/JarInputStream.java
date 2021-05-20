@@ -1,8 +1,6 @@
 /*
- * @(#)JarInputStream.java	1.35 05/05/27
- *
- * Copyright 2005 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, 2010, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.util.jar;
@@ -10,6 +8,7 @@ package java.util.jar;
 import java.util.zip.*;
 import java.io.*;
 import sun.security.util.ManifestEntryVerifier;
+import sun.misc.JarIndex;
 
 /**
  * The <code>JarInputStream</code> class is used to read the contents of
@@ -19,7 +18,7 @@ import sun.security.util.ManifestEntryVerifier;
  * can be used to store meta-information about the JAR file and its entries.
  *
  * @author  David Connelly
- * @version 1.35, 05/27/05
+ * @version %I%, %G%
  * @see	    Manifest
  * @see	    java.util.zip.ZipInputStream
  * @since   1.2
@@ -30,6 +29,8 @@ class JarInputStream extends ZipInputStream {
     private JarEntry first;
     private JarVerifier jv;
     private ManifestEntryVerifier mev;
+    private final boolean doVerify;
+    private boolean tryManifest;
 
 
     /**
@@ -55,8 +56,21 @@ class JarInputStream extends ZipInputStream {
      */
     public JarInputStream(InputStream in, boolean verify) throws IOException {
 	super(in);
-	JarEntry e = (JarEntry)super.getNextEntry();
+	this.doVerify = verify;
 
+        // This implementation assumes the META-INF/MANIFEST.MF entry
+        // should be either the first or the second entry (when preceded
+        // by the dir META-INF/). It skips the META-INF/ and then
+        // "consumes" the MANIFEST.MF to initialize the Manifest object.
+        JarEntry e = (JarEntry)super.getNextEntry();
+        if (e != null && e.getName().equalsIgnoreCase("META-INF/"))
+            e = (JarEntry)super.getNextEntry();
+        first = checkManifest(e);
+    }
+
+    private JarEntry checkManifest(JarEntry e)
+        throws IOException
+    {
         if (e != null && e.getName().equalsIgnoreCase("META-INF/"))
             e = (JarEntry)super.getNextEntry();
 
@@ -64,16 +78,14 @@ class JarInputStream extends ZipInputStream {
             man = new Manifest();
             byte bytes[] = getBytes(new BufferedInputStream(this));
             man.read(new ByteArrayInputStream(bytes));
-            //man.read(new BufferedInputStream(this));
             closeEntry();
-            if (verify) {
+            if (doVerify) {
                 jv = new JarVerifier(bytes);
                 mev = new ManifestEntryVerifier(man);
             }
-            first = getNextJarEntry();
-        } else {
-            first = e;
+            return (JarEntry)super.getNextEntry();
         }
+        return e;
     }
 
     private byte[] getBytes(InputStream is)
@@ -116,8 +128,14 @@ class JarInputStream extends ZipInputStream {
 	JarEntry e;
 	if (first == null) {
 	    e = (JarEntry)super.getNextEntry();
+            if (tryManifest) {
+                e = checkManifest(e);
+                tryManifest = false;
+            }
 	} else {
 	    e = first;
+	    if (first.getName().equalsIgnoreCase(JarIndex.INDEX_NAME))
+	        tryManifest = true;
 	    first = null;
 	}
 	if (jv != null && e != null) {
@@ -151,15 +169,21 @@ class JarInputStream extends ZipInputStream {
 
     /**
      * Reads from the current JAR file entry into an array of bytes.
-     * Blocks until some input is available.
+     * If <code>len</code> is not zero, the method
+     * blocks until some input is available; otherwise, no
+     * bytes are read and <code>0</code> is returned.
      * If verification has been enabled, any invalid signature
      * on the current entry will be reported at some point before the
      * end of the entry is reached.
      * @param b the buffer into which the data is read
-     * @param off the start offset of the data
+     * @param off the start offset in the destination array <code>b</code>
      * @param len the maximum number of bytes to read
      * @return the actual number of bytes read, or -1 if the end of the
      *         entry is reached
+     * @exception  NullPointerException If <code>b</code> is <code>null</code>.
+     * @exception  IndexOutOfBoundsException If <code>off</code> is negative, 
+     * <code>len</code> is negative, or <code>len</code> is greater than 
+     * <code>b.length - off</code>
      * @exception ZipException if a ZIP file error has occurred
      * @exception IOException if an I/O error has occurred
      * @exception SecurityException if any of the jar file entries

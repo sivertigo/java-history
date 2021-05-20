@@ -1,8 +1,8 @@
 /*
- * @(#)DelegateInvocationHandlerImpl.java	1.9 05/10/31
+ * %W% %E%
  *
- * Copyright 2005 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.corba.se.spi.orbutil.proxy ;
@@ -24,11 +24,10 @@ public abstract class DelegateInvocationHandlerImpl
 
     public static InvocationHandler create( final Object delegate )
     {
-        SecurityManager s = System.getSecurityManager();
-        if (s != null) {
-            s.checkPermission(new DynamicAccessPermission("access"));
-        }
-
+	SecurityManager s = System.getSecurityManager();
+	if (s != null) {
+	    s.checkPermission(new DynamicAccessPermission("access"));
+	}
 	return new InvocationHandler() {
 	    public Object invoke( Object proxy, Method method, Object[] args )
 		throws Throwable

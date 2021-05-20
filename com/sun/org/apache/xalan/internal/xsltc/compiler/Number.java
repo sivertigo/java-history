@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /*
- * $Id: Number.java,v 1.14 2004/02/24 02:58:42 zongaro Exp $
+ * $Id: Number.java,v 1.2.4.1 2005/09/21 09:40:51 pvedula Exp $
  */
 
 package com.sun.org.apache.xalan.internal.xsltc.compiler;
@@ -23,6 +23,7 @@ import java.util.ArrayList;
 
 import com.sun.org.apache.bcel.internal.classfile.Field;
 import com.sun.org.apache.bcel.internal.generic.ALOAD;
+import com.sun.org.apache.bcel.internal.generic.ILOAD;
 import com.sun.org.apache.bcel.internal.generic.ASTORE;
 import com.sun.org.apache.bcel.internal.generic.BranchHandle;
 import com.sun.org.apache.bcel.internal.generic.CHECKCAST;
@@ -34,7 +35,7 @@ import com.sun.org.apache.bcel.internal.generic.INVOKESPECIAL;
 import com.sun.org.apache.bcel.internal.generic.INVOKESTATIC;
 import com.sun.org.apache.bcel.internal.generic.INVOKEVIRTUAL;
 import com.sun.org.apache.bcel.internal.generic.InstructionList;
-import com.sun.org.apache.bcel.internal.generic.L2I;
+import com.sun.org.apache.bcel.internal.generic.D2I;
 import com.sun.org.apache.bcel.internal.generic.LocalVariableGen;
 import com.sun.org.apache.bcel.internal.generic.NEW;
 import com.sun.org.apache.bcel.internal.generic.PUSH;
@@ -292,26 +293,29 @@ final class Number extends Instruction implements Closure {
 				   new com.sun.org.apache.bcel.internal.generic.Type[] {
 				       Util.getJCRefType(TRANSLET_INTF_SIG),
 				       Util.getJCRefType(DOM_INTF_SIG),
-				       Util.getJCRefType(NODE_ITERATOR_SIG)
+				       Util.getJCRefType(NODE_ITERATOR_SIG),
+                                       com.sun.org.apache.bcel.internal.generic.Type.BOOLEAN
 				   },
 				   new String[] {
 				       "dom",
 				       "translet",
-				       "iterator"
+				       "iterator",
+                                       "hasFrom"
 				   },
 				   "<init>", _className, il, cpg);
 
-	il.append(ALOAD_0);     // this
-	il.append(ALOAD_1);     // translet
-	il.append(ALOAD_2);     // DOM
-	il.append(new ALOAD(3));// iterator
+	il.append(ALOAD_0);         // this
+	il.append(ALOAD_1);         // translet
+	il.append(ALOAD_2);         // DOM
+	il.append(new ALOAD(3));    // iterator
+        il.append(new ILOAD(4));    // hasFrom
 
 	int index = cpg.addMethodref(ClassNames[_level],
 				     "<init>", 
 				     "(" + TRANSLET_INTF_SIG
 				     + DOM_INTF_SIG
 				     + NODE_ITERATOR_SIG 
-				     + ")V");
+				     + "Z)V");
 	il.append(new INVOKESPECIAL(index));
 	il.append(RETURN);
 	
@@ -476,12 +480,13 @@ final class Number extends Instruction implements Closure {
 					   "(" + TRANSLET_INTF_SIG
 					   + DOM_INTF_SIG 
 					   + NODE_ITERATOR_SIG
-					   + ")V");
+					   + "Z)V");
 	il.append(new NEW(cpg.addClass(_className)));
 	il.append(DUP);
 	il.append(classGen.loadTranslet());
 	il.append(methodGen.loadDOM());
 	il.append(methodGen.loadIterator());
+        il.append(_from != null ? ICONST_1 : ICONST_0);
 	il.append(new INVOKESPECIAL(index));
 
 	// Initialize closure variables
@@ -511,15 +516,16 @@ final class Number extends Instruction implements Closure {
 	    compileDefault(classGen, methodGen);
 	    _value.translate(classGen, methodGen);
 
-	    // Round the number to the nearest integer
-	    index = cpg.addMethodref(MATH_CLASS, "round", "(D)J");
+	    // Using java.lang.Math.floor(number + 0.5) to return a double value
+            il.append(new PUSH(cpg, 0.5));
+            il.append(DADD);
+	    index = cpg.addMethodref(MATH_CLASS, "floor", "(D)D");
 	    il.append(new INVOKESTATIC(index));
-	    il.append(new L2I());
 
 	    // Call setValue on the node counter
 	    index = cpg.addMethodref(NODE_COUNTER, 
 				     "setValue", 
-				     "(I)" + NODE_COUNTER_SIG);
+				     "(D)" + NODE_COUNTER_SIG);
 	    il.append(new INVOKEVIRTUAL(index));
 	}
 	else if (isDefault()) {

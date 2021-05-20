@@ -1,8 +1,8 @@
 /*
- * @(#)LightweightPeer.java	1.11 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.awt.peer;
@@ -19,7 +19,7 @@ package java.awt.peer;
  * nor invoke any of the peer methods directly on the peer
  * instances.
  *
- * @version 1.11 12/19/03
+ * @version %I% %G%
  * @author Timothy Prinzing
  */
 public interface LightweightPeer extends ComponentPeer {

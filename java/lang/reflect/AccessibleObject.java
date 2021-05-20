@@ -1,8 +1,8 @@
 /*
- * @(#)AccessibleObject.java	1.27 09/05/08
+ * %W% %E%
  *
- * Copyright 2009 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang.reflect;
@@ -151,20 +151,33 @@ public class AccessibleObject implements AnnotatedElement {
         AccessController.doPrivileged
             (new sun.reflect.ReflectionFactory.GetReflectionFactoryAction());
 
+    /**
+     * @throws NullPointerException {@inheritDoc}
+     * @since 1.5
+     */
     public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
         throw new AssertionError("All subclasses should override this method");
     }
 
+    /**
+     * @throws NullPointerException {@inheritDoc}
+     * @since 1.5
+     */
     public boolean isAnnotationPresent(
-        Class<? extends Annotation> annotationClass)
-    {
+        Class<? extends Annotation> annotationClass) {
         return getAnnotation(annotationClass) != null;
     }
 
+    /**
+     * @since 1.5
+     */
     public Annotation[] getAnnotations() { 
         return getDeclaredAnnotations();
     }
 
+    /**
+     * @since 1.5
+     */
     public Annotation[] getDeclaredAnnotations()  {
         throw new AssertionError("All subclasses should override this method");
     }

@@ -1,8 +1,8 @@
 /*
- * @(#)ObjectStreamException.java	1.13 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.io;
@@ -11,10 +11,13 @@ package java.io;
  * Superclass of all exceptions specific to Object Stream classes.
  *
  * @author  unascribed
- * @version 1.13, 12/19/03
+ * @version %I%, %G%
  * @since   JDK1.1
  */
 public abstract class ObjectStreamException extends IOException {
+
+    private static final long serialVersionUID = 7260898174833392607L;
+
     /**
      * Create an ObjectStreamException with the specified argument.
      *

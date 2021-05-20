@@ -1,8 +1,8 @@
 /*
- * @(#)DropTargetContextPeer.java	1.13 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.awt.dnd.peer;
@@ -26,7 +26,7 @@ import java.io.IOException;
  * enable control of platform DnD operations
  * </p>
  *
- * @version 	1.13, 12/19/03
+ * @version 	%I%, %G%
  * @since 1.2
  *
  */

@@ -1,8 +1,8 @@
 /*
- * @(#)DefaultSingleSelectionModel.java	1.35 04/05/05
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing;
@@ -23,7 +23,7 @@ import java.util.EventListener;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
- * @version 1.35 05/05/04
+ * @version %I% %G%
  * @author Dave Moore
  */
 public class DefaultSingleSelectionModel implements SingleSelectionModel, 

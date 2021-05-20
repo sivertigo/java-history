@@ -1,8 +1,8 @@
 /*
- * @(#)XPStyle.java	1.28 07/01/09
+ * @(#)XPStyle.java	1.34 06/07/13
  *
- * Copyright 2006 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 /*
@@ -24,26 +24,27 @@ package com.sun.java.swing.plaf.windows;
 
 import java.awt.*;
 import java.awt.image.*;
-import java.io.*;
 import java.security.AccessController;
 import java.util.*;
-import java.util.prefs.*;
 
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.plaf.*;
 import javax.swing.text.JTextComponent;
 
+import sun.awt.image.CachingSurfaceManager;
+import sun.awt.image.SurfaceManager;
 import sun.awt.windows.ThemeReader;
 import sun.security.action.GetPropertyAction;
 import sun.swing.CachedPainter;
 
-import com.sun.java.swing.plaf.windows.TMSchema.*;
+import static com.sun.java.swing.plaf.windows.TMSchema.*;
+
 
 /**
  * Implements Windows XP Styles for the Windows Look and Feel.
  *
- * @version 1.28 01/09/07
+ * @version 1.34 07/13/06
  * @author Leif Samuelsson
  */
 class XPStyle {
@@ -70,6 +71,7 @@ class XPStyle {
     static synchronized void invalidateStyle() {
         xp = null;
         themeActive = null;
+        skinPainter.flush();
     }
 
     /** Get the singleton instance of this class
@@ -100,7 +102,10 @@ class XPStyle {
         return xp;
     }
 
-
+    static boolean isVista() {
+        XPStyle xp = XPStyle.getXP();
+        return (xp != null && xp.isSkinDefined(null, Part.CP_DROPDOWNBUTTONRIGHT));
+    }
 
     /** Get a named <code>String</code> value from the current style
      *
@@ -117,9 +122,16 @@ class XPStyle {
         return getTypeEnumName(c, part, state, prop);
     }
 
-    private static String getTypeEnumName(Component c, Part part, State state, Prop prop) {
+    TypeEnum getTypeEnum(Component c, Part part, State state, Prop prop) {
         int enumValue = ThemeReader.getEnum(part.getControlName(c), part.getValue(),
                                             State.getValue(part, state),
+                                            prop.getValue());
+        return TypeEnum.getTypeEnum(prop, enumValue);
+    }
+    
+    private static String getTypeEnumName(Component c, Part part, State state, Prop prop) {
+        int enumValue = ThemeReader.getEnum(part.getControlName(c), part.getValue(),
+					    State.getValue(part, state),
                                             prop.getValue());
         if (enumValue == -1) {
             return null;
@@ -138,7 +150,7 @@ class XPStyle {
      */
     int getInt(Component c, Part part, State state, Prop prop, int fallback) {
         return ThemeReader.getInt(part.getControlName(c), part.getValue(),
-                                  State.getValue(part, state),
+				  State.getValue(part, state),
                                   prop.getValue());
     }
 
@@ -153,7 +165,7 @@ class XPStyle {
      */
     Dimension getDimension(Component c, Part part, State state, Prop prop) {
         return ThemeReader.getPosition(part.getControlName(c), part.getValue(),
-                                       State.getValue(part, state),
+				       State.getValue(part, state),
                                        prop.getValue());
     }
 
@@ -169,7 +181,7 @@ class XPStyle {
      */
     Point getPoint(Component c, Part part, State state, Prop prop) {
         Dimension d = ThemeReader.getPosition(part.getControlName(c), part.getValue(),
-                                              State.getValue(part, state),
+					      State.getValue(part, state),
                                               prop.getValue());
         if (d != null) {
             return new Point(d.width, d.height);
@@ -190,7 +202,7 @@ class XPStyle {
      */
     Insets getMargin(Component c, Part part, State state, Prop prop) {
         return ThemeReader.getThemeMargins(part.getControlName(c), part.getValue(),
-                                           State.getValue(part, state),
+					   State.getValue(part, state),
                                            prop.getValue());
     }
 
@@ -202,13 +214,13 @@ class XPStyle {
      *    in the current style
      */
     synchronized Color getColor(Skin skin, Prop prop, Color fallback) {
-        String key = skin.toString() + "." + prop.name();
-        Part part = skin.part;
+	String key = skin.toString() + "." + prop.name();
+	Part part = skin.part;
         Color color = colorMap.get(key);
         if (color == null) {
             color = ThemeReader.getColor(part.getControlName(null), part.getValue(),
                                          State.getValue(part, skin.state),
-                                         prop.getValue());
+					 prop.getValue());
             if (color != null) {
                 color = new ColorUIResource(color);
                 colorMap.put(key, color);
@@ -218,7 +230,7 @@ class XPStyle {
     }
 
     Color getColor(Component c, Part part, State state, Prop prop, Color fallback) {
-        return getColor(new Skin(c, part, state), prop, fallback);
+	return getColor(new Skin(c, part, state), prop, fallback);
     }
 
 
@@ -251,11 +263,16 @@ class XPStyle {
                 int thickness = getInt(c, part, null, Prop.BORDERSIZE, 1);
                 Color color = getColor(skin, Prop.BORDERCOLOR, Color.black);
                 border = new XPFillBorder(color, thickness);
+                if (part == Part.CP_COMBOBOX) {
+                    border = new XPStatefulFillBorder(color, thickness, part, Prop.BORDERCOLOR);
+                }
             } else if ("imagefile".equalsIgnoreCase(bgType)) {
                 Insets m = getMargin(c, part, null, Prop.SIZINGMARGINS);
                 if (m != null) {
                     if (getBoolean(c, part, null, Prop.BORDERONLY)) {
                         border = new XPImageBorder(c, part);
+                    } else if (part == Part.CP_COMBOBOX) {
+                        border = new EmptyBorder(1, 1, 1, 1);
                     } else {
                         if(part == Part.TP_BUTTON) {
                             border = new XPEmptyBorder(new Insets(3,3,3,3));
@@ -304,6 +321,33 @@ class XPStyle {
         }
     }
 
+    private class XPStatefulFillBorder extends XPFillBorder {
+        private final Part part;
+        private final Prop prop;
+        XPStatefulFillBorder(Color color, int thickness, Part part, Prop prop) {
+            super(color, thickness);
+            this.part = part;
+            this.prop = prop;
+        }
+        
+        public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
+            State state = State.NORMAL;
+            // special casing for comboboxes.
+            // there may be more special cases in the future
+            if(c instanceof JComboBox) {
+                JComboBox cb = (JComboBox)c;
+                // note. in the future this should be replaced with a call
+                // to BasicLookAndFeel.getUIOfType()
+                if(cb.getUI() instanceof WindowsComboBoxUI) {
+                    WindowsComboBoxUI wcb = (WindowsComboBoxUI)cb.getUI();
+                    state = wcb.getXPComboBoxState(cb);
+                }
+            }
+            lineColor = getColor(c, part, state, prop, Color.black);
+            super.paintBorder(c, g, x, y, width, height);
+        }
+    }
+
     private class XPImageBorder extends AbstractBorder implements UIResource {
         Skin skin;
 
@@ -323,6 +367,9 @@ class XPStyle {
         public Insets getBorderInsets(Component c, Insets insets)       {
             Insets margin = null;
             Insets borderInsets = skin.getContentMargin();
+            if(borderInsets == null) {
+                borderInsets = new Insets(0, 0, 0, 0);
+            }
             //
             // Ideally we'd have an interface defined for classes which
             // support margins (to avoid this hackery), but we've
@@ -386,25 +433,33 @@ class XPStyle {
             return insets;
         }
     }
-
     boolean isSkinDefined(Component c, Part part) {
         return (part.getValue() == 0) 
             || ThemeReader.isThemePartDefined(
                    part.getControlName(c), part.getValue(), 0);
     }
 
+
     /** Get a <code>Skin</code> object from the current style
      * for a named part (component type)
      *
      * @param part a <code>Part</code>
-     * @return a <code>Skin</code> object
+     * @return a <code>Skin</code> object 
      */
     synchronized Skin getSkin(Component c, Part part) {
-        assert isSkinDefined(c, part) : "part " + part + " is not defined"; 
+        assert isSkinDefined(c, part) : "part " + part + " is not defined";
         return new Skin(c, part, null);
     }
 
 
+    long getThemeTransitionDuration(Component c, Part part, State stateFrom, 
+                                    State stateTo, Prop prop) {
+         return ThemeReader.getThemeTransitionDuration(part.getControlName(c),
+                                          part.getValue(),
+                                          State.getValue(part, stateFrom),
+                                          State.getValue(part, stateTo),
+                                          (prop != null) ? prop.getValue() : 0);
+    }
 
 
     /** A class which encapsulates attributes for a given part
@@ -412,37 +467,43 @@ class XPStyle {
      * and glyphs
      */
     static class Skin {
-        final Component component;
-        final Part part;
-        final State state;
+	final Component component;
+	final Part part;
+	final State state;
 
-        private final String string;
+	private final String string;
         private Dimension size = null;
 
-        Skin(Component component, Part part) {
-            this(component, part, null);
-        }
+	Skin(Component component, Part part) {
+	    this(component, part, null);
+	}
 
-        Skin(Part part, State state) {
-            this(null, part, state);
-        }
+	Skin(Part part, State state) {
+	    this(null, part, state);
+	}
 
-        Skin(Component component, Part part, State state) {
-            this.component = component;
-            this.part  = part;
-            this.state = state;
+	Skin(Component component, Part part, State state) {
+	    this.component = component;
+	    this.part  = part;
+	    this.state = state;
 
-            String str = part.getControlName(component) +"." + part.name();
-            if (state != null) {
-                str += "("+state.name()+")";
-            }
-            string = str;
-        }
+	    String str = part.getControlName(component) +"." + part.name();
+	    if (state != null) {
+		str += "("+state.name()+")";
+	    }
+	    string = str;
+	}
 
         Insets getContentMargin() {
-            // This is only called by WindowsTableHeaderUI so far.
-            return ThemeReader.getThemeMargins(part.getControlName(null), part.getValue(),
-                                               0, Prop.SIZINGMARGINS.getValue());
+            /* idk: it seems margins are the same for all 'big enough' 
+             * bounding rectangles.
+             */
+            int boundingWidth = 100;
+            int boundingHeight = 100;
+
+            return ThemeReader.getThemeBackgroundContentMargins(
+                part.getControlName(null), part.getValue(),
+                0, boundingWidth, boundingHeight);
         }
 
         private int getWidth(State state) {
@@ -467,29 +528,29 @@ class XPStyle {
             return getHeight((state != null) ? state : State.NORMAL);
         }
 
-        public String toString() {
-            return string;
-        }
+	public String toString() {
+	    return string;
+	}
 
-        public boolean equals(Object obj) {
-            return (obj instanceof Skin && ((Skin)obj).string.equals(string));
-        }
+	public boolean equals(Object obj) {
+	    return (obj instanceof Skin && ((Skin)obj).string.equals(string));
+	}
 
-        public int hashCode() {
-            return string.hashCode();
-        }
+	public int hashCode() {
+	    return string.hashCode();
+	}
 
         /** Paint a skin at x, y.
          *
          * @param g   the graphics context to use for painting
-         * @param dx  the destination <i>x</i> coordinate.
-         * @param dy  the destination <i>y</i> coordinate.
+         * @param dx  the destination <i>x</i> coordinate
+         * @param dy  the destination <i>y</i> coordinate
          * @param state which state to paint
          */
         void paintSkin(Graphics g, int dx, int dy, State state) {
-            if (state == null) {
-                state = this.state;
-            }
+	    if (state == null) {
+		state = this.state;
+	    }
             paintSkin(g, dx, dy, getWidth(state), getHeight(state), state);
         }
 
@@ -505,6 +566,32 @@ class XPStyle {
         }
 
         /** Paint a skin at a defined position and size
+         *  This method supports animation.
+         *
+         * @param g   the graphics context to use for painting
+         * @param dx  the destination <i>x</i> coordinate
+         * @param dy  the destination <i>y</i> coordinate
+         * @param dw  the width of the area to fill, may cause
+         *                  the image to be stretched or tiled
+         * @param dh  the height of the area to fill, may cause
+         *                  the image to be stretched or tiled
+         * @param state which state to paint
+         */
+        void paintSkin(Graphics g, int dx, int dy, int dw, int dh, State state) {
+            if (ThemeReader.isGetThemeTransitionDurationDefined() 
+                  && component instanceof JComponent 
+                  && SwingUtilities.getAncestorOfClass(CellRendererPane.class, 
+                                                       component) == null) {
+                AnimationController.paintSkin((JComponent) component, this, 
+                                              g, dx, dy, dw, dh, state);
+            } else {
+                paintSkinRaw(g, dx, dy, dw, dh, state);
+            }
+        }
+
+        /** Paint a skin at a defined position and size. This method
+         *  does not trigger animation. It is needed for the animation
+         *  support.
          *
          * @param g   the graphics context to use for painting
          * @param dx  the destination <i>x</i> coordinate.
@@ -515,11 +602,11 @@ class XPStyle {
          *                  the image to be stretched or tiled
          * @param state which state to paint
          */
-        void paintSkin(Graphics g, int dx, int dy, int dw, int dh, State state) {
+        void paintSkinRaw(Graphics g, int dx, int dy, int dw, int dh, State state) {
             skinPainter.paint(null, g, dx, dy, dw, dh, this, state);
         }
-        /** 
-         * Paint a skin at a defined position and size
+
+        /** Paint a skin at a defined position and size
          *
          * @param g   the graphics context to use for painting
          * @param dx  the destination <i>x</i> coordinate
@@ -530,7 +617,7 @@ class XPStyle {
          *                  the image to be stretched or tiled
          * @param state which state to paint
          * @param borderFill should test if the component uses a border fill
-         *                 and skip painting if it is
+                            and skip painting if it is
          */
         void paintSkin(Graphics g, int dx, int dy, int dw, int dh, State state, 
                 boolean borderFill) {
@@ -547,24 +634,47 @@ class XPStyle {
             super(30);
             flush();
         }
-
+        
+        public void flush() {
+            super.flush();
+        }
+        
         protected void paintToImage(Component c, Image image, Graphics g,
                                     int w, int h, Object[] args) {
-            Skin skin = (Skin)args[0];
-            Part part = skin.part;
+            CachingSurfaceManager csm = null;
+            boolean accEnabled = false;
+	    Skin skin = (Skin)args[0];
+	    Part part = skin.part;
             State state = (State)args[1];
-            if (state == null) {
-                state = skin.state;
+	    if (state == null) {
+		state = skin.state;
+	    }
+	    if (c == null) {
+		c = skin.component;
+	    }
+            BufferedImage bi = (BufferedImage)image;
+            
+            // Getting the DataBuffer for an image (as it's done below) defeats 
+            // possible future acceleration.
+            // Calling setLocalAccelerationEnabled on that image's surface
+            // manager re-enables it.
+            SurfaceManager sm = SurfaceManager.getManager(bi);
+            if (sm instanceof CachingSurfaceManager) {
+                csm = (CachingSurfaceManager)sm;
+                accEnabled = csm.isLocalAccelerationEnabled();
             }
-            if (c == null) {
-                c = skin.component;
-            }
-            WritableRaster raster = ((BufferedImage)image).getRaster();
+            
+            WritableRaster raster = bi.getRaster();
             DataBufferInt buffer = (DataBufferInt)raster.getDataBuffer();
             ThemeReader.paintBackground(buffer.getData(),
-                                        part.getControlName(c), part.getValue(),
-                                        State.getValue(part, state),
-                                        0, 0, w, h, w);
+					part.getControlName(c), part.getValue(),
+					State.getValue(part, state),
+					0, 0, w, h, w);
+            
+            if (csm != null && accEnabled != csm.isLocalAccelerationEnabled()) {
+                csm.setLocalAccelerationEnabled(accEnabled);
+                csm.rasterChanged();
+            }
         }
 
         protected Image createImage(Component c, int w, int h,
@@ -581,20 +691,23 @@ class XPStyle {
             skin = xp.getSkin(parent, part);
             setBorder(null);
             setContentAreaFilled(false);
+            setMinimumSize(new Dimension(5, 5));
+            setPreferredSize(new Dimension(16, 16));
+            setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
         }   
 
         public boolean isFocusTraversable() {
             return false;
         }
 
-        protected State getState() { 
-            State state = State.NORMAL; 
+        protected State getState() {
+            State state = State.NORMAL;
             if (!isEnabled()) {
-                state = State.DISABLED;
+		state = State.DISABLED;
             } else if (getModel().isPressed()) {
-                state = State.PRESSED;
+		state = State.PRESSED;
             } else if (getModel().isRollover()) {
-                state = State.HOT;
+		state = State.HOT;
             }
             return state;
         }
@@ -604,27 +717,17 @@ class XPStyle {
             skin.paintSkin(g, 0, 0, d.width, d.height, getState());
         }
 
-        public void setPart(Component parent, Part part) { 
-            XPStyle xp = getXP(); 
-            skin = xp.getSkin(parent, part); 
-            revalidate(); 
-            repaint(); 
+        public void setPart(Component parent, Part part) {
+            XPStyle xp = getXP();
+            skin = xp.getSkin(parent, part);
+            revalidate();
+            repaint();
         }
 
         protected void paintBorder(Graphics g) {    
         }
+        
 
-        public Dimension getPreferredSize() {
-            return new Dimension(16, 16);
-        }
-
-        public Dimension getMinimumSize() {
-            return new Dimension(5, 5);
-        }
-
-        public Dimension getMaximumSize() {
-            return new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE);
-        }
     }
 
     // Private constructor
@@ -639,17 +742,19 @@ class XPStyle {
 
     private boolean getBoolean(Component c, Part part, State state, Prop prop) {
         return ThemeReader.getBoolean(part.getControlName(c), part.getValue(),
-                                      State.getValue(part, state),
+				      State.getValue(part, state),
                                       prop.getValue());
     }
 
-    private static Dimension getPartSize(Part part, State state) {
+
+
+    static Dimension getPartSize(Part part, State state) {
         return ThemeReader.getPartSize(part.getControlName(null), part.getValue(),
-                                       State.getValue(part, state));
+				       State.getValue(part, state));
     }
 
     private static boolean getSysBoolean(Prop prop) {
-         // We can use any widget name here, I guess.
+        // We can use any widget name here, I guess.
         return ThemeReader.getSysBoolean("window", prop.getValue());
     }
 }

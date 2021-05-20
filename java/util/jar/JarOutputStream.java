@@ -1,8 +1,8 @@
 /*
- * @(#)JarOutputStream.java	1.22 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2007, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.util.jar;
@@ -19,7 +19,7 @@ import java.io.*;
  * the JAR file and its entries.
  *
  * @author  David Connelly
- * @version 1.22, 12/19/03
+ * @version %I%, %G%
  * @see	    Manifest
  * @see	    java.util.zip.ZipOutputStream
  * @since   1.2
@@ -74,17 +74,19 @@ class JarOutputStream extends ZipOutputStream {
 	    // Make sure that extra field data for first JAR
 	    // entry includes JAR magic number id.
 	    byte[] edata = ze.getExtra();
-	    if (edata != null && !hasMagic(edata)) {
-		// Prepend magic to existing extra data
-		byte[] tmp = new byte[edata.length + 4];
-		System.arraycopy(tmp, 4, edata, 0, edata.length);
-		edata = tmp;
-	    } else {
-		edata = new byte[4];
+            if (edata == null || !hasMagic(edata)) {
+                if (edata == null) {
+                    edata = new byte[4];
+                } else {
+                    // Prepend magic to existing extra data
+                    byte[] tmp = new byte[edata.length + 4];
+                    System.arraycopy(edata, 0, tmp, 4, edata.length);
+                    edata = tmp;
+                }
+                set16(edata, 0, JAR_MAGIC); // extra field id
+                set16(edata, 2, 0);         // extra field size
+                ze.setExtra(edata);
 	    }
-	    set16(edata, 0, JAR_MAGIC); // extra field id
-	    set16(edata, 2, 0);         // extra field size
-	    ze.setExtra(edata);
 	    firstEntry = false;
 	}
 	super.putNextEntry(ze);

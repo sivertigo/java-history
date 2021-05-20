@@ -1,8 +1,8 @@
 /*
- * @(#)SynthPopupMenuUI.java	1.21 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing.plaf.synth;
@@ -34,24 +34,13 @@ import sun.swing.plaf.synth.SynthUI;
 /**
  * Synth's PopupMenuUI.
  *
- * @version 1.21, 12/19/03
+ * @version %I%, %G%
  * @author Georges Saab
  * @author David Karlton
  * @author Arnaud Weber
  */
 class SynthPopupMenuUI extends BasicPopupMenuUI implements
                 PropertyChangeListener, SynthUI {
-    /**
-     * Maximum size of the text portion of the children menu items.
-     */
-    private int maxTextWidth;
-
-    /**
-     * Maximum size of the text for the acclerator portion of the children
-     * menu items.
-     */
-    private int maxAcceleratorWidth;
-
     private SynthStyle style;
 
     public static ComponentUI createUI(JComponent x) {
@@ -117,49 +106,6 @@ class SynthPopupMenuUI extends BasicPopupMenuUI implements
 
     private int getComponentState(JComponent c) {
         return SynthLookAndFeel.getComponentState(c);
-    }
-
-    /**
-     * Resets the max text and accerator widths.
-     */
-    void resetAcceleratorWidths() {
-        maxTextWidth = maxAcceleratorWidth = 0;
-    }
-
-    /**
-     * Adjusts the width needed to display the maximum menu item string.
-     *
-     * @param width Text width.
-     * @return max width
-     */
-    int adjustTextWidth(int width) {
-        maxTextWidth = Math.max(maxTextWidth, width);
-        return maxTextWidth;
-    }
-
-    /**
-     * Adjusts the width needed to display the maximum accelerator.
-     *
-     * @param width Text width.
-     * @return max width
-     */
-    int adjustAcceleratorWidth(int width) {
-        maxAcceleratorWidth = Math.max(maxAcceleratorWidth, width);
-        return maxAcceleratorWidth;
-    }
-
-    /**
-     * Maximum size to display text of children menu items.
-     */
-    int getMaxTextWidth() {
-        return maxTextWidth;
-    }
-
-    /**
-     * Maximum size needed to display accelerators of children menu items.
-     */
-    int getMaxAcceleratorWidth() {
-        return maxAcceleratorWidth;
     }
 
     public void update(Graphics g, JComponent c) {

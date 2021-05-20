@@ -1,6 +1,6 @@
 /*
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.corba.se.impl.orbutil.threadpool;
@@ -26,6 +26,7 @@ import com.sun.corba.se.impl.logging.ORBUtilSystemException ;
 import com.sun.corba.se.impl.orbutil.ORBConstants ;
 import com.sun.corba.se.spi.logging.CORBALogDomains ;
 
+
 public class ThreadPoolManagerImpl implements ThreadPoolManager 
 { 
     private ThreadPool threadPool ;
@@ -34,7 +35,7 @@ public class ThreadPoolManagerImpl implements ThreadPoolManager
     private static final ORBUtilSystemException wrapper = 
 	ORBUtilSystemException.get( CORBALogDomains.RPC_TRANSPORT ) ;
 
-    public ThreadPoolManagerImpl( ) {
+    public ThreadPoolManagerImpl() {
 	threadGroup = getThreadGroup();
 	threadPool = new ThreadPoolImpl( threadGroup,
 	    ORBConstants.THREADPOOL_DEFAULT_NAME ) ;
@@ -42,7 +43,8 @@ public class ThreadPoolManagerImpl implements ThreadPoolManager
 
     private static AtomicInteger tgCount = new AtomicInteger() ;
 
-   private ThreadGroup getThreadGroup() {
+
+    private ThreadGroup getThreadGroup() {
         ThreadGroup tg ;
 
         // See bugs 4916766 and 4936203
@@ -87,7 +89,7 @@ public class ThreadPoolManagerImpl implements ThreadPoolManager
 
         return tg ;
     }
-
+ 
     public void close() {
         try {
             threadPool.close() ;

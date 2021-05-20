@@ -1,8 +1,8 @@
 /*
- * @(#)DefaultFormatterFactory.java	1.8 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package javax.swing.text;
 
@@ -52,7 +52,7 @@ import javax.swing.JFormattedTextField;
  *
  * @see javax.swing.JFormattedTextField
  *
- * @version 1.8 12/19/03
+ * @version %I% %G%
  * @since 1.4
  */
 public class DefaultFormatterFactory extends JFormattedTextField.AbstractFormatterFactory implements Serializable {
@@ -213,7 +213,7 @@ public class DefaultFormatterFactory extends JFormattedTextField.AbstractFormatt
 
     /**
      * Sets the <code>JFormattedTextField.AbstractFormatter</code> to use if
-     * the code>JFormattedTextField</code> is being edited and either
+     * the <code>JFormattedTextField</code> is being edited and either
      * the value is not-null, or the value is null and a null formatter has 
      * has not been specified.
      *

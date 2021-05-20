@@ -62,9 +62,9 @@ import com.sun.org.apache.xerces.internal.xni.parser.XMLDocumentFilter;
 /**
  * DOM Revalidation handler adds additional functionality to XMLDocumentHandler
  * 
- *
+ * @xerces.internal
  * @author Elena Litani, IBM
- * @version $Id: RevalidationHandler.java,v 1.5 2003/11/14 09:25:12 venu Exp $
+ * @version $Id: RevalidationHandler.java,v 1.3 2007/07/19 04:38:23 ofung Exp $
  */
 public interface RevalidationHandler extends XMLDocumentFilter {
 

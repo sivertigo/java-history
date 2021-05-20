@@ -1,13 +1,13 @@
 /*
- * @(#)MetalLabelUI.java	1.15 09/07/30
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing.plaf.metal;
 
-import com.sun.java.swing.SwingUtilities2;
+import sun.swing.SwingUtilities2;
 import sun.awt.AppContext;
 
 import javax.swing.*;
@@ -23,27 +23,33 @@ import java.awt.*;
  * is completely static, i.e. there's only one UIView implementation 
  * that's shared by all JLabel objects.
  *
- * @version 1.15 07/30/09
+ * @version %I% %G%
  * @author Hans Muller
  */
 
 public class MetalLabelUI extends BasicLabelUI
 {
+   /**
+    * The default <code>MetalLabelUI</code> instance. This field might
+    * not be used. To change the default instance use a subclass which
+    * overrides the <code>createUI</code> method, and place that class
+    * name in defaults table under the key "LabelUI".
+    */ 
     protected static MetalLabelUI metalLabelUI = new MetalLabelUI();
-
+    
     private static final Object METAL_LABEL_UI_KEY = new Object();
 
     public static ComponentUI createUI(JComponent c) {
         if (System.getSecurityManager() != null) {
             AppContext appContext = AppContext.getAppContext();
             MetalLabelUI safeMetalLabelUI = 
-                     (MetalLabelUI) appContext.get(METAL_LABEL_UI_KEY);
+                    (MetalLabelUI) appContext.get(METAL_LABEL_UI_KEY);
             if (safeMetalLabelUI == null) {
-       	        safeMetalLabelUI = new MetalLabelUI();
+                safeMetalLabelUI = new MetalLabelUI();
                 appContext.put(METAL_LABEL_UI_KEY, safeMetalLabelUI);
             }
-	    return safeMetalLabelUI;
-        }
+            return safeMetalLabelUI;
+        }   
         return metalLabelUI;
     }
 

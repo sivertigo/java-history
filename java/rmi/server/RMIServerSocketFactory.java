@@ -1,8 +1,8 @@
 /*
- * @(#)RMIServerSocketFactory.java	1.11 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.rmi.server;
@@ -33,7 +33,7 @@ import java.net.*;
  * implement {@link Object#hashCode} consistently with its
  * <code>Object.equals</code> implementation).
  *
- * @version 1.11, 12/19/03
+ * @version %I%, %G%
  * @author  Ann Wollrath
  * @author  Peter Jones
  * @since   1.2

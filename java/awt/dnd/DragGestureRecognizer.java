@@ -1,8 +1,8 @@
 /*
- * @(#)DragGestureRecognizer.java	1.20 04/05/05
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.awt.dnd;
@@ -55,7 +55,7 @@ import java.io.Serializable;
  * appropriate). 
  * <P>
  * @author Laurence P. G. Cable
- * @version 1.20
+ * @version %R%.%L%
  * @see java.awt.dnd.DragGestureListener
  * @see java.awt.dnd.DragGestureEvent
  * @see java.awt.dnd.DragSource

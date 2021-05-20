@@ -1,8 +1,8 @@
 /*
- * @(#)Transmitter.java	1.22 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.sound.midi;		  	 
@@ -15,7 +15,7 @@ package javax.sound.midi;
  *
  * @see Receiver
  *
- * @version 1.22, 03/12/19
+ * @version %I%, %E%
  * @author Kara Kytle
  */
 public interface Transmitter {

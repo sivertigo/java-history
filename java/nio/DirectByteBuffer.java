@@ -1,8 +1,6 @@
 /*
- * @(#)Direct-X-Buffer.java	1.48 04/05/03
- *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2000, 2011, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 // -- This file was mechanically generated: Do not edit! -- //
@@ -29,6 +27,9 @@ class DirectByteBuffer
     // Cached unsafe-access object
     protected static final Unsafe unsafe = Bits.unsafe();
 
+    // Cached array base offset
+    private static final long arrayBaseOffset = (long)unsafe.arrayBaseOffset(byte[].class);
+
     // Cached unaligned-access capability
     protected static final boolean unaligned = Bits.unaligned();
 
@@ -36,9 +37,10 @@ class DirectByteBuffer
     // NOTE: moved up to Buffer.java for speed in JNI GetDirectBufferAddress
     //    protected long address;
 
-    // If this buffer is a view of another buffer then we keep a reference to
-    // that buffer so that its memory isn't freed before we're done with it
-    protected Object viewedBuffer = null;
+    // An object attached to this buffer. If this buffer is a view of another
+    // buffer then we use this field to keep a reference to that buffer to
+    // ensure that its memory isn't freed before we are done with it.
+    private final Object viewedBuffer;
 
     public Object viewedBuffer() {
         return viewedBuffer;
@@ -109,6 +111,7 @@ class DirectByteBuffer
 	    address = base;
 	}
 	cleaner = Cleaner.create(this, new Deallocator(base, cap));
+        viewedBuffer = null;
 
 
 
@@ -116,12 +119,23 @@ class DirectByteBuffer
 
 
 
+    // Invoked to construct a direct ByteBuffer referring to the block of
+    // memory. A given arbitrary object may also be attached to the buffer.
+    //
+    DirectByteBuffer(long addr, int cap, Object ob) {
+        super(-1, 0, cap, cap);
+        address = addr;
+        cleaner = null;
+        viewedBuffer = ob;
+    }
+
     // Invoked only by JNI: NewDirectByteBuffer(void*, long)
     //
     private DirectByteBuffer(long addr, int cap) {
         super(-1, 0, cap, cap, false);
 	address = addr;
 	cleaner = null;
+        viewedBuffer = null;
     }
 
 
@@ -132,8 +146,8 @@ class DirectByteBuffer
 
         super(-1, 0, cap, cap, true);
 	address = addr;
-        viewedBuffer = null;
 	cleaner = Cleaner.create(this, unmapper);
+        viewedBuffer = null;
 
 
 
@@ -150,10 +164,10 @@ class DirectByteBuffer
 
 	super(mark, pos, lim, cap);
 	address = db.address() + off;
-	viewedBuffer = db;
 
 	cleaner = null;
 
+        viewedBuffer = db;
 
 
 
@@ -220,18 +234,20 @@ class DirectByteBuffer
 	    if (length > rem)
 		throw new BufferUnderflowException();
 
-	    if (order() != ByteOrder.nativeOrder())
-		Bits.copyToByteArray(ix(pos), dst,
-					  offset << 0,
-					  length << 0);
-	    else
-		Bits.copyToByteArray(ix(pos), dst,
-				     offset << 0,
-				     length << 0);
-	    position(pos + length);
-	} else {
-	    super.get(dst, offset, length);
-	}
+
+
+
+
+
+
+
+                Bits.copyToArray(ix(pos), dst, arrayBaseOffset,
+                                 offset << 0,
+                                 length << 0);
+            position(pos + length);
+        } else {
+            super.get(dst, offset, length);
+        }
 	return this;
 
 
@@ -280,7 +296,7 @@ class DirectByteBuffer
  	    unsafe.copyMemory(sb.ix(spos), ix(pos), srem << 0);
  	    sb.position(spos + srem);
  	    position(pos + srem);
-	} else if (!src.isDirect()) {
+	} else if (src.hb != null) {
 
 	    int spos = src.position();
 	    int slim = src.limit();
@@ -310,16 +326,18 @@ class DirectByteBuffer
 	    if (length > rem)
 		throw new BufferOverflowException();
 
-	    if (order() != ByteOrder.nativeOrder()) 
-		Bits.copyFromByteArray(src, offset << 0,
-					    ix(pos), length << 0);
-	    else
-		Bits.copyFromByteArray(src, offset << 0,
-				       ix(pos), length << 0);
-	    position(pos + length);
-	} else {
-	    super.put(src, offset, length);
-	}
+
+
+
+
+
+
+                Bits.copyFromArray(src, arrayBaseOffset, offset << 0,
+                                   ix(pos), length << 0);
+            position(pos + length);
+        } else {
+            super.put(src, offset, length);
+        }
 	return this;
 
 
@@ -351,6 +369,8 @@ class DirectByteBuffer
     }
 
 
+
+
 
 
 

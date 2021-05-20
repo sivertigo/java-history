@@ -1,8 +1,8 @@
 /*
- * @(#)LayoutComparator.java	1.7 04/02/05
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package javax.swing;
 
@@ -19,7 +19,7 @@ import java.awt.Window;
  * position. Code adapted from original javax.swing.DefaultFocusManager
  * implementation.
  *
- * @version 1.7, 02/05/04
+ * @version %I%, %G%
  * @author David Mendenhall
  */
 final class LayoutComparator implements Comparator, java.io.Serializable {

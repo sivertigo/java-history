@@ -1,8 +1,8 @@
 /*
- * @(#)AccessibleHTML.java	1.13 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing.text.html;
@@ -21,7 +21,7 @@ import java.text.BreakIterator;
  * The AccessibleHTML class provide information about the contents 
  * of a HTML document to assistive technologies.
  * 
- * @version 1.13 12/19/03
+ * @version %I% %G%
  * @author  Lynn Monsanto
  */
 class AccessibleHTML implements Accessible {
@@ -2032,7 +2032,7 @@ class AccessibleHTML implements Accessible {
 		return -1;
 	    }
 	    
-	    /*
+	    /**
 	     * Returns the index at a row and column in the table.
 	     *
 	     * @param r zero-based row of the table

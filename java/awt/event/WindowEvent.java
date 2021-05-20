@@ -1,8 +1,8 @@
 /*
- * @(#)WindowEvent.java	1.34 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.awt.event;
@@ -29,12 +29,11 @@ import sun.awt.SunToolkit;
  *
  * @author Carl Quinn
  * @author Amy Fowler
- * @version 1.34, 12/19/03
+ * @version %I%, %G%
  *
  * @see WindowAdapter
  * @see WindowListener
  * @see <a href="http://java.sun.com/docs/books/tutorial/post1.0/ui/windowlistener.html">Tutorial: Writing a Window Listener</a>
- * @see <a href="http://www.awl.com/cp/javaseries/jcl1_2.html">Reference: The Java Class Libraries (update file)</a>
  *
  * @since JDK1.1
  */
@@ -214,6 +213,7 @@ public class WindowEvent extends ComponentEvent {
      * @param opposite   the other <code>Window</code> involved in the
      *                   focus or activation change, or <code>null</code>
      * @throws IllegalArgumentException if <code>source</code> is null
+     * @since 1.4
      */
     public WindowEvent(Window source, int id, Window opposite) {
         this(source, id, opposite, 0, 0);

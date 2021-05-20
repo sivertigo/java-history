@@ -1,8 +1,8 @@
 /*
- * @(#)MemoryMXBean.java	1.16 06/03/08
+ * %W% %E%
  *
- * Copyright 2006 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang.management;
@@ -178,7 +178,7 @@ import javax.management.openmbean.CompositeData;
  *      Ways to Access MXBeans</a>
  *
  * @author  Mandy Chung
- * @version 1.16, 03/08/06 
+ * @version %I%, %G% 
  * @since   1.5
  */
 public interface MemoryMXBean {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /*
- * $Id: XSLTC.java,v 1.1.2.1 2006/09/19 01:06:49 jeffsuttor Exp $
+ * $Id: XSLTC.java,v 1.2.4.1 2005/09/05 09:51:38 pvedula Exp $
  */
 
 package com.sun.org.apache.xalan.internal.xsltc.compiler;
@@ -37,6 +37,7 @@ import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 
 import com.sun.org.apache.bcel.internal.classfile.JavaClass;
+import com.sun.org.apache.xalan.internal.utils.SecuritySupport;
 import com.sun.org.apache.xalan.internal.xsltc.compiler.util.ErrorMsg;
 import com.sun.org.apache.xalan.internal.xsltc.compiler.util.Util;
 import com.sun.org.apache.xml.internal.dtm.DTM;
@@ -127,13 +128,15 @@ public final class XSLTC {
      */
     private boolean _isSecureProcessing = false;
 
+    private boolean _useServicesMechanism = true;
+
     /**
      * XSLTC compiler constructor
      */
-    public XSLTC() {
-	_parser = new Parser(this);
+    public XSLTC(boolean useServicesMechanism) {
+	_parser = new Parser(this, useServicesMechanism);
     }
-
+    
     /**
      * Set the state of the secure processing feature.
      */
@@ -146,6 +149,19 @@ public final class XSLTC {
      */
     public boolean isSecureProcessing() {
         return _isSecureProcessing;
+    }
+    /**
+     * Return the state of the services mechanism feature.
+     */
+    public boolean useServicesMechnism() {
+        return _useServicesMechanism;
+    }
+
+    /**
+     * Set the state of the services mechanism feature.
+     */
+    public void setServicesMechnism(boolean flag) {
+        _useServicesMechanism = flag;
     }
 
     /**
@@ -253,7 +269,7 @@ public final class XSLTC {
 	    return compile(input, _className);
 	}
 	catch (IOException e) {
-	    _parser.reportError(Constants.FATAL, new ErrorMsg(e));
+	    _parser.reportError(Constants.FATAL, new ErrorMsg(ErrorMsg.JAXP_COMPILE_ERR, e)); 
 	    return false;
 	}
     }
@@ -272,14 +288,14 @@ public final class XSLTC {
 	    return compile(input, name);
 	}
 	catch (IOException e) {
-	    _parser.reportError(Constants.FATAL, new ErrorMsg(e));
+	    _parser.reportError(Constants.FATAL, new ErrorMsg(ErrorMsg.JAXP_COMPILE_ERR, e)); 
 	    return false;
 	}
     }
 
     /**
      * Compiles an XSL stylesheet passed in through an InputStream
-     * @param input An InputStream that will pass in the stylesheet contents
+     * @param stream An InputStream that will pass in the stylesheet contents
      * @param name The name of the translet class to generate
      * @return 'true' if the compilation was successful
      */
@@ -357,11 +373,11 @@ public final class XSLTC {
 	}
 	catch (Exception e) {
 	    /*if (_debug)*/ e.printStackTrace();
-	    _parser.reportError(Constants.FATAL, new ErrorMsg(e));
+	    _parser.reportError(Constants.FATAL, new ErrorMsg(ErrorMsg.JAXP_COMPILE_ERR, e)); 
 	}
 	catch (Error e) {
 	    if (_debug) e.printStackTrace();
-	    _parser.reportError(Constants.FATAL, new ErrorMsg(e));
+	    _parser.reportError(Constants.FATAL, new ErrorMsg(ErrorMsg.JAXP_COMPILE_ERR, e)); 
 	}
 	finally {
 	    _reader = null; // reset this here to be sure it is not re-used
@@ -569,7 +585,7 @@ public final class XSLTC {
      */
     public boolean setDestDirectory(String dstDirName) {
 	final File dir = new File(dstDirName);
-	if (dir.exists() || dir.mkdirs()) {
+	if (SecuritySupport.getFileExists(dir) || dir.mkdirs()) {
 	    _destDir = dir;
 	    return true;
 	}
@@ -742,7 +758,7 @@ public final class XSLTC {
 	    String parentDir = outFile.getParent();
 	    if (parentDir != null) {
 	      	File parentFile = new File(parentDir);
-	      	if (!parentFile.exists())
+	      	if (!SecuritySupport.getFileExists(parentFile))
 	            parentFile.mkdirs();
 	    }
 	}

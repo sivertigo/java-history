@@ -1,8 +1,8 @@
 /*
- * @(#)Appendable.java	1.3 04/07/16
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang;
@@ -28,7 +28,7 @@ import java.io.IOException;
  * with different styles of error handling there is no guarantee that
  * errors will be propagated to the invoker.
  *
- * @version 	1.3, 07/16/04
+ * @version 	%I%, %G%
  * @since 1.5
  */
 public interface Appendable {

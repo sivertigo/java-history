@@ -1,9 +1,9 @@
 /*
- * @(#)ConnectionPendingException.java	1.9 01/11/19
+ * @(#)ConnectionPendingException.java	%I% %E%
  *
- * Copyright 2000 by Sun Microsystems, Inc.  All Rights Reserved.
+ * Copyright (c) 2000, Oracle and/or its affiliates. All rights reserved.
  * 
- * This software is the proprietary information of Sun Microsystems, Inc.  
+ * This software is the proprietary information of Oracle.
  * Use is subject to license terms.
  */
 
@@ -17,7 +17,7 @@ package java.nio.channels;
  * SocketChannel} for which a non-blocking connection operation is already in
  * progress.
  *
- * @version 1.9, 01/11/19
+ * @version %I%, %E%
  * @since 1.4
  */
 

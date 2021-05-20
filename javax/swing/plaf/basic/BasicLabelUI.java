@@ -1,13 +1,13 @@
 /*
- * @(#)BasicLabelUI.java	1.87 09/08/10
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing.plaf.basic;
 
-import com.sun.java.swing.SwingUtilities2;
+import sun.swing.SwingUtilities2;
 import sun.swing.UIAction;
 import sun.awt.AppContext;
 
@@ -16,6 +16,7 @@ import javax.swing.plaf.*;
 import javax.swing.text.View;
 
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
@@ -33,17 +34,23 @@ import java.beans.PropertyChangeListener;
  * is completely static, i.e. there's only one UIView implementation 
  * that's shared by all JLabel objects.
  *
- * @version 1.87 08/10/09
+ * @version %I% %G%
  * @author Hans Muller
  */
 public class BasicLabelUI extends LabelUI implements  PropertyChangeListener
 {
+   /**
+    * The default <code>BasicLabelUI</code> instance. This field might
+    * not be used. To change the default instance use a subclass which
+    * overrides the <code>createUI</code> method, and place that class
+    * name in defaults table under the key "LabelUI".
+    */ 
     protected static BasicLabelUI labelUI = new BasicLabelUI();
+    
+    private static final Object BASIC_LABEL_UI_KEY = new Object();
 
     private Rectangle paintIconR = new Rectangle();
     private Rectangle paintTextR = new Rectangle();
-
-    private static final Object BASIC_LABEL_UI_KEY = new Object();
 
     static void loadActionMap(LazyActionMap map) {
         map.put(new Actions(Actions.PRESS));
@@ -115,7 +122,7 @@ public class BasicLabelUI extends LabelUI implements  PropertyChangeListener
                                                    textX, textY);
     }
 
-    /** 
+    /**
      * Paint the label text in the foreground color, if the label
      * is opaque then paint the entire background with the background
      * color.  The Label text is drawn by paintEnabledText() or
@@ -137,19 +144,7 @@ public class BasicLabelUI extends LabelUI implements  PropertyChangeListener
         }
 
         FontMetrics fm = SwingUtilities2.getFontMetrics(label, g);
-        Insets insets = c.getInsets(null);
-
-        Rectangle paintViewR = new Rectangle();
-        paintViewR.x = insets.left;
-        paintViewR.y = insets.top;
-        paintViewR.width = c.getWidth() - (insets.left + insets.right);
-        paintViewR.height = c.getHeight() - (insets.top + insets.bottom);
-
-        paintIconR.x = paintIconR.y = paintIconR.width = paintIconR.height = 0;
-        paintTextR.x = paintTextR.y = paintTextR.width = paintTextR.height = 0;
-
-        String clippedText = 
-            layoutCL(label, fm, text, icon, paintViewR, paintIconR, paintTextR);
+        String clippedText = layout(label, fm, c.getWidth(), c.getHeight());
 
         if (icon != null) {
             icon.paintIcon(c, g, paintIconR.x, paintIconR.y);
@@ -171,6 +166,23 @@ public class BasicLabelUI extends LabelUI implements  PropertyChangeListener
 		}
 	    }
         }
+    }
+
+    private String layout(JLabel label, FontMetrics fm,
+                          int width, int height) {
+        Insets insets = label.getInsets(null);
+        String text = label.getText();
+        Icon icon = (label.isEnabled()) ? label.getIcon() :
+                                          label.getDisabledIcon();
+        Rectangle paintViewR = new Rectangle();
+        paintViewR.x = insets.left;
+        paintViewR.y = insets.top;
+        paintViewR.width = width - (insets.left + insets.right);
+        paintViewR.height = height - (insets.top + insets.bottom);
+        paintIconR.x = paintIconR.y = paintIconR.width = paintIconR.height = 0;
+        paintTextR.x = paintTextR.y = paintTextR.width = paintTextR.height = 0;
+        return layoutCL(label, fm, text, icon, paintViewR, paintIconR,
+                        paintTextR);
     }
 
     public Dimension getPreferredSize(JComponent c) 
@@ -242,6 +254,52 @@ public class BasicLabelUI extends LabelUI implements  PropertyChangeListener
 	    d.width += v.getMaximumSpan(View.X_AXIS) - v.getPreferredSpan(View.X_AXIS);
 	}
 	return d;
+    }
+
+    /**
+     * Returns the baseline.
+     *
+     * @throws NullPointerException {@inheritDoc}
+     * @throws IllegalArgumentException {@inheritDoc}
+     * @see javax.swing.JComponent#getBaseline(int, int)
+     * @since 1.6
+     */
+    public int getBaseline(JComponent c, int width, int height) {
+        super.getBaseline(c, width, height);
+        JLabel label = (JLabel)c;
+        String text = label.getText();
+        if (text == null || "".equals(text) || label.getFont() == null) {
+            return -1;
+        }
+        FontMetrics fm = label.getFontMetrics(label.getFont());
+        layout(label, fm, width, height);
+        return BasicHTML.getBaseline(label, paintTextR.y, fm.getAscent(),
+                                     paintTextR.width, paintTextR.height);
+    }
+
+    /**
+     * Returns an enum indicating how the baseline of the component
+     * changes as the size changes.
+     *
+     * @throws NullPointerException {@inheritDoc}
+     * @see javax.swing.JComponent#getBaseline(int, int)
+     * @since 1.6
+     */
+    public Component.BaselineResizeBehavior getBaselineResizeBehavior(
+            JComponent c) {
+        super.getBaselineResizeBehavior(c);
+        if (c.getClientProperty(BasicHTML.propertyKey) != null) {
+            return Component.BaselineResizeBehavior.OTHER;
+        }
+        switch(((JLabel)c).getVerticalAlignment()) {
+        case JLabel.TOP:
+            return Component.BaselineResizeBehavior.CONSTANT_ASCENT;
+        case JLabel.BOTTOM:
+            return Component.BaselineResizeBehavior.CONSTANT_DESCENT;
+        case JLabel.CENTER:
+            return Component.BaselineResizeBehavior.CENTER_OFFSET;
+        }
+        return Component.BaselineResizeBehavior.OTHER;
     }
 
 
@@ -328,7 +386,7 @@ public class BasicLabelUI extends LabelUI implements  PropertyChangeListener
                 appContext.put(BASIC_LABEL_UI_KEY, safeBasicLabelUI);
             }
             return safeBasicLabelUI;
-        }
+        }   
         return labelUI;
     }
 
@@ -371,39 +429,37 @@ public class BasicLabelUI extends LabelUI implements  PropertyChangeListener
         }
 
         private void doPress(JLabel label) {
-	   Component labelFor = label.getLabelFor();
-	   if(labelFor != null && labelFor.isEnabled()) {
-	      InputMap inputMap = SwingUtilities.getUIInputMap(label, JComponent.WHEN_FOCUSED);
-	      if (inputMap == null) {
-	         inputMap = new InputMapUIResource();
-		 SwingUtilities.replaceUIInputMap(label, JComponent.WHEN_FOCUSED, inputMap);
-	      }
-	      int dka = label.getDisplayedMnemonic();
-	      inputMap.put(KeyStroke.getKeyStroke(dka, ActionEvent.ALT_MASK, true), RELEASE);
-              // Need this if the accelerator is released before the ALT key
-	      inputMap.put(KeyStroke.getKeyStroke(0, ActionEvent.ALT_MASK, true), RELEASE);
-	      Component owner = label.getLabelFor();
-	      label.requestFocus();
-	   }
+            Component labelFor = label.getLabelFor();
+            if (labelFor != null && labelFor.isEnabled()) {
+                InputMap inputMap = SwingUtilities.getUIInputMap(label, JComponent.WHEN_FOCUSED);
+                if (inputMap == null) {
+                    inputMap = new InputMapUIResource();
+                    SwingUtilities.replaceUIInputMap(label, JComponent.WHEN_FOCUSED, inputMap);
+                }
+                int dka = label.getDisplayedMnemonic();
+                inputMap.put(KeyStroke.getKeyStroke(dka, ActionEvent.ALT_MASK, true), RELEASE);
+                // Need this if ALT is released before the accelerator
+                inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ALT, 0, true), RELEASE);
+                label.requestFocus();
+            }
         }
 
         private void doRelease(JLabel label) {
-	   Component labelFor = label.getLabelFor();
-	   if(labelFor != null && labelFor.isEnabled()) {
-	      InputMap inputMap = SwingUtilities.getUIInputMap(label, JComponent.WHEN_FOCUSED);
-	      if (inputMap != null) {
-	         // inputMap should never be null.
-	         inputMap.remove(KeyStroke.getKeyStroke (label.getDisplayedMnemonic(), ActionEvent.ALT_MASK, true));
-	         inputMap.remove(KeyStroke.getKeyStroke(0, ActionEvent.ALT_MASK, true));
-	      }
-	      if (labelFor instanceof Container &&
-		  ((Container)labelFor).isFocusCycleRoot()) {
-		  labelFor.requestFocus();
-	      }
-	      else {
-		  BasicLookAndFeel.compositeRequestFocus(labelFor);
-	      }
-	   }
+            Component labelFor = label.getLabelFor();
+            if (labelFor != null && labelFor.isEnabled()) {
+                InputMap inputMap = SwingUtilities.getUIInputMap(label, JComponent.WHEN_FOCUSED);
+                if (inputMap != null) {
+                    // inputMap should never be null.
+                    inputMap.remove(KeyStroke.getKeyStroke(label.getDisplayedMnemonic(), ActionEvent.ALT_MASK, true));
+                    inputMap.remove(KeyStroke.getKeyStroke(KeyEvent.VK_ALT, 0, true));
+                }
+                if (labelFor instanceof Container &&
+                        ((Container) labelFor).isFocusCycleRoot()) {
+                    labelFor.requestFocus();
+                } else {
+                    SwingUtilities2.compositeRequestFocus(labelFor);
+                }
+            }
         }
     }
 }

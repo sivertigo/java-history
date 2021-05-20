@@ -1,8 +1,6 @@
 /*
- * @(#)MetalFileChooserUI.java	1.85 08/08/18
- *
- * Copyright 2008 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, 2011, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing.plaf.metal;
@@ -13,7 +11,6 @@ import javax.swing.filechooser.*;
 import javax.swing.event.*;
 import javax.swing.plaf.*;
 import javax.swing.plaf.basic.*;
-import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.beans.*;
@@ -23,7 +20,7 @@ import java.io.IOException;
 import java.util.*;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-
+import javax.accessibility.*;
 
 import sun.awt.shell.ShellFolder;
 import sun.swing.*;
@@ -31,7 +28,6 @@ import sun.swing.*;
 /**
  * Metal L&F implementation of a FileChooser.
  *
- * @version 1.85 08/18/08
  * @author Jeff Dinkins
  */
 public class MetalFileChooserUI extends BasicFileChooserUI {
@@ -190,6 +186,10 @@ public class MetalFileChooserUI extends BasicFileChooserUI {
 	public ListSelectionListener createListSelectionListener() {
 	    return MetalFileChooserUI.this.createListSelectionListener(getFileChooser());
 	}
+        
+        public boolean usesShellFolder() {
+            return useShellFolder;
+        }
     }
 
     public void installComponents(JFileChooser fc) {
@@ -230,7 +230,8 @@ public class MetalFileChooserUI extends BasicFileChooserUI {
 		return d;
 	    }
 	};
-	directoryComboBox.getAccessibleContext().setAccessibleDescription(lookInLabelText);
+        directoryComboBox.putClientProperty(AccessibleContext.ACCESSIBLE_DESCRIPTION_PROPERTY,
+                                            lookInLabelText);
 	directoryComboBox.putClientProperty( "JComboBox.isTableCellEditor", Boolean.TRUE );
 	lookInLabel.setLabelFor(directoryComboBox);
 	directoryComboBoxModel = createDirectoryComboBoxModel(fc);
@@ -247,8 +248,9 @@ public class MetalFileChooserUI extends BasicFileChooserUI {
 	JButton upFolderButton = new JButton(getChangeToParentDirectoryAction());
 	upFolderButton.setText(null);
 	upFolderButton.setIcon(upFolderIcon);
-     	upFolderButton.setToolTipText(upFolderToolTipText);
-     	upFolderButton.getAccessibleContext().setAccessibleName(upFolderAccessibleName);
+        upFolderButton.setToolTipText(upFolderToolTipText);
+        upFolderButton.putClientProperty(AccessibleContext.ACCESSIBLE_NAME_PROPERTY,
+                                         upFolderAccessibleName);
 	upFolderButton.setAlignmentX(JComponent.LEFT_ALIGNMENT);
 	upFolderButton.setAlignmentY(JComponent.CENTER_ALIGNMENT);
 	upFolderButton.setMargin(shrinkwrap);
@@ -268,7 +270,8 @@ public class MetalFileChooserUI extends BasicFileChooserUI {
 
 	JButton b = new JButton(homeFolderIcon);
      	b.setToolTipText(toolTipText);
-     	b.getAccessibleContext().setAccessibleName(homeFolderAccessibleName);
+        b.putClientProperty(AccessibleContext.ACCESSIBLE_NAME_PROPERTY,
+                            homeFolderAccessibleName);
 	b.setAlignmentX(JComponent.LEFT_ALIGNMENT);
 	b.setAlignmentY(JComponent.CENTER_ALIGNMENT);
 	b.setMargin(shrinkwrap);
@@ -283,7 +286,8 @@ public class MetalFileChooserUI extends BasicFileChooserUI {
 	    b.setText(null);
 	    b.setIcon(newFolderIcon);
 	    b.setToolTipText(newFolderToolTipText);
-	    b.getAccessibleContext().setAccessibleName(newFolderAccessibleName);
+            b.putClientProperty(AccessibleContext.ACCESSIBLE_NAME_PROPERTY,
+                                newFolderAccessibleName);
 	    b.setAlignmentX(JComponent.LEFT_ALIGNMENT);
 	    b.setAlignmentY(JComponent.CENTER_ALIGNMENT);
 	    b.setMargin(shrinkwrap);
@@ -297,7 +301,8 @@ public class MetalFileChooserUI extends BasicFileChooserUI {
 	// List Button
 	listViewButton = new JToggleButton(listViewIcon);
      	listViewButton.setToolTipText(listViewButtonToolTipText);
-     	listViewButton.getAccessibleContext().setAccessibleName(listViewButtonAccessibleName);
+        listViewButton.putClientProperty(AccessibleContext.ACCESSIBLE_NAME_PROPERTY,
+                                         listViewButtonAccessibleName);
 	listViewButton.setSelected(true);
 	listViewButton.setAlignmentX(JComponent.LEFT_ALIGNMENT);
 	listViewButton.setAlignmentY(JComponent.CENTER_ALIGNMENT);
@@ -309,7 +314,8 @@ public class MetalFileChooserUI extends BasicFileChooserUI {
 	// Details Button
 	detailsViewButton = new JToggleButton(detailsViewIcon);
      	detailsViewButton.setToolTipText(detailsViewButtonToolTipText);
-     	detailsViewButton.getAccessibleContext().setAccessibleName(detailsViewButtonAccessibleName);
+        detailsViewButton.putClientProperty(AccessibleContext.ACCESSIBLE_NAME_PROPERTY,
+                                            detailsViewButtonAccessibleName);
 	detailsViewButton.setAlignmentX(JComponent.LEFT_ALIGNMENT);
 	detailsViewButton.setAlignmentY(JComponent.CENTER_ALIGNMENT);
 	detailsViewButton.setMargin(shrinkwrap);
@@ -358,7 +364,7 @@ public class MetalFileChooserUI extends BasicFileChooserUI {
 	bottomPanel.add(fileNamePanel);
 	bottomPanel.add(Box.createRigidArea(vstrut5));
 
-	fileNameLabel = new AlignedLabel();
+        fileNameLabel = new AlignedLabel();
         populateFileNameLabel();
 	fileNamePanel.add(fileNameLabel);
 
@@ -397,7 +403,8 @@ public class MetalFileChooserUI extends BasicFileChooserUI {
 	filterComboBoxModel = createFilterComboBoxModel();
 	fc.addPropertyChangeListener(filterComboBoxModel);
 	filterComboBox = new JComboBox(filterComboBoxModel);
-	filterComboBox.getAccessibleContext().setAccessibleDescription(filesOfTypeLabelText);
+        filterComboBox.putClientProperty(AccessibleContext.ACCESSIBLE_DESCRIPTION_PROPERTY,
+                                         filesOfTypeLabelText);
 	filesOfTypeLabel.setLabelFor(filterComboBox);
 	filterComboBox.setRenderer(createFilterComboBoxRenderer());
 	filesOfTypePanel.add(filterComboBox);
@@ -432,7 +439,7 @@ public class MetalFileChooserUI extends BasicFileChooserUI {
 	if (prop != null) {
 	    useShellFolder = prop.booleanValue();
 	} else {
-	    useShellFolder = fc.getFileSystemView().equals(FileSystemView.getFileSystemView());
+            useShellFolder = fc.getFileSystemView().equals(FileSystemView.getFileSystemView());
 	}
     }
 
@@ -461,7 +468,7 @@ public class MetalFileChooserUI extends BasicFileChooserUI {
 	
 	fileNameLabelMnemonic = UIManager.getInt("FileChooser.fileNameLabelMnemonic");  
 	fileNameLabelText = UIManager.getString("FileChooser.fileNameLabelText",l); 
-	folderNameLabelMnemonic = UIManager.getInt("FileChooser.folderNameLabelMnemonic");  
+        folderNameLabelMnemonic = UIManager.getInt("FileChooser.folderNameLabelMnemonic");
         folderNameLabelText = UIManager.getString("FileChooser.folderNameLabelText",l);
 	
 	filesOfTypeLabelMnemonic = UIManager.getInt("FileChooser.filesOfTypeLabelMnemonic");  
@@ -535,6 +542,11 @@ public class MetalFileChooserUI extends BasicFileChooserUI {
 	approveButton.removeActionListener(getApproveSelectionAction());
 	fileNameTextField.removeActionListener(getApproveSelectionAction());
 
+	if (filePane != null) {
+	    filePane.uninstallUI();
+	    filePane = null;
+	}
+
 	super.uninstallUI(c);
     }
 
@@ -588,7 +600,8 @@ public class MetalFileChooserUI extends BasicFileChooserUI {
 	    return null;
 	} else {
 	    JFileChooser fc = getFileChooser();
-	    if (fc.isDirectorySelectionEnabled() && !fc.isFileSelectionEnabled()) {
+	    if ((fc.isDirectorySelectionEnabled() && !fc.isFileSelectionEnabled()) ||
+	        (fc.isDirectorySelectionEnabled() && fc.isFileSelectionEnabled() && fc.getFileSystemView().isFileSystemRoot(file))) {
 		return file.getPath();
 	    } else {
 		return file.getName();
@@ -660,7 +673,7 @@ public class MetalFileChooserUI extends BasicFileChooserUI {
     }
 
     private void doFileSelectionModeChanged(PropertyChangeEvent e) {
-	if (fileNameLabel != null) {
+        if (fileNameLabel != null) {
             populateFileNameLabel();
         }
 	clearIconCache();
@@ -926,11 +939,11 @@ public class MetalFileChooserUI extends BasicFileChooserUI {
 
 	    File[] baseFolders;
 	    if (useShellFolder) {
-		baseFolders = AccessController.doPrivileged(new PrivilegedAction<File[]>() {
+                baseFolders = AccessController.doPrivileged(new PrivilegedAction<File[]>() {
                     public File[] run() {
                         return (File[])ShellFolder.get("fileChooserComboBoxFolders");
                     }
-                });
+                }); 
 	    } else {
 		baseFolders = fsv.getRoots();
 	    }
@@ -941,7 +954,7 @@ public class MetalFileChooserUI extends BasicFileChooserUI {
 	    // for example /foo/bar/ becomes /foo/bar
 	    File canonical = null;
 	    try {
-		canonical = directory.getCanonicalFile();
+		canonical = ShellFolder.getNormalizedFile(directory);
 	    } catch (IOException e) {
 		// Maybe drive is not ready. Can't abort here.
 		canonical = directory;
@@ -1070,7 +1083,6 @@ public class MetalFileChooserUI extends BasicFileChooserUI {
 	public void setSelectedItem(Object filter) {
 	    if(filter != null) {
 		getFileChooser().setFileFilter((FileFilter) filter);
-		setFileName(null);
 		fireContentsChanged(this, -1, -1);
 	    }
 	}

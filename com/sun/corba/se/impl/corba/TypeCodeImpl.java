@@ -1,8 +1,8 @@
 /*
- * @(#)TypeCodeImpl.java	1.94 04/06/21
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.corba.se.impl.corba;
@@ -406,7 +406,7 @@ public final class TypeCodeImpl extends TypeCode
 	    setId(id);
 	    _name		= name;
 	    _type_modifier	= type_modifier;
-	    if (_concrete_base != null) {
+	    if (concrete_base != null) {
 		_concrete_base = convertToNative(_orb, concrete_base);
 	    }
 	    _memberCount	= members.length;

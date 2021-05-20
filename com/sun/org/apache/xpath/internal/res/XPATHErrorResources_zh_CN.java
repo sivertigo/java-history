@@ -14,14 +14,11 @@
  * limitations under the License.
  */
 /*
- * $Id: XPATHErrorResources_zh_CN.java,v 1.8 2004/02/17 04:36:45 minchau Exp $
+ * $Id: XPATHErrorResources_zh_CN.java,v 1.2.4.1 2005/09/15 00:39:21 jeffsuttor Exp $
  */
 package com.sun.org.apache.xpath.internal.res;
 
 import java.util.ListResourceBundle;
-import java.util.Locale;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
 
 /**
  * Set up error messages.
@@ -351,7 +348,14 @@ public static final String ER_IGNORABLE_WHITESPACE_NOT_HANDLED =
 
   // Error messages...
 
-  public static final Object[][] contents = {
+  /**
+   * Get the association list.
+   *
+   * @return The association list.
+   */
+  public Object[][] getContents()
+  {
+    return new Object[][]{
 
   /** Field ERROR0000          */
 
@@ -1222,9 +1226,9 @@ public static final String ER_IGNORABLE_WHITESPACE_NOT_HANDLED =
   { "three", "3" }
 
   };
+  }
 
 
-  // ================= INFRASTRUCTURE ======================
 
   /** Field BAD_CODE          */
   public static final String BAD_CODE = "BAD_CODE";
@@ -1254,87 +1258,5 @@ public static final String ER_IGNORABLE_WHITESPACE_NOT_HANDLED =
   /** Field QUERY_HEADER          */
   public static final String QUERY_HEADER = "PATTERN ";
 
-  /**
-   * Get the association list.
-   *
-   * @return The association list.
-   */
-  protected Object[][] getContents() {
-      // return a copy of contents; in theory we want a deep clone
-      // of contents, but since it only contains (immutable) Strings,
-      // this shallow copy is sufficient
-      Object[][] msgCopy = new Object[contents.length][2];
-      for (int i = 0; i < contents.length; i++) {
-          msgCopy[i][0] = contents[i][0];
-          msgCopy[i][1] = contents[i][1];
-      }
-      return msgCopy;
-  }
-
-  /**
-   * Return a named ResourceBundle for a particular locale.  This method mimics the behavior
-   * of ResourceBundle.getBundle().
-   *
-   * @param res the name of the resource to load.
-   * @param locale the locale to prefer when searching for the bundle
-   *
-   * @param className Name of local-specific subclass.
-   * @return the ResourceBundle
-   * @throws MissingResourceException
-   */
-  public static final XPATHErrorResources loadResourceBundle(String className)
-          throws MissingResourceException
-  {
-
-    Locale locale = Locale.getDefault();
-    String suffix = getResourceSuffix(locale);
-
-    try
-    {
-
-      // first try with the given locale
-      return (XPATHErrorResources) ResourceBundle.getBundle(className
-              + suffix, locale);
-    }
-    catch (MissingResourceException e)
-    {
-      try  // try to fall back to en_US if we can't load
-      {
-
-        // Since we can't find the localized property file,
-        // fall back to en_US.
-        return (XPATHErrorResources) ResourceBundle.getBundle(className,
-                new Locale("zh", "CN"));
-      }
-      catch (MissingResourceException e2)
-      {
-
-        // Now we are really in trouble.
-        // very bad, definitely very bad...not going to get very far
-        throw new MissingResourceException(
-          "\u65e0\u6cd5\u88c5\u5165\u4efb\u4f55\u8d44\u6e90\u5305\u3002", className, "");
-      }
-    }
-  }
-
-  /**
-   * Return the resource file suffic for the indicated locale
-   * For most locales, this will be based the language code.  However
-   * for Chinese, we do distinguish between Taiwan and PRC
-   *
-   * @param locale the locale
-   * @return an String suffix which canbe appended to a resource name
-   */
-  private static final String getResourceSuffix(Locale locale)
-  {
-
-    String suffix = "_" + locale.getLanguage();
-    String country = locale.getCountry();
-
-    if (country.equals("TW"))
-      suffix += "_" + country;
-
-    return suffix;
-  }
 
 }

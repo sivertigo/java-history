@@ -1,8 +1,8 @@
 /*
- * @(#)TableHeaderUI.java	1.12 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing.plaf;
@@ -10,7 +10,7 @@ package javax.swing.plaf;
 /**
  * Pluggable look and feel interface for JTableHeader.
  *
- * @version 1.12 12/19/03
+ * @version %I% %G%
  * @author Alan Chung
  */
 public abstract class TableHeaderUI extends ComponentUI {

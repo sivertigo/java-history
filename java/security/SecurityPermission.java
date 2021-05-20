@@ -1,8 +1,8 @@
 /*
- * @(#)SecurityPermission.java	1.27 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.security;
@@ -73,6 +73,14 @@ import java.util.StringTokenizer;
  *   <td>Granting this permission is extremely dangerous, as malicious
  * code may grant itself all the necessary permissions it needs
  * to successfully mount an attack on the system.</td>
+ * </tr>
+ *
+ * <tr>
+ *   <td>createPolicy.{policy type}</td>
+ *   <td>Getting an instance of a Policy implementation from a provider</td>
+ *   <td>Granting this permission enables code to obtain a Policy object.
+ * Malicious code may query the Policy object to determine what permissions
+ * have been granted to code other than itself. </td>
  * </tr>
  *
  * <tr>
@@ -245,7 +253,7 @@ import java.util.StringTokenizer;
  * @see java.security.PermissionCollection
  * @see java.lang.SecurityManager
  *
- * @version 1.27 03/12/19
+ * @version %I% %E%
  *
  * @author Marianne Mueller
  * @author Roland Schemers
@@ -262,6 +270,9 @@ public final class SecurityPermission extends BasicPermission {
      * signify a wildcard match.
      *
      * @param name the name of the SecurityPermission
+     *
+     * @throws NullPointerException if <code>name</code> is <code>null</code>.
+     * @throws IllegalArgumentException if <code>name</code> is empty.
      */
 
     public SecurityPermission(String name)
@@ -276,6 +287,9 @@ public final class SecurityPermission extends BasicPermission {
      *
      * @param name the name of the SecurityPermission
      * @param actions should be null.
+     *
+     * @throws NullPointerException if <code>name</code> is <code>null</code>.
+     * @throws IllegalArgumentException if <code>name</code> is empty.
      */
 
     public SecurityPermission(String name, String actions)

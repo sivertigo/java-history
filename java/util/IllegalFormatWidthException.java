@@ -1,8 +1,8 @@
 /*
- * @(#)IllegalFormatWidthException.java	1.4 04/06/07
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.util;
@@ -11,7 +11,7 @@ package java.util;
  * Unchecked exception thrown when the format width is a negative value other
  * than <tt>-1</tt> or is otherwise unsupported.
  *
- * @version 	1.4, 06/07/04
+ * @version 	%I%, %G%
  * @since 1.5
  */
 public class IllegalFormatWidthException extends IllegalFormatException {

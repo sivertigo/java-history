@@ -1,8 +1,6 @@
 /*
- * @(#)NTSystem.java	1.10 06/06/23
- *
- * Copyright 2006 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, 2011, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.security.auth.module;
@@ -13,11 +11,11 @@ import javax.security.auth.login.LoginException;
  * <p> This class implementation retrieves and makes available NT
  * security information for the current user.
  * 
- * @version 1.10, 06/23/06
  */
 public class NTSystem {
     
     private native void getCurrent(boolean debug);
+    private native long getImpersonationToken0();
     
     private String userName;
     private String domain;
@@ -117,10 +115,13 @@ public class NTSystem {
      *
      * @return an impersonation token for the current NT user.
      */
-    public long getImpersonationToken() {
+    public synchronized long getImpersonationToken() {
+        if (impersonationToken == 0) {
+            impersonationToken = getImpersonationToken0();
+        }
         return impersonationToken;
     }
-    
+
     private void loadNative() {
 	System.loadLibrary("jaas_nt");
     }

@@ -1,17 +1,16 @@
 /*
- * @(#)ProcessBuilder.java	1.6 04/02/07
- *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2003, 2013, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  *
  * @author  Martin Buchholz
- * @version 1.6, 04/02/07
+ * @version %I%, %E%
  */
 
 package java.lang;
 
 import java.io.File;
 import java.io.IOException;
+import java.security.AccessControlException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -92,7 +91,7 @@ import java.util.Map;
  * env.put("VAR1", "myValue");
  * env.remove("OTHERVAR");
  * env.put("VAR2", env.get("VAR1") + "suffix");
- * pb.directory("myDir");
+ * pb.directory(new File("myDir"));
  * Process p = pb.start();
  * </pre></blockquote>
  *
@@ -436,6 +435,7 @@ public final class ProcessBuilder
 	// Must convert to array first -- a malicious user-supplied
 	// list might try to circumvent the security check.
 	String[] cmdarray = command.toArray(new String[command.size()]);
+        cmdarray = cmdarray.clone();
 	for (String arg : cmdarray)
 	    if (arg == null)
 		throw new NullPointerException();
@@ -448,9 +448,30 @@ public final class ProcessBuilder
 
 	String dir = directory == null ? null : directory.toString();
 
-	return ProcessImpl.start(cmdarray,
-				 environment,
-				 dir,
-				 redirectErrorStream);
+	try {
+	    return ProcessImpl.start(cmdarray,
+				     environment,
+				     dir,
+				     redirectErrorStream);
+	} catch (IOException e) {
+            String exceptionInfo = ": " + e.getMessage();
+            Throwable cause = e;
+            if (security != null) {
+                // Can not disclose the fail reason for read-protected files.
+                try {
+                    security.checkRead(prog);
+                } catch (AccessControlException ace) {
+                    exceptionInfo = "";
+                    cause = ace;
+                }    
+            }
+	    // It's much easier for us to create a high-quality error
+	    // message than the low-level C code which found the problem.
+	    throw new IOException(
+		"Cannot run program \"" + prog + "\""
+		+ (dir == null ? "" : " (in directory \"" + dir + "\")")
+                + exceptionInfo,
+                cause);
+	}
     }
 }

@@ -1,8 +1,6 @@
 /*
- * @(#)Direct-X-Buffer.java	1.48 04/05/03
- *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2000, 2011, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 // -- This file was mechanically generated: Do not edit! -- //
@@ -29,6 +27,9 @@ class DirectIntBufferS
     // Cached unsafe-access object
     protected static final Unsafe unsafe = Bits.unsafe();
 
+    // Cached array base offset
+    private static final long arrayBaseOffset = (long)unsafe.arrayBaseOffset(int[].class);
+
     // Cached unaligned-access capability
     protected static final boolean unaligned = Bits.unaligned();
 
@@ -36,9 +37,10 @@ class DirectIntBufferS
     // NOTE: moved up to Buffer.java for speed in JNI GetDirectBufferAddress
     //    protected long address;
 
-    // If this buffer is a view of another buffer then we keep a reference to
-    // that buffer so that its memory isn't freed before we're done with it
-    protected Object viewedBuffer = null;
+    // An object attached to this buffer. If this buffer is a view of another
+    // buffer then we use this field to keep a reference to that buffer to
+    // ensure that its memory isn't freed before we are done with it.
+    private final Object viewedBuffer;
 
     public Object viewedBuffer() {
         return viewedBuffer;
@@ -141,6 +143,18 @@ class DirectIntBufferS
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     // For duplicates and slices
     //
     DirectIntBufferS(DirectBuffer db,	        // package-private
@@ -150,10 +164,10 @@ class DirectIntBufferS
 
 	super(mark, pos, lim, cap);
 	address = db.address() + off;
-	viewedBuffer = db;
 
 
 
+        viewedBuffer = db;
 
 
 
@@ -220,18 +234,20 @@ class DirectIntBufferS
 	    if (length > rem)
 		throw new BufferUnderflowException();
 
-	    if (order() != ByteOrder.nativeOrder())
-		Bits.copyToIntArray(ix(pos), dst,
-					  offset << 2,
-					  length << 2);
-	    else
-		Bits.copyToByteArray(ix(pos), dst,
-				     offset << 2,
-				     length << 2);
-	    position(pos + length);
-	} else {
-	    super.get(dst, offset, length);
-	}
+
+            if (order() != ByteOrder.nativeOrder())
+                Bits.copyToIntArray(ix(pos), dst,
+                                          offset << 2,
+                                          length << 2);
+            else
+
+                Bits.copyToArray(ix(pos), dst, arrayBaseOffset,
+                                 offset << 2,
+                                 length << 2);
+            position(pos + length);
+        } else {
+            super.get(dst, offset, length);
+        }
 	return this;
 
 
@@ -280,7 +296,7 @@ class DirectIntBufferS
  	    unsafe.copyMemory(sb.ix(spos), ix(pos), srem << 2);
  	    sb.position(spos + srem);
  	    position(pos + srem);
-	} else if (!src.isDirect()) {
+	} else if (src.hb != null) {
 
 	    int spos = src.position();
 	    int slim = src.limit();
@@ -310,16 +326,18 @@ class DirectIntBufferS
 	    if (length > rem)
 		throw new BufferOverflowException();
 
-	    if (order() != ByteOrder.nativeOrder()) 
-		Bits.copyFromIntArray(src, offset << 2,
-					    ix(pos), length << 2);
-	    else
-		Bits.copyFromByteArray(src, offset << 2,
-				       ix(pos), length << 2);
-	    position(pos + length);
-	} else {
-	    super.put(src, offset, length);
-	}
+
+            if (order() != ByteOrder.nativeOrder())
+                Bits.copyFromIntArray(src, offset << 2,
+                                            ix(pos), length << 2);
+            else
+
+                Bits.copyFromArray(src, arrayBaseOffset, offset << 2,
+                                   ix(pos), length << 2);
+            position(pos + length);
+        } else {
+            super.put(src, offset, length);
+        }
 	return this;
 
 
@@ -351,6 +369,8 @@ class DirectIntBufferS
     }
 
 
+
+
 
 
 

@@ -1,15 +1,13 @@
 /*
- * @(#)DefaultPersistenceDelegate.java	1.18 05/08/26
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package java.beans;
 
 import java.util.*;
 import java.lang.reflect.*;
-import java.beans.*;
-import java.io.*;
 import sun.reflect.misc.*;
 
 
@@ -37,7 +35,7 @@ import sun.reflect.misc.*;
  *
  * @since 1.4
  *
- * @version 1.18 08/26/05
+ * @version %I% %G%
  * @author Philip Milne
  */
 
@@ -81,8 +79,7 @@ public class DefaultPersistenceDelegate extends PersistenceDelegate {
 
     private static boolean definesEquals(Class type) {
         try {
-            type.getDeclaredMethod("equals", new Class[]{Object.class});
-            return true;
+            return type == type.getMethod("equals", Object.class).getDeclaringClass();
         }
         catch(NoSuchMethodException e) {
             return false;
@@ -137,35 +134,34 @@ public class DefaultPersistenceDelegate extends PersistenceDelegate {
     protected Expression instantiate(Object oldInstance, Encoder out) {
         int nArgs = constructor.length;
         Class type = oldInstance.getClass();
-        // System.out.println("writeObject: " + oldInstance);
         Object[] constructorArgs = new Object[nArgs];
         for(int i = 0; i < nArgs; i++) {
-            /*
-            1.2 introduces "public double getX()" et al. which return values
-            which cannot be used in the constructors (they are the wrong type).
-            In constructors, use public fields in preference to getters
-            when they are defined.
-            */
-            String name = constructor[i];
-
-            Field f = null;
             try {
-                // System.out.println("Trying field " + name + " in " + type);
-                f = type.getDeclaredField(name);
-                f.setAccessible(true);
-            }
-            catch (NoSuchFieldException e) {}
-            try {
-                constructorArgs[i] = (f != null && !Modifier.isStatic(f.getModifiers())) ?
-                    f.get(oldInstance) :
-                    MethodUtil.invoke(ReflectionUtils.getPublicMethod(type, "get" + NameGenerator.capitalize(name), 
-				   new Class[0]), oldInstance, new Object[0]);
+                Method method = findMethod(type, this.constructor[i]);
+                constructorArgs[i] = MethodUtil.invoke(method, oldInstance, new Object[0]);
             }
             catch (Exception e) {
                 out.getExceptionListener().exceptionThrown(e);
             }
         }
         return new Expression(oldInstance, oldInstance.getClass(), "new", constructorArgs);
+    }
+
+    private Method findMethod(Class type, String property) throws IntrospectionException {
+        if (property == null) {
+            throw new IllegalArgumentException("Property name is null");
+        }
+        BeanInfo info = Introspector.getBeanInfo(type);
+        for (PropertyDescriptor pd : info.getPropertyDescriptors()) {
+            if (property.equals(pd.getName())) {
+                Method method = pd.getReadMethod();
+                if (method != null) {
+                    return method;
+                }
+                throw new IllegalStateException("Could not find getter for the property " + property);
+            }
+        }
+        throw new IllegalStateException("Could not find property by the name " + property);
     }
 
     // This is a workaround for a bug in the introspector.
@@ -328,6 +324,10 @@ public class DefaultPersistenceDelegate extends PersistenceDelegate {
             // Eventually, this may need to do true differencing.
             String addListenerMethodName = d.getAddListenerMethod().getName();
             for (int i = newL.length; i < oldL.length; i++) {
+                // The BufferStrategyPaintManager adds BufferInfo as a WindowsListener automatically
+                if (oldL[i].getClass().getName().equals("javax.swing.BufferStrategyPaintManager$BufferInfo")) {
+                    continue;
+                }
                 // System.out.println("Adding listener: " + addListenerMethodName + oldL[i]);
                 invokeStatement(oldInstance, addListenerMethodName, new Object[]{oldL[i]}, out);
             }

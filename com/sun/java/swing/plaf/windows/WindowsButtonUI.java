@@ -1,8 +1,8 @@
 /*
- * @(#)WindowsButtonUI.java	1.36 06/03/22
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.java.swing.plaf.windows;
@@ -14,9 +14,11 @@ import javax.swing.*;
 
 import java.awt.*;
 
-import com.sun.java.swing.plaf.windows.TMSchema.*;
-import com.sun.java.swing.plaf.windows.XPStyle.Skin;
+import static com.sun.java.swing.plaf.windows.TMSchema.*;
+import static com.sun.java.swing.plaf.windows.TMSchema.Part.*;
+import static com.sun.java.swing.plaf.windows.XPStyle.Skin;
 import sun.awt.AppContext;
+
 
 /**
  * Windows button.
@@ -28,13 +30,12 @@ import sun.awt.AppContext;
  * version of Swing.  A future release of Swing will provide support for
  * long term persistence.
  *
- * @version 1.36 03/22/06
+ * @version %I% %G%
  * @author Jeff Dinkins
  *
  */
 public class WindowsButtonUI extends BasicButtonUI
 {
-
     protected int dashedRectGapX;
     protected int dashedRectGapY;
     protected int dashedRectGapWidth;
@@ -45,19 +46,19 @@ public class WindowsButtonUI extends BasicButtonUI
     private boolean defaults_initialized = false;
     
     private static final Object WINDOWS_BUTTON_UI_KEY = new Object();
-
+    
     // ********************************
     //          Create PLAF
     // ********************************
     public static ComponentUI createUI(JComponent c){
-	AppContext appContext = AppContext.getAppContext();
+        AppContext appContext = AppContext.getAppContext();
         WindowsButtonUI windowsButtonUI = 
                 (WindowsButtonUI) appContext.get(WINDOWS_BUTTON_UI_KEY);
         if (windowsButtonUI == null) {
             windowsButtonUI = new WindowsButtonUI();
             appContext.put(WINDOWS_BUTTON_UI_KEY, windowsButtonUI);
         }
-	return windowsButtonUI;
+        return windowsButtonUI;
     }
     
 
@@ -104,14 +105,6 @@ public class WindowsButtonUI extends BasicButtonUI
     } 
 	
     protected void paintFocus(Graphics g, AbstractButton b, Rectangle viewRect, Rectangle textRect, Rectangle iconRect){
-	if (b.getParent() instanceof JToolBar) {
-	    // Windows doesn't draw the focus rect for buttons in a toolbar.
-	    return;
-	}
-	    
-	if (XPStyle.getXP() != null) {
-	    return;
-	}
 
 	// focus painted same color as text on Basic??
 	int width = b.getWidth();
@@ -157,27 +150,44 @@ public class WindowsButtonUI extends BasicButtonUI
 	super.paint(g, c);
     }
 
-    static Part getXPButtonType(AbstractButton b) { 
+    static Part getXPButtonType(AbstractButton b) {
+        if(b instanceof JCheckBox) {
+            return Part.BP_CHECKBOX;
+        }
+        if(b instanceof JRadioButton) {
+            return Part.BP_RADIOBUTTON;
+        }
         boolean toolbar = (b.getParent() instanceof JToolBar);
-        return toolbar ? Part.TP_BUTTON : Part.BP_PUSHBUTTON; 
+        return toolbar ? Part.TP_BUTTON : Part.BP_PUSHBUTTON;
     }
 
-    static void paintXPButtonBackground(Graphics g, JComponent c) {
-	AbstractButton b = (AbstractButton)c;
-
-	XPStyle xp = XPStyle.getXP();
-
-	boolean toolbar = (b.getParent() instanceof JToolBar);
+    static State getXPButtonState(AbstractButton b) {
         Part part = getXPButtonType(b);
-
-	if (b.isContentAreaFilled() && xp != null) {
-
-	    ButtonModel model = b.getModel();
-            Skin skin = xp.getSkin(b, part); 
-
-	    // normal, rollover/activated/focus, pressed, disabled, default
-            State state = State.NORMAL; 
-	    if (toolbar) {
+        ButtonModel model = b.getModel();
+        State state = State.NORMAL;
+        switch (part) {
+        case BP_RADIOBUTTON:
+            /* falls through */            
+        case BP_CHECKBOX:
+            if (! model.isEnabled()) {
+                state = (model.isSelected()) ? State.CHECKEDDISABLED 
+                    : State.UNCHECKEDDISABLED;
+            } else if (model.isPressed() && model.isArmed()) {
+                state = (model.isSelected()) ? State.CHECKEDPRESSED 
+                    : State.UNCHECKEDPRESSED;
+            } else if (model.isRollover()) {
+                state = (model.isSelected()) ? State.CHECKEDHOT 
+                    : State.UNCHECKEDHOT;
+            } else {
+                state = (model.isSelected()) ? State.CHECKEDNORMAL
+                    : State.UNCHECKEDNORMAL;
+            }
+            break;
+        case BP_PUSHBUTTON:
+            /* falls through */            
+        case TP_BUTTON:
+            boolean toolbar = (b.getParent() instanceof JToolBar);
+            if (toolbar) {
                 if (model.isArmed() && model.isPressed()) {
                     state = State.PRESSED;
                 } else if (!model.isEnabled()) {
@@ -188,20 +198,44 @@ public class WindowsButtonUI extends BasicButtonUI
                     state = State.CHECKED;
                 } else if (model.isRollover()) {
                     state = State.HOT;
+                } else if (b.hasFocus()) {
+                    state = State.HOT;
                 }
-	    } else {
-		if (model.isArmed() && model.isPressed() || model.isSelected()) {
+            } else {
+                if ((model.isArmed() && model.isPressed()) 
+                      || model.isSelected()) {
                     state = State.PRESSED;
                 } else if (!model.isEnabled()) {
                     state = State.DISABLED;
                 } else if (model.isRollover() || model.isPressed()) {
                     state = State.HOT;
-                } else if (b instanceof JButton && ((JButton)b).isDefaultButton()) {
+                } else if (b instanceof JButton 
+                           && ((JButton)b).isDefaultButton()) {
                     state = State.DEFAULTED;
-                } else if (c.hasFocus()) {
+                } else if (b.hasFocus()) {
                     state = State.HOT;
                 }
-	    }
+            }
+            break;
+        default : 
+            state = State.NORMAL;
+        }
+
+        return state;
+    }
+
+    static void paintXPButtonBackground(Graphics g, JComponent c) {
+	AbstractButton b = (AbstractButton)c;
+
+	XPStyle xp = XPStyle.getXP();
+
+        Part part = getXPButtonType(b);
+
+	if (b.isContentAreaFilled() && xp != null) {
+
+	    Skin skin = xp.getSkin(b, part);
+
+            State state = getXPButtonState(b);
 	    Dimension d = c.getSize();
 	    int dx = 0;
 	    int dy = 0;
@@ -226,7 +260,7 @@ public class WindowsButtonUI extends BasicButtonUI
 		dw -= (insets.left + insets.right);
 		dh -= (insets.top + insets.bottom);
 	    }
-            skin.paintSkin(g, dx, dy, dw, dh, state);
+	    skin.paintSkin(g, dx, dy, dw, dh, state);
 	}
     }
 

@@ -1,8 +1,8 @@
 /*
- * @(#)PSSParameterSpec.java	1.6 04/01/27
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.security.spec;
@@ -13,8 +13,8 @@ import java.security.spec.MGF1ParameterSpec;
 /**
  * This class specifies a parameter spec for RSA-PSS signature scheme,
  * as defined in the 
- * <a href="http://www.rsa.com/rsalabs/pubs/PKCS/html/pkcs-1.html">
- * PKCS#1 v2.1</a> standard.
+ * <a href="http://www.ietf.org/rfc/rfc3447.txt">PKCS#1 v2.1</a>
+ * standard.
  *
  * <p>Its ASN.1 definition in PKCS#1 standard is described below:
  * <pre>
@@ -53,7 +53,7 @@ import java.security.spec.MGF1ParameterSpec;
  *
  * @author Valerie Peng
  *
- * @version 1.6 04/01/27
+ * @version %I% %E%
  *
  * @since 1.4
  */
@@ -68,6 +68,7 @@ public class PSSParameterSpec implements AlgorithmParameterSpec {
 
     /**
      * The PSS parameter set with all default values.
+     * @since 1.5
      */
     public static final PSSParameterSpec DEFAULT = new PSSParameterSpec();
 

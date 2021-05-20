@@ -1,8 +1,8 @@
 /*
- * @(#)SubjectDomainCombiner.java	1.50 07/09/11
+ * %W% %E%
  *
- * Copyright 2005 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.security.auth;
@@ -29,7 +29,7 @@ import java.lang.ref.WeakReference;
  * with Principals from the <code>Subject</code> associated with this
  * <code>SubjectDomainCombiner</code>.
  *
- * @version 1.48, 08/25/05
+ * @version %I%, %G%
  */
 public class SubjectDomainCombiner implements java.security.DomainCombiner {
 
@@ -335,14 +335,14 @@ public class SubjectDomainCombiner implements java.security.DomainCombiner {
 		    Permissions perms = new Permissions();
 		    PermissionCollection coll = pd.getPermissions();
 		    java.util.Enumeration e;
-                    if (coll != null) {
-		        synchronized (coll) {
+		    if (coll != null) {
+			synchronized (coll) {
 			    e = coll.elements();
 			    while (e.hasMoreElements()) {
-			        Permission newPerm = 
-                                    (Permission)e.nextElement();
-			        perms.add(newPerm);
-                            } 
+				Permission newPerm =
+					(Permission)e.nextElement();
+				 perms.add(newPerm);
+			    }
 			}
 		    }
 
@@ -374,8 +374,8 @@ public class SubjectDomainCombiner implements java.security.DomainCombiner {
 			    }
 			}
 		    }
-                    subjectPd = new ProtectionDomain  
-                        (finalCs, perms, pd.getClassLoader(), principals);
+		    subjectPd = new ProtectionDomain
+			(finalCs, perms, pd.getClassLoader(), principals);
 
 		    if (allowCaching)
 			cachedPDs.putValue(pd, subjectPd);
@@ -464,8 +464,7 @@ public class SubjectDomainCombiner implements java.security.DomainCombiner {
 	    }
 	});
 	if (s != null) {
-	    Boolean b = new Boolean(s); 
-	    return b.booleanValue(); 
+	    return Boolean.parseBoolean(s);
 	}
 
 	// cache by default

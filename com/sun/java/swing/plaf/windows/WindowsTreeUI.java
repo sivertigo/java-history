@@ -1,8 +1,8 @@
 /*
- * @(#)WindowsTreeUI.java	1.25 06/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.java.swing.plaf.windows;
@@ -19,8 +19,8 @@ import javax.swing.plaf.*;
 
 import javax.swing.tree.*;
 
-import com.sun.java.swing.plaf.windows.TMSchema.*;
-import com.sun.java.swing.plaf.windows.XPStyle.Skin;
+import static com.sun.java.swing.plaf.windows.TMSchema.*;
+import static com.sun.java.swing.plaf.windows.XPStyle.Skin;
 
 
 /**
@@ -33,7 +33,7 @@ import com.sun.java.swing.plaf.windows.XPStyle.Skin;
  * version of Swing.  A future release of Swing will provide support for
  * long term persistence.
  *
- * @version 1.25 12/19/06
+ * @version %I% %G%
  * @author Scott Violet
  */
 public class WindowsTreeUI extends BasicTreeUI {
@@ -108,15 +108,15 @@ public class WindowsTreeUI extends BasicTreeUI {
 	    return new ExpandedIcon();
 	}
 
-        Skin getSkin(Component c) {
+	Skin getSkin(Component c) {
 	    XPStyle xp = XPStyle.getXP();
-            return (xp != null) ? xp.getSkin(c, Part.TVP_GLYPH) : null;
+	    return (xp != null) ? xp.getSkin(c, Part.TVP_GLYPH) : null;
 	}
 
 	public void paintIcon(Component c, Graphics g, int x, int y) {
-            Skin skin = getSkin(c);
+	    Skin skin = getSkin(c);
 	    if (skin != null) {
-                skin.paintSkin(g, x, y, State.OPENED);
+		skin.paintSkin(g, x, y, State.OPENED);
 		return;
 	    }
 
@@ -134,12 +134,12 @@ public class WindowsTreeUI extends BasicTreeUI {
 	}
 
 	public int getIconWidth() {
-            Skin skin = getSkin(null);
+	    Skin skin = getSkin(null);
 	    return (skin != null) ? skin.getWidth() : SIZE;
 	}
 
 	public int getIconHeight() {
-            Skin skin = getSkin(null);
+	    Skin skin = getSkin(null);
 	    return (skin != null) ? skin.getHeight() : SIZE;
 	}
     }
@@ -160,9 +160,9 @@ public class WindowsTreeUI extends BasicTreeUI {
 	}
 
 	public void paintIcon(Component c, Graphics g, int x, int y) {
-            Skin skin = getSkin(c);
+	    Skin skin = getSkin(c);
 	    if (skin != null) {
-                skin.paintSkin(g, x, y, State.CLOSED);
+		skin.paintSkin(g, x, y, State.CLOSED);
 	    } else {
 	    super.paintIcon(c, g, x, y);
 	    g.drawLine(x + HALF_SIZE, y + 2, x + HALF_SIZE, y + (SIZE - 3));

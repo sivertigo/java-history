@@ -1,8 +1,8 @@
 /*
- * @(#)SignedObject.java	1.43 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, 2011, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
  
 package java.security;
@@ -95,7 +95,7 @@ import java.io.*;
  *
  * @see Signature
  *
- * @version 	1.43, 12/19/03
+ * @version 	%I%, %G%
  * @author Li Gong
  */
 
@@ -235,8 +235,9 @@ public final class SignedObject implements Serializable {
     private void readObject(java.io.ObjectInputStream s)
          throws java.io.IOException, ClassNotFoundException
     {
-	s.defaultReadObject();
-	content = (byte[])content.clone();
-	signature = (byte[])signature.clone();
+        java.io.ObjectInputStream.GetField fields = s.readFields();
+        content = ((byte[])fields.get("content", null)).clone();
+        signature = ((byte[])fields.get("signature", null)).clone();
+        thealgorithm = (String)fields.get("thealgorithm", null);
     }
 }

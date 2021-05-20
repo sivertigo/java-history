@@ -1,8 +1,8 @@
 /*
- * @(#)SynthRadioButtonUI.java	1.8 04/04/16
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing.plaf.synth;
@@ -17,7 +17,7 @@ import javax.swing.text.View;
 /**
  * Synth's RadioButtonUI.
  *
- * @version 1.8, 04/16/04
+ * @version %I%, %G%
  * @author Jeff Dinkins
  */
 class SynthRadioButtonUI extends SynthToggleButtonUI {

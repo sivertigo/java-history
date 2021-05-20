@@ -1,8 +1,8 @@
 /*
- * @(#)ScrollPaneConstants.java	1.17 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing;
@@ -11,7 +11,7 @@ package javax.swing;
 /**
  * Constants used with the JScrollPane component.
  *
- * @version 1.17 12/19/03
+ * @version %I% %G%
  * @author Hans Muller
  */
 public interface ScrollPaneConstants

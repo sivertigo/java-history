@@ -71,6 +71,13 @@ public final class DOMImplementationRegistry {
     private Vector sources;
     
     /**
+     * Default class name.
+     */
+    private static final String FALLBACK_CLASS = 
+            "com.sun.org.apache.xerces.internal.dom.DOMXSImplementationSourceImpl";
+    private static final String DEFAULT_PACKAGE =
+            "com.sun.org.apache.xerces.internal.dom";
+    /**
      * Private constructor.
      * @param srcs Vector List of DOMImplementationSources
      */
@@ -86,8 +93,8 @@ public final class DOMImplementationRegistry {
      * application or the implementation, depending on the context, by
      * first checking the value of the Java system property
      * <code>org.w3c.dom.DOMImplementationSourceList</code> and
-     * the the service provider whose contents are at
-     * "<code>META_INF/services/org.w3c.dom.DOMImplementationSourceList</code>"
+     * the service provider whose contents are at
+     * "<code>META_INF/services/org.w3c.dom.DOMImplementationSourceList</code>". 
      * The value of this property is a white-space separated list of
      * names of availables classes implementing the
      * <code>DOMImplementationSource</code> interface. Each class listed
@@ -127,16 +134,22 @@ public final class DOMImplementationRegistry {
 	    //
 	    // DOM Implementations can modify here to add *additional* fallback
 	    // mechanisms to access a list of default DOMImplementationSources.
-	    
-	}
+            //fall back to JAXP implementation class com.sun.org.apache.xerces.internal.dom.DOMXSImplementationSourceImpl
+            p = FALLBACK_CLASS;
+        }
 	if (p != null) {
 	    StringTokenizer st = new StringTokenizer(p);
 	    while (st.hasMoreTokens()) {
 		String sourceName = st.nextToken();
-		// Use context class loader, falling back to Class.forName
-		// if and only if this fails...
+                // make sure we have access to restricted packages
+                boolean internal = false;
+                if (System.getSecurityManager() != null) {
+                    if (sourceName != null && sourceName.startsWith(DEFAULT_PACKAGE)) {
+                        internal = true;
+                    }            
+                }
 		Class sourceClass = null;
-		if (classLoader != null) {
+		if (classLoader != null && !internal) {
 		    sourceClass = classLoader.loadClass(sourceName);
 		} else {
 		    sourceClass = Class.forName(sourceName);

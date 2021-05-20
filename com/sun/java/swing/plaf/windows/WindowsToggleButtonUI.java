@@ -1,8 +1,8 @@
 /*
- * @(#)WindowsToggleButtonUI.java	1.32 09/07/30
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.java.swing.plaf.windows;
@@ -29,7 +29,7 @@ import java.beans.PropertyChangeEvent;
  * version of Swing.  A future release of Swing will provide support for
  * long term persistence.
  *
- * @version 1.32 07/30/09
+ * @version %I% %G%
  * @author Jeff Dinkins
  */
 public class WindowsToggleButtonUI extends BasicToggleButtonUI
@@ -46,14 +46,14 @@ public class WindowsToggleButtonUI extends BasicToggleButtonUI
     private boolean defaults_initialized = false;
     
     public static ComponentUI createUI(JComponent b) {
-	AppContext appContext = AppContext.getAppContext();
+        AppContext appContext = AppContext.getAppContext();
         WindowsToggleButtonUI windowsToggleButtonUI = 
                 (WindowsToggleButtonUI) appContext.get(WINDOWS_TOGGLE_BUTTON_UI_KEY);
         if (windowsToggleButtonUI == null) {
             windowsToggleButtonUI = new WindowsToggleButtonUI();
             appContext.put(WINDOWS_TOGGLE_BUTTON_UI_KEY, windowsToggleButtonUI);
         }
-	return windowsToggleButtonUI;
+        return windowsToggleButtonUI;
     }
 
 
@@ -95,32 +95,33 @@ public class WindowsToggleButtonUI extends BasicToggleButtonUI
     //         Paint Methods
     // ********************************
 
+    private transient Color cachedSelectedColor = null;
+    private transient Color cachedBackgroundColor = null;
+    private transient Color cachedHighlightColor = null;
+    
     protected void paintButtonPressed(Graphics g, AbstractButton b) {
-        if (XPStyle.getXP() == null &&
-	    b.isContentAreaFilled() && 
-	    !(b.getBorder() instanceof UIResource)) {
-	    // This is a special case in which the toggle button in the
-	    // Rollover JToolBar will render the button in a pressed state
-	    Color oldColor = g.getColor();
-
-            int w = b.getWidth();
-	    int h = b.getHeight();
-	    UIDefaults table = UIManager.getLookAndFeelDefaults();
-
-	    Color shade = table.getColor("ToggleButton.shadow");
-	    Component p = b.getParent();
-	    if (p != null && p.getBackground().equals(shade)) {
-		shade = table.getColor("ToggleButton.darkShadow");
-	    }
-	    g.setColor(shade);
-	    g.drawRect(0, 0, w-1, h-1);
-	    g.setColor(table.getColor("ToggleButton.highlight"));
-	    g.drawLine(w-1, 0, w-1, h-1);
-	    g.drawLine(0, h-1, w-1, h-1);
-	    g.setColor(oldColor);
+        if (XPStyle.getXP() == null && b.isContentAreaFilled()) {
+            Color oldColor = g.getColor();
+            Color c1 = b.getBackground();
+            Color c2 = UIManager.getColor("ToggleButton.highlight");
+            if (c1 != cachedBackgroundColor || c2 != cachedHighlightColor) {
+                int r1 = c1.getRed(), r2 = c2.getRed();
+                int g1 = c1.getGreen(), g2 = c2.getGreen();
+                int b1 = c1.getBlue(), b2 = c2.getBlue();
+                cachedSelectedColor = new Color(
+                        Math.min(r1, r2) + Math.abs(r1 - r2) / 2,
+                        Math.min(g1, g2) + Math.abs(g1 - g2) / 2,
+                        Math.min(b1, b2) + Math.abs(b1 - b2) / 2
+                );
+                cachedBackgroundColor = c1;
+                cachedHighlightColor = c2;
+            }
+            g.setColor(cachedSelectedColor);
+            g.fillRect(0, 0, b.getWidth(), b.getHeight());
+            g.setColor(oldColor);
 	}
     }
-
+    
     public void paint(Graphics g, JComponent c) {
 	if (XPStyle.getXP() != null) {
 	    WindowsButtonUI.paintXPButtonBackground(g, c);
@@ -138,10 +139,6 @@ public class WindowsToggleButtonUI extends BasicToggleButtonUI
 
     protected void paintFocus(Graphics g, AbstractButton b,
 			      Rectangle viewRect, Rectangle textRect, Rectangle iconRect) {
-	if (b.getParent() instanceof JToolBar) {
-	    // Windows doesn't draw the focus rect for buttons in a toolbar.
-	    return;
-	}
 	g.setColor(getFocusColor());
 	BasicGraphicsUtils.drawDashedRect(g, dashedRectGapX, dashedRectGapY,
 					  b.getWidth() - dashedRectGapWidth,

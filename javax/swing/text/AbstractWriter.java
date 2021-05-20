@@ -1,8 +1,8 @@
 /*
- * @(#)AbstractWriter.java	1.21 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package javax.swing.text;
@@ -19,7 +19,7 @@ import java.util.Enumeration;
  * But this value can be set by subclasses.
  *
  * @author Sunita Mani
- * @version 1.21, 12/19/03
+ * @version %I%, %G%
  */
 
 public abstract class AbstractWriter {
@@ -310,7 +310,7 @@ public abstract class AbstractWriter {
     /**
      * Sets the current line length.
      *
-     * @since 1.3.
+     * @since 1.3
      */
     protected void setCurrentLineLength(int length) {
 	currLength = length;
@@ -320,7 +320,7 @@ public abstract class AbstractWriter {
     /**
      * Returns the current line length.
      *
-     * @since 1.3.
+     * @since 1.3
      */
     protected int getCurrentLineLength() {
 	return currLength;

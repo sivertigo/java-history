@@ -1,8 +1,8 @@
 /*
- * @(#)AlgorithmParametersSpi.java	1.12 04/05/05
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
  
 package java.security;
@@ -22,7 +22,7 @@ import java.security.spec.InvalidParameterSpecException;
  *
  * @author Jan Luehe
  *
- * @version 1.12, 05/05/04
+ * @version %I%, %G%
  *
  * @see AlgorithmParameters
  * @see java.security.spec.AlgorithmParameterSpec
@@ -103,7 +103,7 @@ public abstract class AlgorithmParametersSpi {
      * The primary encoding format for parameters is ASN.1, if an ASN.1
      * specification for this type of parameters exists.
      *
-     * @return the parameters encoded using the specified encoding scheme.
+     * @return the parameters encoded using their primary encoding format.
      *
      * @exception IOException on encoding errors.
      */

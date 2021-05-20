@@ -1,8 +1,8 @@
 /*
- * @(#)SelectionKey.java	1.24 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.nio.channels;
@@ -67,7 +67,7 @@ import java.io.IOException;
  * implement that protocol.  Selection keys therefore support the
  * <i>attachment</i> of a single arbitrary object to a key.  An object can be
  * attached via the {@link #attach attach} method and then later retrieved via
- * the {@link #attachment attachment} method.
+ * the {@link #attachment() attachment} method.
  *
  * <p> Selection keys are safe for use by multiple concurrent threads.  The
  * operations of reading and writing the interest set will, in general, be
@@ -82,7 +82,7 @@ import java.io.IOException;
  *
  * @author Mark Reinhold
  * @author JSR-51 Expert Group
- * @version 1.24, 03/12/19
+ * @version %I%, %E%
  * @since 1.4
  *
  * @see SelectableChannel
@@ -350,7 +350,7 @@ public abstract class SelectionKey {
     /**
      * Attaches the given object to this key.
      *
-     * <p> An attached object may later be retrieved via the {@link #attachment
+     * <p> An attached object may later be retrieved via the {@link #attachment()
      * attachment} method.  Only one object may be attached at a time; invoking
      * this method causes any previous attachment to be discarded.  The current
      * attachment may be discarded by attaching <tt>null</tt>.  </p>

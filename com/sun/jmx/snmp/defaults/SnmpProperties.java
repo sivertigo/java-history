@@ -1,11 +1,11 @@
 /*
- * @(#)file      SnmpProperties.java
- * @(#)author    Sun Microsystems, Inc.
- * @(#)version   1.10
- * @(#)lastedit      03/12/19
+ * %Z%file      %M%
+ * %Z%author    Sun Microsystems, Inc.
+ * %Z%version   %I%
+ * %Z%lastedit      %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.jmx.snmp.defaults;
@@ -24,7 +24,7 @@ import java.util.Enumeration;
  *
  * <p><b>This API is a Sun Microsystems internal API  and is subject 
  * to change without notice.</b></p>
- * @version     1.10     12/19/03
+ * @version     %I%     %G%
  * @author      Sun Microsystems, Inc
  *
  * @since 1.5

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /*
- * $Id: VariableBase.java,v 1.1.2.2 2006/10/05 17:10:31 spericas Exp $
+ * $Id: VariableBase.java,v 1.5 2005/09/28 13:48:18 pvedula Exp $
  */
 
 package com.sun.org.apache.xalan.internal.xsltc.compiler;
@@ -34,7 +34,7 @@ import com.sun.org.apache.xalan.internal.xsltc.compiler.util.MethodGenerator;
 import com.sun.org.apache.xalan.internal.xsltc.compiler.util.NodeSetType;
 import com.sun.org.apache.xalan.internal.xsltc.compiler.util.Type;
 import com.sun.org.apache.xalan.internal.xsltc.compiler.util.Util;
-import com.sun.org.apache.xml.internal.utils.XMLChar;
+import com.sun.org.apache.xml.internal.utils.XML11Char;
 
 /**
  * @author Jacek Ambroziak
@@ -85,6 +85,19 @@ class VariableBase extends TopLevelElement {
      */
     public void removeReference(VariableRefBase vref) {
 	_refs.remove(vref);
+    }
+    
+    /**
+     * When a variable is overriden by another, e.g. via xsl:import,
+     * its references need to be copied or otherwise it may be 
+     * compiled away as dead code. This method can be used for that
+     * purpose.
+     */
+    public void copyReferences(VariableBase var) {
+        final int size = _refs.size();
+        for (int i = 0; i < size; i++) {
+            var.addReference((VariableRefBase) _refs.get(i));
+        }
     }
 
     /**
@@ -208,7 +221,7 @@ class VariableBase extends TopLevelElement {
 	String name = getAttribute("name");
 
         if (name.length() > 0) {
-            if (!XMLChar.isValidQName(name)) {
+            if (!XML11Char.isXML11ValidQName(name)) {
                 ErrorMsg err = new ErrorMsg(ErrorMsg.INVALID_QNAME_ERR, name, this);
                 parser.reportError(Constants.ERROR, err);           
             }   

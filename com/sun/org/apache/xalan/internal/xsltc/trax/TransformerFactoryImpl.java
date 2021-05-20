@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 /*
  * $Id: TransformerFactoryImpl.java,v 1.8 2007/04/09 21:30:41 joehw Exp $
  */
@@ -36,7 +35,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import javax.xml.XMLConstants;
-
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.ParserConfigurationException;
@@ -47,6 +45,7 @@ import javax.xml.transform.Templates;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.URIResolver;
 import javax.xml.transform.dom.DOMResult;
 import javax.xml.transform.dom.DOMSource;
@@ -57,15 +56,20 @@ import javax.xml.transform.sax.TemplatesHandler;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
+import javax.xml.transform.stax.*;
 
 import com.sun.org.apache.xml.internal.utils.StylesheetPIHandler;
 import com.sun.org.apache.xml.internal.utils.StopParseException;
 
+import com.sun.org.apache.xalan.internal.XalanConstants;
 import com.sun.org.apache.xalan.internal.xsltc.compiler.Constants;
 import com.sun.org.apache.xalan.internal.xsltc.compiler.SourceLoader;
 import com.sun.org.apache.xalan.internal.xsltc.compiler.XSLTC;
 import com.sun.org.apache.xalan.internal.xsltc.compiler.util.ErrorMsg;
 import com.sun.org.apache.xalan.internal.xsltc.dom.XSLTCDTMManager;
+import com.sun.org.apache.xalan.internal.utils.ObjectFactory;
+import com.sun.org.apache.xalan.internal.utils.FactoryImpl;
+import com.sun.org.apache.xalan.internal.utils.SecuritySupport;
 
 import org.xml.sax.InputSource;
 import org.xml.sax.XMLFilter;
@@ -74,15 +78,13 @@ import org.xml.sax.helpers.XMLReaderFactory;
 
 /**
  * Implementation of a JAXP1.1 TransformerFactory for Translets.
+ * @author G. Todd Miller 
+ * @author Morten Jorgensen
+ * @author Santiago Pericas-Geertsen
  */
 public class TransformerFactoryImpl
     extends SAXTransformerFactory implements SourceLoader, ErrorListener 
 {
-	/**
-	 * <p>Name of class as a constant to use for debugging.</p>
-	 */
-	private static final String CLASS_NAME = "TransformerFactoryImpl";
-
     // Public constants for attributes supported by the XSLTC TransformerFactory.
     public final static String TRANSLET_NAME = "translet-name";
     public final static String DESTINATION_DIRECTORY = "destination-directory";
@@ -116,7 +118,7 @@ public class TransformerFactoryImpl
      * compared to the rest of his bulk, waved helplessly before his eyes.
      * "What has happened to me?", he thought. It was no dream....
      */
-    protected static String DEFAULT_TRANSLET_NAME = "GregorSamsa";
+    protected final static String DEFAULT_TRANSLET_NAME = "GregorSamsa";
     
     /**
      * The class name of the translet
@@ -143,12 +145,6 @@ public class TransformerFactoryImpl
      * <?xml-stylesheet ...?> processing instructions in XML docs.
      */
     private Hashtable _piParams = null;
-
-
-    /**
-     * Use a thread local variable to store a copy of an XML Reader.
-     */
-    static ThreadLocal _xmlReader = new ThreadLocal();
 
     /**
      * The above hashtable stores objects of this class.
@@ -214,10 +210,26 @@ public class TransformerFactoryImpl
     private boolean _isSecureProcessing = false;
 
     /**
+     * Indicates whether implementation parts should use
+     *   service loader (or similar).
+     * Note the default value (false) is the safe option..
+     */
+    private boolean _useServicesMechanism;
+
+    /**
      * javax.xml.transform.sax.TransformerFactory implementation.
      */
     public TransformerFactoryImpl() {
-        m_DTMManagerClass = XSLTCDTMManager.getDTMManagerClass();
+        this(true);
+    }
+
+    public static TransformerFactory newTransformerFactoryNoServiceLoader() {
+        return new TransformerFactoryImpl(false);
+    }
+
+    private TransformerFactoryImpl(boolean useServicesMechanism) {
+        this.m_DTMManagerClass = XSLTCDTMManager.getDTMManagerClass(useServicesMechanism);
+        this._useServicesMechanism = useServicesMechanism;
     }
 
     /**
@@ -413,6 +425,11 @@ public class TransformerFactoryImpl
 	    // all done processing feature
 	    return;
 	}
+        else if (name.equals(XalanConstants.ORACLE_FEATURE_SERVICE_MECHANISM)) {
+            //in secure mode, let _useServicesMechanism be determined by the constructor
+            if (System.getSecurityManager() == null) 
+                _useServicesMechanism = value;
+        }
 	else {	
 	    // unknown feature
             ErrorMsg err = new ErrorMsg(ErrorMsg.JAXP_UNSUPPORTED_FEATURE, name);
@@ -436,10 +453,13 @@ public class TransformerFactoryImpl
 	    DOMResult.FEATURE,
 	    SAXSource.FEATURE,
 	    SAXResult.FEATURE,
+	    StAXSource.FEATURE,
+	    StAXResult.FEATURE,
 	    StreamSource.FEATURE,
 	    StreamResult.FEATURE,
 	    SAXTransformerFactory.FEATURE,
-	    SAXTransformerFactory.FEATURE_XMLFILTER
+	    SAXTransformerFactory.FEATURE_XMLFILTER,
+            XalanConstants.ORACLE_FEATURE_SERVICE_MECHANISM
 	};
 
 	// feature name cannot be null
@@ -461,6 +481,12 @@ public class TransformerFactoryImpl
 
 	// Feature not supported
 	return false;
+    }
+    /**
+     * Return the state of the services mechanism feature.
+     */
+    public boolean useServicesMechnism() {
+        return _useServicesMechanism;
     }
 
     /**
@@ -534,7 +560,7 @@ public class TransformerFactoryImpl
                 isource = SAXSource.sourceToInputSource(source);
                 baseId = isource.getSystemId();
 
-                SAXParserFactory factory = SAXParserFactory.newInstance();
+                SAXParserFactory factory = FactoryImpl.getSAXFactory(_useServicesMechanism);
                 factory.setNamespaceAware(true);
                 
                 if (_isSecureProcessing) {
@@ -543,7 +569,7 @@ public class TransformerFactoryImpl
                     }
                     catch (org.xml.sax.SAXException e) {}
                 }
-
+                
                 SAXParser jaxpParser = factory.newSAXParser();
 
                 reader = jaxpParser.getXMLReader();
@@ -600,11 +626,10 @@ public class TransformerFactoryImpl
 	if (_uriResolver != null) {
 	    result.setURIResolver(_uriResolver);
 	}
-        
-        if (_isSecureProcessing) {
-            result.setSecureProcessing(true);
-        }
-
+	
+	if (_isSecureProcessing) {
+	    result.setSecureProcessing(true);
+	}
 	return result;
     }
 
@@ -641,9 +666,14 @@ public class TransformerFactoryImpl
 	// Pass messages to listener, one by one
 	final int count = messages.size();
 	for (int pos = 0; pos < count; pos++) {
-	    String message = messages.elementAt(pos).toString();
-	    _errorListener.error(
-		new TransformerConfigurationException(message));
+	    ErrorMsg msg = (ErrorMsg)messages.elementAt(pos);
+	    // Workaround for the TCK failure ErrorListener.errorTests.error001.
+	    if (msg.isWarningError())
+	        _errorListener.error(
+		    new TransformerConfigurationException(msg.toString()));
+	    else
+	    	_errorListener.warning(
+		    new TransformerConfigurationException(msg.toString()));
 	}
     }
 
@@ -672,7 +702,7 @@ public class TransformerFactoryImpl
      * Process the Source into a Templates object, which is a a compiled
      * representation of the source.
      *
-     * @param stylesheet The input stylesheet - DOMSource not supported!!!
+     * @param source The input stylesheet - DOMSource not supported!!!
      * @return A Templates object that can be used to create Transformers.
      * @throws TransformerConfigurationException
      */
@@ -689,8 +719,7 @@ public class TransformerFactoryImpl
 	        transletName = _packageName + "." + transletName;
 	        
 	    try {
-                final Class clazz = ObjectFactory.findProviderClass(
-                    transletName, ObjectFactory.findClassLoader(), true);
+                final Class clazz = ObjectFactory.findProviderClass(transletName, true);
 	        resetTransientAttributes();
 	            
 	        return new TemplatesImpl(new Class[]{clazz}, transletName, null, _indentNumber, this);
@@ -740,10 +769,10 @@ public class TransformerFactoryImpl
 	}
 	
 	// Create and initialize a stylesheet compiler
-	final XSLTC xsltc = new XSLTC();
+        final XSLTC xsltc = new XSLTC(_useServicesMechanism);
 	if (_debug) xsltc.setDebug(true);
 	if (_enableInlining) xsltc.setTemplateInlining(true);
-        if (_isSecureProcessing) xsltc.setSecureProcessing(true);
+	if (_isSecureProcessing) xsltc.setSecureProcessing(true);
 	xsltc.init();
 
 	// Set a document loader (for xsl:include/import) if defined
@@ -826,8 +855,14 @@ public class TransformerFactoryImpl
 	// Check that the transformation went well before returning
     if (bytecodes == null) {
         
-        ErrorMsg err = new ErrorMsg(ErrorMsg.JAXP_COMPILE_ERR);
-        TransformerConfigurationException exc =  new TransformerConfigurationException(err.toString());
+        Vector errs = xsltc.getErrors();
+        ErrorMsg err = null;
+        if (errs != null) {
+            err = (ErrorMsg)errs.get(errs.size()-1);
+        } else {
+            err = new ErrorMsg(ErrorMsg.JAXP_COMPILE_ERR);
+        }
+        TransformerConfigurationException exc =  new TransformerConfigurationException(err.toString(), err.getCause());
         
         // Pass compiler errors to the error listener
         if (_errorListener != null) {
@@ -949,7 +984,7 @@ public class TransformerFactoryImpl
      * Create an XMLFilter that uses the given source as the
      * transformation instructions.
      *
-     * @param src The source of the transformation instructions.
+     * @param templates The source of the transformation instructions.
      * @return An XMLFilter object, or null if this feature is not supported.
      * @throws TransformerConfigurationException
      */
@@ -979,7 +1014,7 @@ public class TransformerFactoryImpl
      * invoking this method. It should still be possible for the application
      * to process the document through to the end.
      *
-     * @param exception The warning information encapsulated in a transformer 
+     * @param e The warning information encapsulated in a transformer 
      * exception.
      * @throws TransformerException if the application chooses to discontinue
      * the transformation (always does in our case).
@@ -1007,7 +1042,7 @@ public class TransformerFactoryImpl
      * Transformers are free to stop reporting events once this method has
      * been invoked.
      *
-     * @param exception The warning information encapsulated in a transformer
+     * @param e warning information encapsulated in a transformer
      * exception.
      * @throws TransformerException if the application chooses to discontinue
      * the transformation (always does in our case).
@@ -1035,7 +1070,7 @@ public class TransformerFactoryImpl
      * transformation. It should still be possible for the application to
      * process the document through to the end.
      *
-     * @param exception The warning information encapsulated in a transformer
+     * @param e The warning information encapsulated in a transformer
      * exception.
      * @throws TransformerException if the application chooses to discontinue
      * the transformation (never does in our case).
@@ -1072,11 +1107,12 @@ public class TransformerFactoryImpl
 		}
 	    }
 	}
-	catch (TransformerException e) {
-	    // should catch it when the resolver explicitly throws the exception
-	    final ErrorMsg msg = new ErrorMsg(ErrorMsg.INVALID_URI_ERR, href + "\n" + e.getMessage(), this);
-	    xsltc.getParser().reportError(Constants.FATAL, msg);
+	catch (TransformerException e) {            
+	    // should catch it when the resolver explicitly throws the exception 
+            final ErrorMsg msg = new ErrorMsg(ErrorMsg.INVALID_URI_ERR, href + "\n" + e.getMessage(), this);
+            xsltc.getParser().reportError(Constants.FATAL, msg);
 	}
+ 
 	return null;
     }
 
@@ -1173,7 +1209,7 @@ public class TransformerFactoryImpl
     	// Find the parent directory of the translet.
     	String transletParentDir = transletFile.getParent();
     	if (transletParentDir == null)
-    	    transletParentDir = System.getProperty("user.dir");
+    	    transletParentDir = SecuritySupport.getSystemProperty("user.dir");
     	  
     	File transletParentFile = new File(transletParentDir);
     	

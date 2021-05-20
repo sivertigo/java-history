@@ -1,8 +1,6 @@
 /*
- * @(#)BasicScrollBarUI.java	1.84 07/04/11
- *
- * Copyright 2007 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, 2011, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package javax.swing.plaf.basic;
 
@@ -23,7 +21,7 @@ import javax.swing.plaf.*;
 /**
  * Implementation of ScrollBarUI for the Basic Look and Feel
  *
- * @version 1.84 04/11/07
+ * @version %I% %G%
  * @author Rich Schiavi
  * @author David Kloba
  * @author Hans Muller
@@ -37,6 +35,8 @@ public class BasicScrollBarUI
     private static final int MIN_SCROLL = 2;
     private static final int MAX_SCROLL = 3;
 
+    // NOTE: DO NOT use this field directly, SynthScrollBarUI assumes you'll
+    // call getMinimumThumbSize to access it.
     protected Dimension minimumThumbSize;
     protected Dimension maximumThumbSize;
 
@@ -92,6 +92,24 @@ public class BasicScrollBarUI
      * The scrollbar value is cached to save real value if the view is adjusted.
      */
     private int scrollBarValue;
+
+    /**
+     * Distance between the increment button and the track. This may be a negative
+     * number. If negative, then an overlap between the button and track will occur,
+     * which is useful for shaped buttons.
+     *
+     * TODO This should be made protected in a feature release
+     */
+    private int incrGap;
+
+    /**
+     * Distance between the decrement button and the track. This may be a negative
+     * number. If negative, then an overlap between the button and track will occur,
+     * which is useful for shaped buttons.
+     *
+     * TODO This should be made protected in a feature release
+     */
+    private int decrGap;
 
     static void loadActionMap(LazyActionMap map) {
         map.put(new Actions(Actions.POSITIVE_UNIT_INCREMENT));
@@ -167,6 +185,31 @@ public class BasicScrollBarUI
 	LookAndFeel.installProperty(scrollbar, "opaque", Boolean.TRUE);
 
 	scrollBarValue = scrollbar.getValue();
+
+        incrGap = UIManager.getInt("ScrollBar.incrementButtonGap");
+        decrGap = UIManager.getInt("ScrollBar.decrementButtonGap");
+
+        // TODO this can be removed when incrGap/decrGap become protected
+        // handle scaling for sizeVarients for special case components. The
+        // key "JComponent.sizeVariant" scales for large/small/mini
+        // components are based on Apples LAF
+        String scaleKey = (String)scrollbar.getClientProperty(
+                "JComponent.sizeVariant");
+        if (scaleKey != null){
+            if ("large".equals(scaleKey)){
+                scrollBarWidth *= 1.15;
+                incrGap *= 1.15;
+                decrGap *= 1.15;
+            } else if ("small".equals(scaleKey)){
+                scrollBarWidth *= 0.857;
+                incrGap *= 0.857;
+                decrGap *= 0.714;
+            } else if ("mini".equals(scaleKey)){
+                scrollBarWidth *= 0.714;
+                incrGap *= 0.714;
+                decrGap *= 0.714;
+            }
+        }
     }
 
 
@@ -423,20 +466,24 @@ public class BasicScrollBarUI
 	g.setColor(trackHighlightColor);
 
 	if (scrollbar.getOrientation() == JScrollBar.VERTICAL) {
+            //paint the distance between the start of the track and top of the thumb
 	    int x = insets.left;
-	    int y = decrButton.getY() + decrButton.getHeight();
+	    int y = trackRect.y;
 	    int w = scrollbar.getWidth() - (insets.left + insets.right);
 	    int h = thumbR.y - y;
 	    g.fillRect(x, y, w, h);
 	} 
 	else	{
+            //if left-to-right, fill the area between the start of the track and
+            //the left edge of the thumb. If right-to-left, fill the area between
+            //the end of the thumb and end of the track.
 	    int x, w;
 	    if (scrollbar.getComponentOrientation().isLeftToRight()) {
-		x = decrButton.getX() + decrButton.getWidth();
+		x = trackRect.x;
 		w = thumbR.x - x;
 	    } else {
 		x = thumbR.x + thumbR.width;
-		w = decrButton.getX() - x;
+		w = trackRect.x + trackRect.width - x;
 	    }
 	    int y = insets.top;
 	    int h = scrollbar.getHeight() - (insets.top + insets.bottom);
@@ -452,19 +499,23 @@ public class BasicScrollBarUI
 	g.setColor(trackHighlightColor);
 
 	if (scrollbar.getOrientation() == JScrollBar.VERTICAL) {
+            //fill the area between the bottom of the thumb and the end of the track.
 	    int x = insets.left;
 	    int y = thumbR.y + thumbR.height;
 	    int w = scrollbar.getWidth() - (insets.left + insets.right);
-	    int h = incrButton.getY() - y;
+	    int h = trackRect.y + trackRect.height - y;
 	    g.fillRect(x, y, w, h);
 	} 
 	else {
+            //if left-to-right, fill the area between the right of the thumb and the
+            //end of the track. If right-to-left, then fill the area to the left of
+            //the thumb and the start of the track.
 	    int x, w;
 	    if (scrollbar.getComponentOrientation().isLeftToRight()) {
 		x = thumbR.x + thumbR.width;
-		w = incrButton.getX() - x;
+		w = trackRect.x + trackRect.width - x;
 	    } else {
-		x = incrButton.getX() + incrButton.getWidth();
+		x = trackRect.x;
 		w = thumbR.x - x;
 	    }
 	    int y = insets.top;
@@ -591,11 +642,13 @@ public class BasicScrollBarUI
         int incrButtonY = sbSize.height - (sbInsets.bottom + incrButtonH);
         
         /* The thumb must fit within the height left over after we
-	 * subtract the preferredSize of the buttons and the insets.
-	 */
+	     * subtract the preferredSize of the buttons and the insets
+	     * and the gaps
+	     */
         int sbInsetsH = sbInsets.top + sbInsets.bottom;
         int sbButtonsH = decrButtonH + incrButtonH;
-        float trackH = sbSize.height - (sbInsetsH + sbButtonsH);
+        int gaps = decrGap + incrGap;
+        float trackH = sbSize.height - (sbInsetsH + sbButtonsH) - gaps;
         
         /* Compute the height and origin of the thumb.   The case
 	 * where the thumb is at the bottom edge is handled specially 
@@ -613,11 +666,11 @@ public class BasicScrollBarUI
 	thumbH = Math.max(thumbH, getMinimumThumbSize().height);
 	thumbH = Math.min(thumbH, getMaximumThumbSize().height);
         
-	int thumbY = incrButtonY - thumbH;  
+	int thumbY = incrButtonY - incrGap - thumbH;
 	if (value < (sb.getMaximum() - sb.getVisibleAmount())) {
 	    float thumbRange = trackH - thumbH;
 	    thumbY = (int)(0.5f + (thumbRange * ((value - min) / (range - extent))));
-	    thumbY +=  decrButtonY + decrButtonH;
+	    thumbY +=  decrButtonY + decrButtonH + decrGap;
 	}
 
         /* If the buttons don't fit, allocate half of the available 
@@ -633,8 +686,8 @@ public class BasicScrollBarUI
 
 	/* Update the trackRect field.
 	 */	
-	int itrackY = decrButtonY + decrButtonH;
-	int itrackH = incrButtonY - itrackY;
+	int itrackY = decrButtonY + decrButtonH + decrGap;
+	int itrackH = incrButtonY - incrGap - itrackY;
 	trackRect.setBounds(itemX, itrackY, itemW, itrackH);
 	
 	/* If the thumb isn't going to fit, zero it's bounds.  Otherwise
@@ -645,11 +698,11 @@ public class BasicScrollBarUI
 	    setThumbBounds(0, 0, 0, 0);
 	}
 	else {
-	    if ((thumbY + thumbH) > incrButtonY) {
-		thumbY = incrButtonY - thumbH;
+	    if ((thumbY + thumbH) > incrButtonY - incrGap) {
+		thumbY = incrButtonY - incrGap - thumbH;
 	    }
-	    if (thumbY  < (decrButtonY + decrButtonH)) {
-		thumbY = decrButtonY + decrButtonH + 1;
+	    if (thumbY  < (decrButtonY + decrButtonH + decrGap)) {
+		thumbY = decrButtonY + decrButtonH + decrGap + 1;
 	    }
 	    setThumbBounds(itemX, thumbY, itemW, thumbH);
 	}
@@ -684,13 +737,16 @@ public class BasicScrollBarUI
         }
         int leftButtonX = sbInsets.left;        
         int rightButtonX = sbSize.width - (sbInsets.right + rightButtonW);
+        int leftGap = ltr ? decrGap : incrGap;
+        int rightGap = ltr ? incrGap : decrGap;
 
         /* The thumb must fit within the width left over after we
-	 * subtract the preferredSize of the buttons and the insets.
-	 */
+	     * subtract the preferredSize of the buttons and the insets
+	     * and the gaps
+	     */
         int sbInsetsW = sbInsets.left + sbInsets.right;
         int sbButtonsW = leftButtonW + rightButtonW;
-        float trackW = sbSize.width - (sbInsetsW + sbButtonsW);
+        float trackW = sbSize.width - (sbInsetsW + sbButtonsW) - (leftGap + rightGap);
         
         /* Compute the width and origin of the thumb.  Enforce
 	 * the thumbs min/max dimensions.  The case where the thumb 
@@ -709,7 +765,7 @@ public class BasicScrollBarUI
         thumbW = Math.max(thumbW, getMinimumThumbSize().width);
         thumbW = Math.min(thumbW, getMaximumThumbSize().width);
         
-	int thumbX = ltr ? rightButtonX - thumbW : leftButtonX + leftButtonW;
+	int thumbX = ltr ? rightButtonX - rightGap - thumbW : leftButtonX + leftButtonW + leftGap;
 	if (value < (max - sb.getVisibleAmount())) {
 	    float thumbRange = trackW - thumbW;
             if( ltr ) {
@@ -717,7 +773,7 @@ public class BasicScrollBarUI
             } else {
                 thumbX = (int)(0.5f + (thumbRange * ((max - extent - value) / (range - extent))));
             }
-	    thumbX +=  leftButtonX + leftButtonW;
+	    thumbX +=  leftButtonX + leftButtonW + leftGap;
 	}
 
         /* If the buttons don't fit, allocate half of the available 
@@ -726,7 +782,7 @@ public class BasicScrollBarUI
         int sbAvailButtonW = (sbSize.width - sbInsetsW);
         if (sbAvailButtonW < sbButtonsW) {
             rightButtonW = leftButtonW = sbAvailButtonW / 2;
-            rightButtonX = sbSize.width - (sbInsets.right + rightButtonW);
+            rightButtonX = sbSize.width - (sbInsets.right + rightButtonW + rightGap);
         }
         
         (ltr ? decrButton : incrButton).setBounds(leftButtonX, itemY, leftButtonW, itemH);
@@ -734,8 +790,8 @@ public class BasicScrollBarUI
 
 	/* Update the trackRect field.
 	 */	
-	int itrackX = leftButtonX + leftButtonW;
-	int itrackW = rightButtonX - itrackX;
+	int itrackX = leftButtonX + leftButtonW + leftGap;
+	int itrackW = rightButtonX - rightGap - itrackX;
 	trackRect.setBounds(itrackX, itemY, itrackW, itemH);
 
 	/* Make sure the thumb fits between the buttons.  Note 
@@ -745,11 +801,11 @@ public class BasicScrollBarUI
 	    setThumbBounds(0, 0, 0, 0);
 	}
 	else {
-	    if (thumbX + thumbW > rightButtonX) {
-		thumbX = rightButtonX - thumbW;
+	    if (thumbX + thumbW > rightButtonX - rightGap) {
+		thumbX = rightButtonX - rightGap - thumbW;
 	    }
-	    if (thumbX  < leftButtonX + leftButtonW) {
-		thumbX = leftButtonX + leftButtonW + 1;
+	    if (thumbX  < leftButtonX + leftButtonW + leftGap) {
+		thumbX = leftButtonX + leftButtonW + leftGap + 1;
 	    }
 	    setThumbBounds(thumbX, itemY, thumbW, itemH);
 	}
@@ -876,40 +932,64 @@ public class BasicScrollBarUI
     /*
      * Method for scrolling by a unit increment.
      * Added for mouse wheel scrolling support, RFE 4202656.
+     *
+     * If limitByBlock is set to true, the scrollbar will scroll at least 1
+     * unit increment, but will not scroll farther than the block increment.
+     * See BasicScrollPaneUI.Handler.mouseWheelMoved().
      */
     static void scrollByUnits(JScrollBar scrollbar, int direction,
-                                   int units) {
+                              int units, boolean limitToBlock) {
         // This method is called from BasicScrollPaneUI to implement wheel
         // scrolling, as well as from scrollByUnit().
         int delta;
+        int limit = -1;
 
-	for (int i=0; i<units; i++) {
-	    if (direction > 0) {
-		delta = scrollbar.getUnitIncrement(direction);
-	    }
-	    else {
-		delta = -scrollbar.getUnitIncrement(direction);
-	    }
+        if (limitToBlock) {
+            if (direction < 0) {
+                limit = scrollbar.getValue() -
+                                         scrollbar.getBlockIncrement(direction);
+            }
+            else {
+                limit = scrollbar.getValue() +
+                                         scrollbar.getBlockIncrement(direction);
+            }
+        }
 
-	    int oldValue = scrollbar.getValue();
-	    int newValue = oldValue + delta;
-	    
-	    // Check for overflow.
-	    if (delta > 0 && newValue < oldValue) {
-		newValue = scrollbar.getMaximum();
-	    }
-	    else if (delta < 0 && newValue > oldValue) {
-		newValue = scrollbar.getMinimum();
-	    }
-	    if (oldValue == newValue) {
-		break;
-	    }
-	    scrollbar.setValue(newValue);
-	}
+        for (int i=0; i<units; i++) {
+            if (direction > 0) {
+                delta = scrollbar.getUnitIncrement(direction);
+            }
+            else {
+                delta = -scrollbar.getUnitIncrement(direction);
+            }
+
+            int oldValue = scrollbar.getValue();
+            int newValue = oldValue + delta;
+
+            // Check for overflow.
+            if (delta > 0 && newValue < oldValue) {
+                newValue = scrollbar.getMaximum();
+            }
+            else if (delta < 0 && newValue > oldValue) {
+                newValue = scrollbar.getMinimum();
+            }
+            if (oldValue == newValue) {
+                break;
+            }
+
+            if (limitToBlock && i > 0) {
+                assert limit != -1;
+                if ((direction < 0 && newValue < limit) ||
+                    (direction > 0 && newValue > limit)) {
+                    break;
+                }
+            }
+            scrollbar.setValue(newValue);
+        }
     }
 
     protected void scrollByUnit(int direction)	{
-        scrollByUnits(scrollbar, direction, 1);
+        scrollByUnits(scrollbar, direction, 1, false);
     }
 
     /**
@@ -1094,23 +1174,18 @@ public class BasicScrollBarUI
 	    int thumbMin, thumbMax, thumbPos;
 	    
 	    if (scrollbar.getOrientation() == JScrollBar.VERTICAL) {
-		thumbMin = decrButton.getY() + decrButton.getHeight();
-		thumbMax = incrButton.getY() - thumbR.height;
+		thumbMin = trackRect.y;
+		thumbMax = trackRect.y + trackRect.height - thumbR.height;
 		thumbPos = Math.min(thumbMax, Math.max(thumbMin, (e.getY() - offset)));
 		setThumbBounds(thumbR.x, thumbPos, thumbR.width, thumbR.height);
 		trackLength = getTrackBounds().height;
 	    }
 	    else {
-		if (scrollbar.getComponentOrientation().isLeftToRight()) {
-		    thumbMin = decrButton.getX() + decrButton.getWidth();
-		    thumbMax = incrButton.getX() - thumbR.width;
-		} else {
-		    thumbMin = incrButton.getX() + incrButton.getWidth();
-		    thumbMax = decrButton.getX() - thumbR.width;
-		}
-		thumbPos = Math.min(thumbMax, Math.max(thumbMin, (e.getX() - offset)));
-		setThumbBounds(thumbPos, thumbR.y, thumbR.width, thumbR.height);
-		trackLength = getTrackBounds().width;
+		    thumbMin = trackRect.x;
+		    thumbMax = trackRect.x + trackRect.width - thumbR.width;
+		    thumbPos = Math.min(thumbMax, Math.max(thumbMin, (e.getX() - offset)));
+		    setThumbBounds(thumbPos, thumbR.y, thumbR.width, thumbR.height);
+		    trackLength = getTrackBounds().width;
 	    }
 	    
 	    /* Set the scrollbars value.  If the thumb has reached the end of
@@ -1196,27 +1271,24 @@ public class BasicScrollBarUI
 	    if (scrollTimer.isRunning()) {
 		return;
 	    }
+            
+            Rectangle tb = getThumbBounds();
+            
 	    switch (scrollbar.getOrientation()) {
 	    case JScrollBar.VERTICAL:
-		if (direction >0) {
-		    if (getThumbBounds().y + getThumbBounds().height <
-			trackListener.currentMouseY) {
+		if (direction > 0) {
+                    if (tb.y + tb.height < trackListener.currentMouseY) {
 			scrollTimer.start();
 		    }
-		} else if (getThumbBounds().y >
-			   trackListener.currentMouseY) {
+                } else if (tb.y > trackListener.currentMouseY) {
 		    scrollTimer.start();
 		}
 		break;
 	    case JScrollBar.HORIZONTAL:
-		if (direction >0) {
-		    if (getThumbBounds().x + getThumbBounds().width <
-			trackListener.currentMouseX) {
-			scrollTimer.start();
-		    }
-		} else if (getThumbBounds().x >
-			   trackListener.currentMouseX) {
-		    scrollTimer.start();
+                if ((direction > 0 && isMouseAfterThumb())
+                        || (direction < 0 && isMouseBeforeThumb())) {
+
+                    scrollTimer.start();
 		}
 		break;
 	    }
@@ -1315,12 +1387,10 @@ public class BasicScrollBarUI
 			((Timer)e.getSource()).stop();
 		    }
 		} else {
-		    if(direction > 0)	{
-			if(getThumbBounds().x + getThumbBounds().width 
-				>= trackListener.currentMouseX)
-				    ((Timer)e.getSource()).stop();
-		    } else if(getThumbBounds().x <= trackListener.currentMouseX)	{
-		        ((Timer)e.getSource()).stop();
+                    if ((direction > 0 && !isMouseAfterThumb())
+                           || (direction < 0 && !isMouseBeforeThumb())) {
+
+                       ((Timer)e.getSource()).stop();
 		    }
 	        }
 	    } else {
@@ -1337,6 +1407,26 @@ public class BasicScrollBarUI
 	}
     }
 
+    private boolean isMouseLeftOfThumb() {
+        return trackListener.currentMouseX < getThumbBounds().x;
+    }
+
+    private boolean isMouseRightOfThumb() {
+        Rectangle tb = getThumbBounds();
+        return trackListener.currentMouseX > tb.x + tb.width;
+    }
+
+    private boolean isMouseBeforeThumb() {
+        return scrollbar.getComponentOrientation().isLeftToRight()
+            ? isMouseLeftOfThumb()
+            : isMouseRightOfThumb();
+    }
+    
+    private boolean isMouseAfterThumb() {
+        return scrollbar.getComponentOrientation().isLeftToRight()
+            ? isMouseRightOfThumb()
+            : isMouseLeftOfThumb();
+    }
 
     private void updateButtonDirections() {
         int orient = scrollbar.getOrientation();
@@ -1478,7 +1568,7 @@ public class BasicScrollBarUI
 	        BoundedRangeModel newModel = (BoundedRangeModel)e.getNewValue();
 		oldModel.removeChangeListener(modelListener);
 		newModel.addChangeListener(modelListener);
-		scrollBarValue = scrollbar.getValue();
+                scrollBarValue = scrollbar.getValue();
 		scrollbar.repaint();
 		scrollbar.revalidate();
 	    } else if ("orientation" == propertyName) {

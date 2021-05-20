@@ -1,8 +1,8 @@
 /*
- * @(#)OptionalDataException.java	1.18 04/01/12
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package java.io;
 
@@ -25,10 +25,13 @@ package java.io;
  * </ul>
  *
  * @author  unascribed
- * @version 1.18, 01/12/04
+ * @version %I%, %G%
  * @since   JDK1.1
  */
 public class OptionalDataException extends ObjectStreamException {
+
+    private static final long serialVersionUID = -8011121865681257820L;
+
     /*
      * Create an <code>OptionalDataException</code> with a length.
      */

@@ -1,8 +1,8 @@
 /*
- * @(#)BasicToggleButtonUI.java	1.59 09/07/30
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
  
 package javax.swing.plaf.basic;
@@ -23,7 +23,7 @@ import javax.swing.text.View;
  * BasicToggleButton implementation
  * <p>
  *
- * @version 1.59 07/30/09
+ * @version %I% %G%
  * @author Jeff Dinkins
  */
 public class BasicToggleButtonUI extends BasicButtonUI {
@@ -43,7 +43,7 @@ public class BasicToggleButtonUI extends BasicButtonUI {
             toggleButtonUI = new BasicToggleButtonUI();
             appContext.put(BASIC_TOGGLE_BUTTON_UI_KEY, toggleButtonUI);
         }
-	return toggleButtonUI;
+        return toggleButtonUI;
     }
 
     protected String getPropertyPrefix() {

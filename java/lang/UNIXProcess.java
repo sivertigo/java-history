@@ -1,7 +1,7 @@
 /*
- * @(#)UNIXProcess.java.linux	1.38 06/09/20
+ * %W% %E%
  *
- * Copyright 1995-2000 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright (c) 1995, 2000, Oracle and/or its affiliates. All rights reserved.
  *
  * This software is the proprietary information of Sun Microsystems, Inc.
  * Use is subject to license terms.
@@ -184,7 +184,7 @@ final class UNIXProcess extends Process {
 	// soon, so this is quite safe.
 	synchronized (this) {
 	    if (!hasExited)
-	destroyProcess(pid);
+		destroyProcess(pid);
 	}
         try {
             stdin_stream.close();
@@ -195,4 +195,10 @@ final class UNIXProcess extends Process {
         }
     }
 
+    /* This routine initializes JNI field offsets for the class */
+    private static native void initIDs();
+
+    static {
+	initIDs();
+    }
 }

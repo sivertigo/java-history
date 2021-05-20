@@ -1,8 +1,8 @@
 /*
- * @(#)Member.java	1.16 04/02/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang.reflect;
@@ -42,7 +42,7 @@ interface Member {
      * @return an object representing the declaring class of the
      * underlying member
      */
-    public Class getDeclaringClass();
+    public Class<?> getDeclaringClass();
 
     /**
      * Returns the simple name of the underlying member or constructor

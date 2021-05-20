@@ -1,8 +1,8 @@
 /*
- * @(#)GraphicsConfigTemplate.java	1.16 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.awt;
@@ -22,10 +22,14 @@ import java.io.*;
  * @see GraphicsDevice
  * @see GraphicsConfiguration
  *
- * @version 	1.16, 12/19/03
+ * @version 	%I%, %G%
  * @since       1.2
  */
 public abstract class GraphicsConfigTemplate implements Serializable {
+    /*
+     * serialVersionUID
+     */
+    private static final long serialVersionUID = -8061369279557787079L;
 
     /**
      * This class is an abstract class so only subclasses can be

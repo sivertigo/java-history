@@ -1,8 +1,8 @@
 /*
- * @(#)UnknownFormatConversionException.java	1.3 04/06/07
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.util;
@@ -14,7 +14,7 @@ package java.util;
  * any method or constructor in this class will cause a {@link
  * NullPointerException} to be thrown.
  *
- * @version 	1.3, 06/07/04
+ * @version 	%I%, %G%
  * @since 1.5
  */
 public class UnknownFormatConversionException extends IllegalFormatException {
@@ -30,6 +30,8 @@ public class UnknownFormatConversionException extends IllegalFormatException {
      *         Unknown conversion
      */
     public UnknownFormatConversionException(String s) {
+	if (s == null)
+	    throw new NullPointerException();
 	this.s = s;
     }
 

@@ -1,8 +1,8 @@
 /*
- * @(#)ServiceName.java	1.115 06/09/29
+ * %W% %E%
  * 
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.jmx.defaults;
@@ -51,9 +51,9 @@ public class ServiceName {
     /**
      * The version of the JMX specification implemented by this product.
      * <BR>
-     * The value is <CODE>1.0 Final Release</CODE>.
+     * The value is <CODE>1.4</CODE>.
      */
-    public static final String JMX_SPEC_VERSION = "1.2 Maintenance Release";
+    public static final String JMX_SPEC_VERSION = "1.4";
 
     /**
      * The vendor of the JMX specification implemented by this product.     

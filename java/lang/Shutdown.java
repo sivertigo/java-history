@@ -1,14 +1,13 @@
 /*
- * @(#)Shutdown.java	1.11 03/12/19
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang;
 
-import java.util.HashSet;
-import java.util.Iterator;
+import java.util.ArrayList;
 
 
 /**
@@ -16,34 +15,11 @@ import java.util.Iterator;
  * governing the virtual-machine shutdown sequence.
  *
  * @author   Mark Reinhold
- * @version  1.11, 03/12/19
+ * @version  %I%, %E%
  * @since    1.3
  */
 
 class Shutdown {
-
-    /* Wrapper class for registered hooks, to ensure that hook identity is
-     * object identity rather than .equals identity
-     */
-    private static class WrappedHook {
-
-	private Thread hook;
-
-	WrappedHook(Thread t) {
-	    hook = t;
-	}
-
-	public int hashCode() {
-	    return System.identityHashCode(hook);
-	}
-
-	public boolean equals(Object o) {
-	    if (!(o instanceof WrappedHook)) return false;
-	    return (((WrappedHook)o).hook == hook);
-	}
-
-    }
-
 
     /* Shutdown state */
     private static final int RUNNING = 0;
@@ -54,8 +30,13 @@ class Shutdown {
     /* Should we run all finalizers upon exit? */
     private static boolean runFinalizersOnExit = false;
 
-    /* The set of registered, wrapped hooks, or null if there aren't any */
-    private static HashSet hooks = null;
+    // The system shutdown hooks are registered with a predefined slot.
+    // The list of shutdown hooks is as follows:
+    // (0) Console restore hook
+    // (1) Application hooks
+    // (2) DeleteOnExit hook
+    private static final int MAX_SYSTEM_HOOKS = 10;
+    private static final Runnable[] hooks = new Runnable[MAX_SYSTEM_HOOKS];
 
     /* The preceding static fields are protected by this lock */
     private static class Lock { };
@@ -75,47 +56,17 @@ class Shutdown {
     /* Add a new shutdown hook.  Checks the shutdown state and the hook itself,
      * but does not do any security checks.
      */
-    static void add(Thread hook) {
-	synchronized (lock) {
-	    if (state > RUNNING)
-		throw new IllegalStateException("Shutdown in progress");
-	    if (hook.isAlive())
-		throw new IllegalArgumentException("Hook already running");
-	    if (hooks == null) {
-		hooks = new HashSet(11);
-		hooks.add(new WrappedHook(hook));
-		Terminator.setup();
-	    } else {
-		WrappedHook wh = new WrappedHook(hook);
-		if (hooks.contains(wh))
-		    throw new IllegalArgumentException("Hook previously registered");
-		hooks.add(wh);
-	    }
-	}
+    static void add(int slot, Runnable hook) {
+        synchronized (lock) {
+            if (state > RUNNING)
+                throw new IllegalStateException("Shutdown in progress");
+
+            if (hooks[slot] != null)
+                throw new InternalError("Shutdown hook at slot " + slot + " already registered");
+
+            hooks[slot] = hook;
+        }
     }
-
-
-    /* Remove a previously-registered hook.  Like the add method, this method
-     * does not do any security checks.
-     */
-    static boolean remove(Thread hook) {
-	synchronized (lock) {
-	    if (state > RUNNING)
-		throw new IllegalStateException("Shutdown in progress");
-	    if (hook == null) throw new NullPointerException();
-	    if (hooks == null) {
-		return false;
-	    } else {
-		boolean rv = hooks.remove(new WrappedHook(hook));
-		if (rv && hooks.isEmpty()) {
-		    hooks = null;
-		    Terminator.teardown();
-		}
-		return rv;
-	    }
-	}
-    }
-
 
     /* Run all registered shutdown hooks
      */
@@ -123,15 +74,14 @@ class Shutdown {
 	/* We needn't bother acquiring the lock just to read the hooks field,
 	 * since the hooks can't be modified once shutdown is in progress
 	 */
-	if (hooks == null) return;
-	for (Iterator i = hooks.iterator(); i.hasNext();) {
-	    ((WrappedHook)(i.next())).hook.start();
-	}
-	for (Iterator i = hooks.iterator(); i.hasNext();) {
+	for (Runnable hook : hooks) {
 	    try {
-		((WrappedHook)(i.next())).hook.join();
-	    } catch (InterruptedException x) {
-		continue;
+		if (hook != null) hook.run();
+	    } catch(Throwable t) { 
+		if (t instanceof ThreadDeath) {
+   		    ThreadDeath td = (ThreadDeath)t;
+		    throw td;
+		} 
 	    }
 	}
     }

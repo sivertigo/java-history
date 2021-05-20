@@ -1,36 +1,23 @@
 /*
- * @(#)InvalidOpenTypeException.java	3.17 03/12/19
+ * %W% %E%
  * 
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
-
 package javax.management.openmbean;
-
-
-// java import
-//
-import java.io.Serializable;
-
-
-// jmx import
-//
-
 
 /**
  * This runtime exception is thrown to indicate that the <i>open type</i> of an <i>open data</i> value
  * is not the one expected.
  *
- * @version     3.17  03/12/19
+ * @version     %I%  %E%
  * @author      Sun Microsystems, Inc.
  *
  * @since 1.5
  * @since.unbundled JMX 1.1
  */
-public class InvalidOpenTypeException 
-    extends IllegalArgumentException
-    implements Serializable {
+public class InvalidOpenTypeException extends IllegalArgumentException {
 
     private static final long serialVersionUID = -2837312755412327534L;
 

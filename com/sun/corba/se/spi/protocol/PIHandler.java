@@ -1,8 +1,8 @@
 /*
- * @(#)PIHandler.java	1.26 08/10/03
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.corba.se.spi.protocol;
@@ -123,6 +123,27 @@ public interface PIHandler extends Closeable {
      *     SystemException, UserException, or RemarshalException.
      */
     Exception invokeClientPIEndingPoint(
+        int replyStatus, Exception exception ) ;
+
+    /**
+     * Called when a retry is needed after initiateClientPIRequest but 
+     * before invokeClientPIRequest.  In this case, we need to properly
+     * balance initiateClientPIRequest/cleanupClientPIRequest calls,
+     * but WITHOUT extraneous calls to invokeClientPIEndingPoint
+     * (see bug 6763340).
+     *
+     * @param replyStatus One of the constants in iiop.messages.ReplyMessage
+     *     indicating which reply status to set.
+     * @param exception The exception before ending interception points have
+     *     been invoked, or null if no exception at the moment.
+     * @return The exception to be thrown, after having gone through
+     *     all ending points, or null if there is no exception to be
+     *     thrown.  Note that this exception can be either the same or
+     *     different from the exception set using setClientPIException.
+     *     There are four possible return types: null (no exception),
+     *     SystemException, UserException, or RemarshalException.
+     */
+    Exception makeCompletedClientRequest(
         int replyStatus, Exception exception ) ;
 
     /**

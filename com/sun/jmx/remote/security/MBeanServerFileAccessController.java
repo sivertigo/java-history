@@ -1,8 +1,8 @@
 /*
- * @(#)MBeanServerFileAccessController.java	1.10 09/01/14
+ * %W% %E%
  * 
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, 2008, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package com.sun.jmx.remote.security;
@@ -35,7 +35,7 @@ import javax.security.auth.Subject;
  * wrapped object.</p>
  *
  * <p>This class implements the {@link #checkRead()}, {@link #checkWrite()},
- * {@link #checkCreate(String)}, and {@link #checkUnregister(ObjectName }
+ * {@link #checkCreate(String)}, and {@link #checkUnregister(ObjectName)}
  * methods based on an access level properties file containing username/access
  * level pairs. The set of username/access level pairs is passed either as a
  * filename which denotes a properties file on disk, or directly as an instance
@@ -66,17 +66,17 @@ public class MBeanServerFileAccessController
 
     static final String READONLY = "readonly";
     static final String READWRITE = "readwrite";
-  
+
     static final String CREATE = "create";
     static final String UNREGISTER = "unregister";
-  
+
     private enum AccessType {READ, WRITE, CREATE, UNREGISTER};
-  
+
     private static class Access {
         final boolean write;
         final String[] createPatterns;
         private boolean unregister;
-  
+
         Access(boolean write, boolean unregister, List<String> createPatternList) {
             this.write = write;
             int npats = (createPatternList == null) ? 0 : createPatternList.size();
@@ -86,10 +86,10 @@ public class MBeanServerFileAccessController
                 this.createPatterns = createPatternList.toArray(new String[npats]);
             this.unregister = unregister;
         }
-  
+
         private final String[] NO_STRINGS = new String[0];
     }
- 
+
     /**
      * <p>Create a new MBeanServerAccessController that forwards all the
      * MBeanServer requests to the MBeanServer set by invoking the {@link
@@ -147,6 +147,7 @@ public class MBeanServerFileAccessController
      * MBeanServer requests to the MBeanServer set by invoking the {@link
      * #setMBeanServer} method after doing access checks based on read and
      * write permissions.</p>
+     *
      * <p>This instance is initialized from the specified properties
      * instance.  This constructor makes a copy of the properties
      * instance and it is the copy that is consulted to check the
@@ -207,6 +208,7 @@ public class MBeanServerFileAccessController
      * Check if the caller can do read operations. This method does
      * nothing if so, otherwise throws SecurityException.
      */
+    @Override
     public void checkRead() {
         checkAccess(AccessType.READ, null);
     }
@@ -215,6 +217,7 @@ public class MBeanServerFileAccessController
      * Check if the caller can do write operations.  This method does
      * nothing if so, otherwise throws SecurityException.
      */
+    @Override
     public void checkWrite() {
         checkAccess(AccessType.WRITE, null);
     }
@@ -223,16 +226,16 @@ public class MBeanServerFileAccessController
      * Check if the caller can create MBeans or instances of the given class.
      * This method does nothing if so, otherwise throws SecurityException.
      */
-
+    @Override
     public void checkCreate(String className) {
         checkAccess(AccessType.CREATE, className);
     }
- 
+
     /**
      * Check if the caller can do unregister operations.  This method does
      * nothing if so, otherwise throws SecurityException.
      */
-
+    @Override
     public void checkUnregister(ObjectName name) {
         checkAccess(AccessType.UNREGISTER, null);
     }
@@ -260,12 +263,12 @@ public class MBeanServerFileAccessController
      * level values differs from "readonly" or "readwrite".
      */
     public synchronized void refresh() throws IOException {
-            Properties props;
-            if (accessFileName == null)
-                props = (Properties) originalProps;
-            else
-                props = propertiesFromFile(accessFileName);
-            parseProperties(props);
+        Properties props;
+        if (accessFileName == null)
+            props = (Properties) originalProps;
+        else
+            props = propertiesFromFile(accessFileName);
+        parseProperties(props);
     }
 
     private static Properties propertiesFromFile(String fname)
@@ -294,30 +297,29 @@ public class MBeanServerFileAccessController
             final Principal p = (Principal) i.next();
             Access access = accessMap.get(p.getName());
             if (access != null) {
-               boolean ok;
-               switch (requiredAccess) {
-                   case READ:
-                      ok = true;  // all access entries imply read
-                      break;
-                   case WRITE:
-                      ok = access.write;
-                      break;
-                   case UNREGISTER:
-                      ok = access.unregister;
-                      if (!ok && access.write)
-                           newPropertyValue = "unregister";
-                       break;
-                   case CREATE:
-                      ok = checkCreateAccess(access, arg);
-                      if (!ok && access.write)
-                          newPropertyValue = "create " + arg;
-                      break;
-                  default:
-                     throw new AssertionError();
-
-            }
-            if (ok)
-                return;
+                boolean ok;
+                switch (requiredAccess) {
+                    case READ:
+                        ok = true;  // all access entries imply read
+                        break;
+                    case WRITE:
+                        ok = access.write;
+                        break;
+                    case UNREGISTER:
+                        ok = access.unregister;
+                        if (!ok && access.write)
+                            newPropertyValue = "unregister";
+                        break;
+                    case CREATE:
+                        ok = checkCreateAccess(access, arg);
+                        if (!ok && access.write)
+                            newPropertyValue = "create " + arg;
+                        break;
+                    default:
+                        throw new AssertionError();
+                }
+                if (ok)
+                    return;
             }
         }
         SecurityException se = new SecurityException("Access denied! Invalid " +
@@ -327,23 +329,19 @@ public class MBeanServerFileAccessController
         // any information to the bad guys, other than that the access control
         // is based on a file, which they could have worked out from the stack
         // trace anyway.
-         if (newPropertyValue != null) {
-             SecurityException se2 = new SecurityException("Access property " +
-                     "for this identity should be similar to: " + READWRITE +
-                     " " + newPropertyValue);
-              se.initCause(se2);
-          }
-          throw se;
+        if (newPropertyValue != null) {
+            SecurityException se2 = new SecurityException("Access property " +
+                    "for this identity should be similar to: " + READWRITE +
+                    " " + newPropertyValue);
+            se.initCause(se2);
+        }
+        throw se;
     }
 
-   private static boolean checkCreateAccess(Access access, String className) {
+    private static boolean checkCreateAccess(Access access, String className) {
         for (String classNamePattern : access.createPatterns) {
             if (classNameMatch(classNamePattern, className))
                 return true;
-
-
-
-
         }
         return false;
     }
@@ -520,7 +518,7 @@ public class MBeanServerFileAccessController
                     msg + " [" + identity + " " + s + "]");
         }
     }
- 
+
     private Map<String, Access> accessMap;
     private Properties originalProps;
     private String accessFileName;

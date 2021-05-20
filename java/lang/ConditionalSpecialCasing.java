@@ -1,8 +1,8 @@
 /*
- * @(#)ConditionalSpecialCasing.java	1.4 04/09/14
+ * %W% %E%
  *
- * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
- * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang;
@@ -231,7 +231,7 @@ final class ConditionalSpecialCasing {
 	    if (ch == 'I') {
 		return true;
 	    } else {
-		cc = Normalizer.getClass(ch);
+		cc = Normalizer.getCombiningClass(ch);
 		if ((cc == 0) || (cc == COMBINING_CLASS_ABOVE)) {
 		    return false;
 		}
@@ -263,7 +263,7 @@ final class ConditionalSpecialCasing {
 	    if (isSoftDotted(ch)) {
 		return true;
 	    } else {
-		cc = Normalizer.getClass(ch);
+		cc = Normalizer.getCombiningClass(ch);
 		if ((cc == 0) || (cc == COMBINING_CLASS_ABOVE)) {
 		    return false;
 		}
@@ -292,7 +292,7 @@ final class ConditionalSpecialCasing {
 		i < len; i += Character.charCount(ch)) {
 	    
 	    ch = src.codePointAt(i);
-	    cc = Normalizer.getClass(ch);
+	    cc = Normalizer.getCombiningClass(ch);
 
 	    if (cc == COMBINING_CLASS_ABOVE) {
 		return true;
@@ -329,7 +329,7 @@ final class ConditionalSpecialCasing {
 	    if (ch == '\u0307') {
 		return true;
 	    } else {
-		cc = Normalizer.getClass(ch);
+		cc = Normalizer.getCombiningClass(ch);
 		if ((cc == 0) || (cc == COMBINING_CLASS_ABOVE)) {
 		    return false;
 		}
