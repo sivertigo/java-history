@@ -1,42 +1,34 @@
 /*
- * @(#)UnknownError.java	1.3 95/08/13  
+ * @(#)UnknownError.java	1.13 03/12/19
  *
- * Copyright (c) 1995 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang;
 
 /**
- * Signals that an unknown but serious exception has occurred.
- * @version 	1.3, 08/13/95
+ * Thrown when an unknown but serious exception has occurred in the 
+ * Java Virtual Machine. 
+ *
+ * @author unascribed
+ * @version 1.13, 12/19/03
+ * @since   JDK1.0
  */
 public
 class UnknownError extends VirtualMachineError {
     /**
-     * Constructs an UnknownError with no detail message.
-     * A detail message is a String that describes this particular exception.
+     * Constructs an <code>UnknownError</code> with no detail message. 
      */
     public UnknownError() {
 	super();
     }
 
     /**
-     * Constructs an UnknownError with the specified detail message.
-     * A detail message is a String that describes this particular exception.
-     * @param s the detail message
+     * Constructs an <code>UnknownError</code> with the specified detail 
+     * message. 
+     *
+     * @param   s   the detail message.
      */
     public UnknownError(String s) {
 	super(s);

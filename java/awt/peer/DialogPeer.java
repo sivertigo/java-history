@@ -1,26 +1,21 @@
 /*
- * @(#)DialogPeer.java	1.3 95/08/07 Arthur van Hoff
+ * @(#)DialogPeer.java	1.13 03/12/19
  *
- * Copyright (c) 1995 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.awt.peer;
 
 import java.awt.*;
 
+/**
+ * The peer interfaces are intended only for use in porting
+ * the AWT. They are not intended for use by application
+ * developers, and developers should not implement peers
+ * nor invoke any of the peer methods directly on the peer
+ * instances.
+ */
 public interface DialogPeer extends WindowPeer {
     void setTitle(String title);
     void setResizable(boolean resizeable);

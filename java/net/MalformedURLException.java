@@ -1,20 +1,8 @@
 /*
- * @(#)MalformedURLException.java	1.6 95/09/08
- * 
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- * 
- * Permission to use, copy, modify, and distribute this software and its
- * documentation for NON-COMMERCIAL purposes and without fee is hereby
- * granted provided that this copyright notice appears in all copies. Please
- * refer to the file "copyright.html" for further important copyright and
- * licensing information.
- * 
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
- * SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
- * OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
- * LICENSEE AS A RESULT OF USING, MODIFYING OR DISTRIBUTING THIS SOFTWARE OR
- * ITS DERIVATIVES.
+ * @(#)MalformedURLException.java	1.16 03/12/19
+ *
+ * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.net;
@@ -22,25 +10,26 @@ package java.net;
 import java.io.IOException;
 
 /**
- * Signals that a malformed URL has occurred.
- * @version 1.6, 09/08/95
- * @author 	Arthur van Hoff
+ * Thrown to indicate that a malformed URL has occurred. Either no 
+ * legal protocol could be found in a specification string or the 
+ * string could not be parsed. 
+ *
+ * @author  Arthur van Hoff
+ * @version 1.16, 12/19/03
+ * @since   JDK1.0
  */
 public class MalformedURLException extends IOException {
-
     /**
-     * Constructs a MalformedURLException with no detail message.  A
-     * detail message is a String that describes this particular 
-     * exception.
+     * Constructs a <code>MalformedURLException</code> with no detail message.
      */
     public MalformedURLException() {
     }
 
     /**
-     * Constructs a MalformedURLException with the specified detail 
-     * message.  A detail message is a String that describes this 
-     * particular exception.
-     * @param msg the detail message
+     * Constructs a <code>MalformedURLException</code> with the 
+     * specified detail message. 
+     *
+     * @param   msg   the detail message.
      */
     public MalformedURLException(String msg) {
 	super(msg);

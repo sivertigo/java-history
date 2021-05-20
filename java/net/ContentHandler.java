@@ -1,19 +1,8 @@
 /*
- * @(#)ContentHandler.java	1.4 95/12/18
+ * @(#)ContentHandler.java	1.17 03/12/19
  *
- * Copyright (c) 1995 Sun Microsystems, Inc.  All Rights reserved
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file copyright.html
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.net;
@@ -21,23 +10,83 @@ package java.net;
 import java.io.IOException;
 
 /**
- * A class to read data from a URLConnection and construct an
- * Object.  Specific subclasses of ContentHandler handle
- * specific mime types.  It is the responsibility of a ContentHandlerFactory
- * to select an appropriate ContentHandler for the mime-type
- * of the URLConnection.  Applications should never call ContentHandlers
- * directly, rather they should use URL.getContent() or
- * URLConnection.getContent()
+ * The abstract class <code>ContentHandler</code> is the superclass 
+ * of all classes that read an <code>Object</code> from a 
+ * <code>URLConnection</code>. 
+ * <p>
+ * An application does not generally call the 
+ * <code>getContent</code> method in this class directly. Instead, an 
+ * application calls the <code>getContent</code> method in class 
+ * <code>URL</code> or in <code>URLConnection</code>.
+ * The application's content handler factory (an instance of a class that 
+ * implements the interface <code>ContentHandlerFactory</code> set 
+ * up by a call to <code>setContentHandler</code>) is 
+ * called with a <code>String</code> giving the MIME type of the 
+ * object being received on the socket. The factory returns an 
+ * instance of a subclass of <code>ContentHandler</code>, and its 
+ * <code>getContent</code> method is called to create the object. 
+ * <p>
+ * If no content handler could be found, URLConnection will 
+ * look for a content handler in a user-defineable set of places.
+ * By default it looks in sun.net.www.content, but users can define a 
+ * vertical-bar delimited set of class prefixes to search through in 
+ * addition by defining the java.content.handler.pkgs property.
+ * The class name must be of the form:
+ * <pre>
+ *     {package-prefix}.{major}.{minor}
+ * e.g.
+ *     YoyoDyne.experimental.text.plain
+ * </pre>
+ * If the loading of the content handler class would be performed by 
+ * a classloader that is outside of the the delegation chain of the caller,
+ * the JVM will need the RuntimePermission "getClassLoader".
+ * 
  * @author  James Gosling
+ * @version 1.17, 12/19/03
+ * @see     java.net.ContentHandler#getContent(java.net.URLConnection)
+ * @see     java.net.ContentHandlerFactory
+ * @see     java.net.URL#getContent()
+ * @see     java.net.URLConnection
+ * @see     java.net.URLConnection#getContent()
+ * @see     java.net.URLConnection#setContentHandlerFactory(java.net.ContentHandlerFactory)
+ * @since   JDK1.0
  */
-
 abstract public class ContentHandler {
     /** 
-     * Given an input stream positioned at the beginning of the
-     * representation of an object, reads that stream and recreates
-     * the object from it. 
-     * @exception IOException  An IO error occurred while reading the object.
+     * Given a URL connect stream positioned at the beginning of the 
+     * representation of an object, this method reads that stream and 
+     * creates an object from it. 
+     *
+     * @param      urlc   a URL connection.
+     * @return     the object read by the <code>ContentHandler</code>.
+     * @exception  IOException  if an I/O error occurs while reading the object.
      */
     abstract public Object getContent(URLConnection urlc) throws IOException;
-}
 
+    /** 
+     * Given a URL connect stream positioned at the beginning of the 
+     * representation of an object, this method reads that stream and 
+     * creates an object that matches one of the types specified. 
+     *
+     * The default implementation of this method should call getContent()
+     * and screen the return type for a match of the suggested types.
+     *
+     * @param      urlc   a URL connection.
+     * @param      classes	an array of types requested  
+     * @return     the object read by the <code>ContentHandler</code> that is 
+     *                 the first match of the suggested types. 
+     *                 null if none of the requested  are supported.
+     * @exception  IOException  if an I/O error occurs while reading the object.
+     */
+    public Object getContent(URLConnection urlc, Class[] classes) throws IOException {
+        Object obj = getContent(urlc);
+
+	for (int i = 0; i < classes.length; i++) {
+	  if (classes[i].isInstance(obj)) {
+		return obj;
+	  }
+	}
+	return null;
+    }
+
+}

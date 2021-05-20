@@ -1,20 +1,8 @@
 /*
- * @(#)CropImageFilter.java	1.3 95/12/14 Jim Graham
+ * @(#)CropImageFilter.java	1.18 04/07/16
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.awt.image;
@@ -35,7 +23,7 @@ import java.awt.Rectangle;
  * @see FilteredImageSource
  * @see ImageFilter
  *
- * @version	1.3 12/14/95
+ * @version	1.18 07/16/04
  * @author 	Jim Graham
  */
 public class CropImageFilter extends ImageFilter {
@@ -63,15 +51,32 @@ public class CropImageFilter extends ImageFilter {
     /**
      * Passes along  the properties from the source object after adding a
      * property indicating the cropped region.
+     * This method invokes <code>super.setProperties</code>,
+     * which might result in additional properties being added.
+     * <p>
+     * Note: This method is intended to be called by the 
+     * <code>ImageProducer</code> of the <code>Image</code> whose pixels 
+     * are being filtered. Developers using
+     * this class to filter pixels from an image should avoid calling
+     * this method directly since that operation could interfere
+     * with the filtering operation.
      */
-    public void setProperties(Hashtable props) {
-	props.put("croprect", new Rectangle(cropX, cropY, cropW, cropH));
-	super.setProperties(props);
+    public void setProperties(Hashtable<?,?> props) {
+	Hashtable<Object,Object> p = (Hashtable<Object,Object>)props.clone();
+	p.put("croprect", new Rectangle(cropX, cropY, cropW, cropH));
+	super.setProperties(p);
     }
 
     /**
      * Override the source image's dimensions and pass the dimensions
      * of the rectangular cropped region to the ImageConsumer.
+     * <p>
+     * Note: This method is intended to be called by the 
+     * <code>ImageProducer</code> of the <code>Image</code> whose 
+     * pixels are being filtered. Developers using
+     * this class to filter pixels from an image should avoid calling
+     * this method directly since that operation could interfere
+     * with the filtering operation.
      * @see ImageConsumer
      */
     public void setDimensions(int w, int h) {
@@ -82,6 +87,13 @@ public class CropImageFilter extends ImageFilter {
      * Determine whether the delivered byte pixels intersect the region to
      * be extracted and passes through only that subset of pixels that
      * appear in the output region.
+     * <p>
+     * Note: This method is intended to be called by the 
+     * <code>ImageProducer</code> of the <code>Image</code> whose 
+     * pixels are being filtered. Developers using
+     * this class to filter pixels from an image should avoid calling
+     * this method directly since that operation could interfere
+     * with the filtering operation.
      */
     public void setPixels(int x, int y, int w, int h,
 			  ColorModel model, byte pixels[], int off,
@@ -90,7 +102,7 @@ public class CropImageFilter extends ImageFilter {
 	if (x1 < cropX) {
 	    x1 = cropX;
 	}
-	int x2 = x + w;
+    int x2 = addWithoutOverflow(x, w);
 	if (x2 > cropX + cropW) {
 	    x2 = cropX + cropW;
 	}
@@ -98,7 +110,8 @@ public class CropImageFilter extends ImageFilter {
 	if (y1 < cropY) {
 	    y1 = cropY;
 	}
-	int y2 = y + h;
+
+    int y2 = addWithoutOverflow(y, h);
 	if (y2 > cropY + cropH) {
 	    y2 = cropY + cropH;
 	}
@@ -114,6 +127,13 @@ public class CropImageFilter extends ImageFilter {
      * Determine if the delivered int pixels intersect the region to
      * be extracted and pass through only that subset of pixels that
      * appear in the output region.
+     * <p>
+     * Note: This method is intended to be called by the 
+     * <code>ImageProducer</code> of the <code>Image</code> whose 
+     * pixels are being filtered. Developers using
+     * this class to filter pixels from an image should avoid calling
+     * this method directly since that operation could interfere
+     * with the filtering operation.
      */
     public void setPixels(int x, int y, int w, int h,
 			  ColorModel model, int pixels[], int off,
@@ -122,7 +142,7 @@ public class CropImageFilter extends ImageFilter {
 	if (x1 < cropX) {
 	    x1 = cropX;
 	}
-	int x2 = x + w;
+    int x2 = addWithoutOverflow(x, w);
 	if (x2 > cropX + cropW) {
 	    x2 = cropX + cropW;
 	}
@@ -130,7 +150,8 @@ public class CropImageFilter extends ImageFilter {
 	if (y1 < cropY) {
 	    y1 = cropY;
 	}
-	int y2 = y + h;
+
+    int y2 = addWithoutOverflow(y, h);
 	if (y2 > cropY + cropH) {
 	    y2 = cropY + cropH;
 	}
@@ -140,5 +161,16 @@ public class CropImageFilter extends ImageFilter {
 	consumer.setPixels(x1 - cropX, y1 - cropY, (x2 - x1), (y2 - y1),
 			   model, pixels,
 			   off + (y1 - y) * scansize + (x1 - x), scansize);
+    }
+
+    //check for potential overflow (see bug 4801285)	
+    private int addWithoutOverflow(int x, int w) {
+        int x2 = x + w;
+        if ( x > 0 && w > 0 && x2 < 0 ) {
+            x2 = Integer.MAX_VALUE;
+        } else if( x < 0 && w < 0 && x2 > 0 ) {
+            x2 = Integer.MIN_VALUE;
+        }
+        return x2;
     }
 }

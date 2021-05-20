@@ -1,46 +1,35 @@
 /*
- * @(#)VirtualMachineError.java	1.4 95/08/13  
+ * @(#)VirtualMachineError.java	1.14 03/12/19
  *
- * Copyright (c) 1995 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang;
 
 /**
- * A VirtualMachineError indicates that the virtual machine is broken
- * or has run out of resources.
- * <p>
+ * Thrown to indicate that the Java Virtual Machine is broken or has 
+ * run out of resources necessary for it to continue operating. 
  *
- * @version 	1.4, 08/13/95
- * @author      Frank Yellin
+ *
+ * @author  Frank Yellin
+ * @version 1.14, 12/19/03
+ * @since   JDK1.0
  */
 abstract public
 class VirtualMachineError extends Error {
     /**
-     * Constructs a VirtualMachineError with no detail message.
-     * A detail message is a String that describes this particular exception.
+     * Constructs a <code>VirtualMachineError</code> with no detail message.
      */
     public VirtualMachineError() {
 	super();
     }
 
     /**
-     * Constructs a VirtualMachineError with the specified detail message.
-     * A detail message is a String that describes this particular exception.
-     * @param s the detail message
+     * Constructs a <code>VirtualMachineError</code> with the specified 
+     * detail message. 
+     *
+     * @param   s   the detail message.
      */
     public VirtualMachineError(String s) {
 	super(s);

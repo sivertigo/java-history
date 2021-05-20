@@ -1,37 +1,30 @@
 /*
- * @(#)Observer.java	1.8 95/12/15 Chris Warth
+ * @(#)Observer.java	1.19 03/12/19
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2004 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package java.util;
 
 /**
- * When implemented, this interface allows all classes 
- * to be observable by instances of class Observer.
+ * A class can implement the <code>Observer</code> interface when it
+ * wants to be informed of changes in observable objects.
  *
- * @version 1.8 12/15/95
- * @author Chris Warth
+ * @author  Chris Warth
+ * @version 1.19, 12/19/03
+ * @see     java.util.Observable
+ * @since   JDK1.0
  */
-public interface Observer { 
-    
+public interface Observer {
     /**
-     * Called when observers in the observable list need to be 
-     * updated.
-     * @param o the list of observers
-     * @param arg the argument being notified
+     * This method is called whenever the observed object is changed. An
+     * application calls an <tt>Observable</tt> object's
+     * <code>notifyObservers</code> method to have all the object's
+     * observers notified of the change.
+     *
+     * @param   o     the observable object.
+     * @param   arg   an argument passed to the <code>notifyObservers</code>
+     *                 method.
      */
     void update(Observable o, Object arg);
 }
