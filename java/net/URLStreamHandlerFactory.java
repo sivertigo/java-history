@@ -1,37 +1,32 @@
 /*
- * @(#)URLStreamHandlerFactory.java	1.6 95/09/08
- * 
- * Copyright (c) 1995 Sun Microsystems, Inc. All Rights Reserved.
- * 
- * Permission to use, copy, modify, and distribute this software and its
- * documentation for NON-COMMERCIAL purposes and without fee is hereby
- * granted provided that this copyright notice appears in all copies. Please
- * refer to the file "copyright.html" for further important copyright and
- * licensing information.
- * 
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
- * SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
- * OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
- * LICENSEE AS A RESULT OF USING, MODIFYING OR DISTRIBUTING THIS SOFTWARE OR
- * ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.net;
 
-
 /**
- * This interface defines a factory for URLStreamHandler instances.  It is used by the
- * URL class to create URLStreamHandlers for various streams.
- * 
- * @version 1.6, 09/08/95
- * @author 	Arthur van Hoff
+ * This interface defines a factory for <code>URL</code> stream
+ * protocol handlers.
+ * <p>
+ * It is used by the <code>URL</code> class to create a
+ * <code>URLStreamHandler</code> for a specific protocol.
+ *
+ * @author  Arthur van Hoff
+ * @version 1.16, 02/06/02
+ * @see     java.net.URL
+ * @see     java.net.URLStreamHandler
+ * @since   JDK1.0
  */
 public interface URLStreamHandlerFactory {
-   
     /**
-     * Creates a new URLStreamHandler instance with the specified protocol.
-     * @param protocol the protocol to use (ftp, http, nntp, etc.)
+     * Creates a new <code>URLStreamHandler</code> instance with the specified
+     * protocol.
+     *
+     * @param   protocol   the protocol ("<code>ftp</code>",
+     *                     "<code>http</code>", "<code>nntp</code>", etc.).
+     * @return  a <code>URLStreamHandler</code> for the specific protocol.
+     * @see     java.net.URLStreamHandler
      */
     URLStreamHandler createURLStreamHandler(String protocol);
 }

@@ -1,39 +1,30 @@
 /*
- * @(#)SocketOutputStream.java	1.9 95/11/06 Jonathan Payne
- *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.net;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.FileDescriptor;
 
 /**
  * This stream extends FileOutputStream to implement a
  * SocketOutputStream. Note that this class should <b>NOT</b> be
  * public.
  *
- * @version     1.9, 11/06/95
+ * @version     1.19, 02/06/02
  * @author 	Jonathan Payne
  * @author	Arthur van Hoff
  */
 class SocketOutputStream extends FileOutputStream
 {
-    private SocketImpl impl;
+    static {
+        init();
+    }
+
+    private PlainSocketImpl impl;
     private byte temp[] = new byte[1];
     
     /**
@@ -42,7 +33,7 @@ class SocketOutputStream extends FileOutputStream
      * that the fd will not be closed.
      * @param impl the socket output stream inplemented
      */
-    SocketOutputStream(SocketImpl impl) throws IOException {
+    SocketOutputStream(PlainSocketImpl impl) throws IOException {
 	super(impl.getFileDescriptor());
 	this.impl = impl;
     }
@@ -54,7 +45,7 @@ class SocketOutputStream extends FileOutputStream
      * @param len the number of bytes that are written
      * @exception IOException If an I/O error has occurred.
      */
-    private native void socketWrite(byte b[], int off, int len)
+    private native void socketWrite(FileDescriptor fd, byte b[], int off, int len)
 	throws IOException;
 
     /** 
@@ -63,8 +54,13 @@ class SocketOutputStream extends FileOutputStream
      * @exception IOException If an I/O error has occurred. 
      */
     public void write(int b) throws IOException {
-	temp[0] = (byte)b;
-	socketWrite(temp, 0, 1);
+	temp[0] = (byte)b;	
+    FileDescriptor fd = impl.acquireFD();
+    try {
+		socketWrite(fd, temp, 0, 1);
+    } finally {
+        impl.releaseFD();
+    }
     }
 
     /** 
@@ -73,7 +69,12 @@ class SocketOutputStream extends FileOutputStream
      * @exception SocketException If an I/O error has occurred. 
      */
     public void write(byte b[]) throws IOException {
-	socketWrite(b, 0, b.length);
+    FileDescriptor fd = impl.acquireFD();
+    try {
+		socketWrite(fd, b, 0, b.length);
+    } finally {
+        impl.releaseFD();
+    }
     }
 
     /** 
@@ -85,7 +86,12 @@ class SocketOutputStream extends FileOutputStream
      * @exception SocketException If an I/O error has occurred.
      */
     public void write(byte b[], int off, int len) throws IOException {
-	socketWrite(b, off, len);
+    FileDescriptor fd = impl.acquireFD();
+    try {
+		socketWrite(fd, b, off, len);
+    } finally {
+        impl.releaseFD();
+    }
     }
 
     /**
@@ -99,4 +105,10 @@ class SocketOutputStream extends FileOutputStream
      * Overrides finalize, the fd is closed by the Socket.
      */
     protected void finalize() {}
+
+    /**
+     * Perform class load-time initializations.
+     */
+    private native static void init();
+
 }

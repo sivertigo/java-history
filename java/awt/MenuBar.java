@@ -1,40 +1,84 @@
 /*
- * @(#)MenuBar.java	1.15 95/09/20 Sami Shaio
- *
- * Copyright (c) 1994,1995 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package java.awt;
 
 import java.util.Vector;
+import java.util.Enumeration;
 import java.awt.peer.MenuBarPeer;
+import java.awt.event.KeyEvent;
+import javax.accessibility.*;
 
 /**
- * A class that encapsulates the platform's concept of a menu bar bound
- * to a Frame. In order to associate the MenuBar with an actual Frame,
- * the Frame.setMenuBar() method should be called.
+ * The <code>MenuBar</code> class encapsulates the platform's
+ * concept of a menu bar bound to a frame. In order to associate
+ * the menu bar with a <code>Frame</code> object, call the
+ * frame's <code>setMenuBar</code> method.
+ * <p>
+ * <A NAME="mbexample"></A><!-- target for cross references -->
+ * This is what a menu bar might look like:
+ * <p>
+ * <img src="doc-files/MenuBar-1.gif"
+ * ALIGN=center HSPACE=10 VSPACE=7>
+ * <p>
+ * A menu bar handles keyboard shortcuts for menu items, passing them
+ * along to its child menus.
+ * (Keyboard shortcuts, which are optional, provide the user with
+ * an alternative to the mouse for invoking a menu item and the
+ * action that is associated with it.)
+ * Each menu item can maintain an instance of <code>MenuShortcut</code>.
+ * The <code>MenuBar</code> class defines several methods,
+ * {@link MenuBar#shortcuts} and
+ * {@link MenuBar#getShortcutMenuItem}
+ * that retrieve information about the shortcuts a given
+ * menu bar is managing.
  *
- * @see Frame#setMenuBar
- *
- * @version 1.15, 09/20/95
+ * @version 1.55, 02/06/02
  * @author Sami Shaio
- *
+ * @see        java.awt.Frame
+ * @see        java.awt.Frame#setMenuBar(java.awt.MenuBar)
+ * @see        java.awt.Menu
+ * @see        java.awt.MenuItem
+ * @see        java.awt.MenuShortcut
+ * @since      JDK1.0
  */
-public class MenuBar extends MenuComponent implements MenuContainer {
+public class MenuBar extends MenuComponent implements MenuContainer, Accessible {
+
+    static {
+        /* ensure that the necessary native libraries are loaded */
+	Toolkit.loadLibraries();
+        initIDs();
+    }
+
+    /**
+     * This field represents a vector of the
+     * actual menus that will be part of the MenuBar.
+     *
+     * @serial
+     * @see countMenus()
+     */
     Vector menus = new Vector();
+
+    /**
+     * This menu is a special menu dedicated to
+     * help.  The one thing to note about this menu
+     * is that on some platforms it appears at the
+     * right edge of the menubar.
+     *
+     * @serial
+     * @see getHelpMenu()
+     * @see setHelpMenu()
+     */
     Menu helpMenu;
+
+    private static final String base = "menubar";
+    private static int nameCounter = 0;
+
+    /*
+     * JDK 1.1 serialVersionUID
+     */
+     private static final long serialVersionUID = -4930327919388951260L;
 
     /**
      * Creates a new menu bar.
@@ -43,121 +87,373 @@ public class MenuBar extends MenuComponent implements MenuContainer {
     }
 
     /**
-     * Creates the menu bar's peer.  The peer allows us to change the 
-     * appearance of the menu bar without changing any of the menu bar's 
-     * functionality.
+     * Construct a name for this MenuComponent.  Called by getName() when
+     * the name is null.
      */
-    public synchronized void addNotify() {
-	peer = Toolkit.getDefaultToolkit().createMenuBar(this);
-
-	int nmenus = countMenus();
-	for (int i = 0 ; i < nmenus ; i++) {
-	    getMenu(i).addNotify();
+    String constructComponentName() {
+        synchronized (getClass()) {
+	    return base + nameCounter++;
 	}
     }
 
     /**
-     * Removes the menu bar's peer.  The peer allows us to change the 
-     * appearance of the menu bar without changing any of the menu bar's 
+     * Creates the menu bar's peer.  The peer allows us to change the
+     * appearance of the menu bar without changing any of the menu bar's
+     * functionality.
+     */
+    public void addNotify() {
+        synchronized (getTreeLock()) {
+	    if (peer == null)
+	        peer = Toolkit.getDefaultToolkit().createMenuBar(this);
+
+	    int nmenus = getMenuCount();
+	    for (int i = 0 ; i < nmenus ; i++) {
+	        getMenu(i).addNotify();
+	    }
+	}
+    }
+
+    /**
+     * Removes the menu bar's peer.  The peer allows us to change the
+     * appearance of the menu bar without changing any of the menu bar's
      * functionality.
      */
     public void removeNotify() {
-	int nmenus = countMenus();
-	for (int i = 0 ; i < nmenus ; i++) {
-	    getMenu(i).removeNotify();
+        synchronized (getTreeLock()) {
+	    int nmenus = getMenuCount();
+	    for (int i = 0 ; i < nmenus ; i++) {
+	        getMenu(i).removeNotify();
+	    }
+	    super.removeNotify();
 	}
-	super.removeNotify();
     }
 
     /**
      * Gets the help menu on the menu bar.
+     * @return    the help menu on this menu bar.
      */
     public Menu getHelpMenu() {
 	return helpMenu;
     }
 
     /**
-     * Sets the help menu to the specified menu on the menu bar.
-     * @param m the menu to be set
+     * Sets the specified menu to be this menu bar's help menu.
+     * If this menu bar has an existing help menu, the old help menu is
+     * removed from the menu bar, and replaced with the specified menu.
+     * @param m    the menu to be set as the help menu
      */
-    public synchronized void setHelpMenu(Menu m) {
-	if (helpMenu != null) {
-	    helpMenu.removeNotify();
-	    helpMenu.parent = null;
-	}
-
-	helpMenu = m;
-	if (m != null) {
-	    m.isHelpMenu = true;
-	    MenuBarPeer peer = (MenuBarPeer)this.peer;
-	    if (peer != null) {
-		if (m.peer == null) {
-		    m.addNotify();
+    public void setHelpMenu(Menu m) {
+        synchronized (getTreeLock()) {
+	    if (helpMenu == m) {
+	        return;
+	    }
+	    if (helpMenu != null) {
+                remove(helpMenu);
+	    }
+	    if (m.parent != this) {
+	        add(m);
+	    }
+	    helpMenu = m;
+	    if (m != null) {
+	        m.isHelpMenu = true;
+		m.parent = this;
+		MenuBarPeer peer = (MenuBarPeer)this.peer;
+		if (peer != null) {
+		    if (m.peer == null) {
+		        m.addNotify();
+		    }
+		    peer.addHelpMenu(m);
 		}
-		peer.addHelpMenu(m);
 	    }
 	}
     }
 
     /**
      * Adds the specified menu to the menu bar.
-     * @param m the menu to be added to the menu bar
+     * @param        m   the menu to be added.
+     * @return       the menu added.
+     * @see          java.awt.MenuBar#remove(int)
+     * @see          java.awt.MenuBar#remove(java.awt.MenuComponent)
      */
-    public synchronized Menu add(Menu m) {
-	if (m.parent != null) {
-	    m.parent.remove(m);
-	}
-	menus.addElement(m);
-	m.parent = this;
-
-	MenuBarPeer peer = (MenuBarPeer)this.peer;
-	if (peer != null) {
-	    if (m.peer == null) {
-		m.addNotify();
+    public Menu add(Menu m) {
+        synchronized (getTreeLock()) {
+	    if (m.parent != null) {
+	        m.parent.remove(m);
 	    }
-	    peer.addMenu(m);
+	    menus.addElement(m);
+	    m.parent = this;
+
+	    MenuBarPeer peer = (MenuBarPeer)this.peer;
+	    if (peer != null) {
+	        if (m.peer == null) {
+		    m.addNotify();
+		}
+		peer.addMenu(m);
+	    }
+	    return m;
 	}
-	return m;
     }
 
     /**
-     * Removes the menu located at the specified index from the menu bar.
-     * @param index the position of the menu to be removed
+     * Removes the menu located at the specified
+     * index from this menu bar.
+     * @param        index   the position of the menu to be removed.
+     * @see          java.awt.MenuBar#add(java.awt.Menu)
      */
-    public synchronized void remove(int index) {
-	MenuBarPeer peer = (MenuBarPeer)this.peer;
-	if (peer != null) {
-	    Menu m = getMenu(index);
-	    m.removeNotify();
-	    m.parent = null;
-	    peer.delMenu(index);
+    public void remove(int index) {
+        synchronized (getTreeLock()) {
+            Menu m = getMenu(index);
+            menus.removeElementAt(index);
+	    MenuBarPeer peer = (MenuBarPeer)this.peer;
+	    if (peer != null) {
+		m.removeNotify();
+		m.parent = null;
+		peer.delMenu(index);
+	    }
 	}
-	menus.removeElementAt(index);
     }
 
     /**
-     * Removes the specified menu from the menu bar.
-     * @param m the menu to be removed
+     * Removes the specified menu component from this menu bar.
+     * @param        m the menu component to be removed.
+     * @see          java.awt.MenuBar#add(java.awt.Menu)
      */
-    public synchronized void remove(MenuComponent m) {
-	int index = menus.indexOf(m);
-	if (index >= 0) {
-	    remove(index);
+    public void remove(MenuComponent m) {
+        synchronized (getTreeLock()) {
+	    int index = menus.indexOf(m);
+	    if (index >= 0) {
+	        remove(index);
+	    }
 	}
     }
 
     /**
-     * Counts the number of menus on the menu bar.
+     * Gets the number of menus on the menu bar.
+     * @return     the number of menus on the menu bar.
+     * @since      JDK1.1
+     */
+    public int getMenuCount() {
+	return countMenus();
+    }
+
+    /**
+     * @deprecated As of JDK version 1.1,
+     * replaced by <code>getMenuCount()</code>.
      */
     public int countMenus() {
+	return getMenuCountImpl();
+    }
+
+    /*
+     * This is called by the native code, so client code can't
+     * be called on the toolkit thread.
+     */
+    final int getMenuCountImpl() {
 	return menus.size();
     }
 
     /**
      * Gets the specified menu.
-     * @param i the menu to be returned
+     * @param      i the index position of the menu to be returned.
+     * @return     the menu at the specified index of this menu bar.
      */
     public Menu getMenu(int i) {
+	return getMenuImpl(i);
+    }
+
+    /*
+     * This is called by the native code, so client code can't
+     * be called on the toolkit thread.
+     */
+    final Menu getMenuImpl(int i) {
 	return (Menu)menus.elementAt(i);
     }
+
+    /**
+     * Gets an enumeration of all menu shortcuts this menu bar
+     * is managing.
+     * @return      an enumeration of menu shortcuts that this
+     *                      menu bar is managing.
+     * @see         java.awt.MenuShortcut
+     * @since       JDK1.1
+     */
+    public synchronized Enumeration shortcuts() {
+        Vector shortcuts = new Vector();
+	int nmenus = getMenuCount();
+	for (int i = 0 ; i < nmenus ; i++) {
+            Enumeration e = getMenu(i).shortcuts();
+            while (e.hasMoreElements()) {
+                shortcuts.addElement(e.nextElement());
+            }
+	}
+        return shortcuts.elements();
+    }
+
+    /**
+     * Gets the instance of <code>MenuItem</code> associated
+     * with the specified <code>MenuShortcut</code> object,
+     * or <code>null</code> if none of the menu items being managed
+     * by this menu bar is associated with the specified menu
+     * shortcut.
+     * @param        s the specified menu shortcut.
+     * @see          java.awt.MenuItem
+     * @see          java.awt.MenuShortcut
+     * @since        JDK1.1
+     */
+     public MenuItem getShortcutMenuItem(MenuShortcut s) {
+	int nmenus = getMenuCount();
+	for (int i = 0 ; i < nmenus ; i++) {
+            MenuItem mi = getMenu(i).getShortcutMenuItem(s);
+            if (mi != null) {
+                return mi;
+            }
+	}
+        return null;  // MenuShortcut wasn't found
+     }
+
+    /*
+     * Post an ACTION_EVENT to the target of the MenuPeer
+     * associated with the specified keyboard event (on
+     * keydown).  Returns true if there is an associated
+     * keyboard event.
+     */
+    boolean handleShortcut(KeyEvent e) {
+        // Is it a key event?
+        int id = e.getID();
+        if (id != KeyEvent.KEY_PRESSED && id != KeyEvent.KEY_RELEASED) {
+            return false;
+        }
+
+        // Is the accelerator modifier key pressed?
+        int accelKey = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
+        if ((e.getModifiers() & accelKey) == 0) {
+            return false;
+        }
+
+        // Pass MenuShortcut on to child menus.
+	int nmenus = getMenuCount();
+	for (int i = 0 ; i < nmenus ; i++) {
+	    Menu m = getMenu(i);
+            if (m.handleShortcut(e)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Deletes the specified menu shortcut.
+     * @param     s the menu shortcut to delete.
+     * @since     JDK1.1
+     */
+    public void deleteShortcut(MenuShortcut s) {
+	int nmenus = getMenuCount();
+	for (int i = 0 ; i < nmenus ; i++) {
+	    getMenu(i).deleteShortcut(s);
+        }
+    }
+
+    /* Serialization support.  Restore the (transient) parent
+     * fields of Menubar menus here.
+     */
+ 
+    /**
+     * The MenuBar's serialized data version.
+     *
+     * @serial
+     */
+    private int menuBarSerializedDataVersion = 1;
+
+    /**
+     * Writes default serializable fields to stream.  Writes
+     * a list of serializable ItemListener(s) as optional data.
+     * The non-serializable ItemListner(s) are detected and
+     * no attempt is made to serialize them.
+     *
+     * @serialData Null terminated sequence of 0 or more pairs.
+     *             The pair consists of a String and Object.
+     *             The String indicates the type of object and
+     *             is one of the following :
+     *             itemListenerK indicating and ItemListener object.
+     *
+     * @see AWTEventMulticaster.save(ObjectOutputStream, String, EventListener)
+     * @see java.awt.Component.itemListenerK
+     */
+    private void writeObject(java.io.ObjectOutputStream s)
+      throws java.lang.ClassNotFoundException,
+	     java.io.IOException
+    {
+      s.defaultWriteObject();
+    }
+
+    /**
+     * Read the ObjectInputStream and if it isnt null
+     * add a listener to receive item events fired
+     * by the MenuBar.
+     * Unrecognised keys or values will be Ignored.
+     *
+     * @see removeActionListener()
+     * @see addActionListener()
+     */
+    private void readObject(java.io.ObjectInputStream s)
+      throws java.lang.ClassNotFoundException,
+	     java.io.IOException
+    {
+      s.defaultReadObject();
+      for (int i = 0; i < menus.size(); i++) {
+	Menu m = (Menu)menus.elementAt(i);
+	m.parent = this;
+      }
+    }
+
+    /**
+     * Initialize JNI field and method IDs
+     */
+    private static native void initIDs();
+
+
+/////////////////
+// Accessibility support
+////////////////
+
+    /**
+     * Gets the AccessibleContext associated with this MenuBar. 
+     * For menu bars, the AccessibleContext takes the form of an 
+     * AccessibleAWTMenuBar. 
+     * A new AccessibleAWTMenuBar instance is created if necessary.
+     *
+     * @return an AccessibleAWTMenuBar that serves as the 
+     *         AccessibleContext of this MenuBar
+     */
+    public AccessibleContext getAccessibleContext() {
+        if (accessibleContext == null) {
+            accessibleContext = new AccessibleAWTMenuBar();
+        }
+        return accessibleContext;
+    }
+
+    /**
+     * Inner class of MenuBar used to provide default support for
+     * accessibility.  This class is not meant to be used directly by
+     * application developers, but is instead meant only to be
+     * subclassed by menu component developers.
+     * <p>
+     * This class implements accessibility support for the 
+     * <code>MenuBar</code> class.  It provides an implementation of the 
+     * Java Accessibility API appropriate to menu bar user-interface elements.
+     */
+    protected class AccessibleAWTMenuBar extends AccessibleAWTMenuComponent {
+
+        /**
+         * Get the role of this object.
+         *
+         * @return an instance of AccessibleRole describing the role of the 
+         * object
+         */
+        public AccessibleRole getAccessibleRole() {
+            return AccessibleRole.MENU_BAR;
+        }
+
+    } // class AccessibleAWTMenuBar
+
 }

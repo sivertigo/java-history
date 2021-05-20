@@ -1,39 +1,30 @@
 /*
- * @(#)SecurityException.java	1.4 95/08/10 Sami Shaio
- *
- * Copyright (c) 1995 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package java.lang;
 
 /**
- * Signals that a security exception has occurred.
+ * Thrown by the security manager to indicate a security violation. 
+ *
+ * @author  unascribed
+ * @version 1.12, 02/06/02
+ * @see     java.lang.SecurityManager
+ * @since   JDK1.0
  */
 public class SecurityException extends RuntimeException {
     /**
-     * Constructs a SecurityException with no detail message.
-     * A detail message is a String that describes this particular exception.
+     * Constructs a <code>SecurityException</code> with no detail  message.
      */
     public SecurityException() {
 	super();
     }
 
     /**
-     * Constructs a SecurityException with the specified detail message.
-     * A detail message is a String that describes this particular exception.
-     * @param s the detail message
+     * Constructs a <code>SecurityException</code> with the specified 
+     * detail message. 
+     *
+     * @param   s   the detail message.
      */
     public SecurityException(String s) {
 	super(s);

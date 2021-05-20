@@ -1,20 +1,6 @@
 /*
- * @(#)PixelGrabber.java	1.3 95/12/06 Jim Graham
- *
- * Copyright (c) 1995 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.awt.image;
@@ -31,7 +17,13 @@ import java.awt.Image;
  * in that image.  Here is an example:
  * <pre>
  *
- * public abstract void handlesinglepixel(int x, int y, int pixel);
+ * public void handlesinglepixel(int x, int y, int pixel) {
+ *	int alpha = (pixel >> 24) & 0xff;
+ *	int red   = (pixel >> 16) & 0xff;
+ *	int green = (pixel >>  8) & 0xff;
+ *	int blue  = (pixel      ) & 0xff;
+ *	// Deal with the pixel as necessary...
+ * }
  *
  * public void handlepixels(Image img, int x, int y, int w, int h) {
  *	int[] pixels = new int[w * h];
@@ -42,7 +34,7 @@ import java.awt.Image;
  *	    System.err.println("interrupted waiting for pixels!");
  *	    return;
  *	}
- *	if ((pg.status() & ImageObserver.ABORT) != 0) {
+ *	if ((pg.getStatus() & ImageObserver.ABORT) != 0) {
  *	    System.err.println("image fetch aborted or errored");
  *	    return;
  *	}
@@ -55,7 +47,9 @@ import java.awt.Image;
  *
  * </pre>
  *
- * @version 	1.3, 12/06/95
+ * @see ColorModel#getRGBdefault
+ *
+ * @version 	1.20, 02/06/02
  * @author 	Jim Graham
  */
 public class PixelGrabber implements ImageConsumer {
@@ -66,17 +60,19 @@ public class PixelGrabber implements ImageConsumer {
     int dstW;
     int dstH;
 
-    int[] pixelbuf;
+    ColorModel imageModel;
+    byte[] bytePixels;
+    int[] intPixels;
     int dstOff;
     int dstScan;
 
     private boolean grabbing;
     private int flags;
 
-    private final int GRABBEDBITS = (ImageObserver.FRAMEBITS
-				     | ImageObserver.ALLBITS);
-    private final int DONEBITS = (GRABBEDBITS
-				  | ImageObserver.ERROR);
+    private static final int GRABBEDBITS = (ImageObserver.FRAMEBITS
+					    | ImageObserver.ALLBITS);
+    private static final int DONEBITS = (GRABBEDBITS
+					 | ImageObserver.ERROR);
 
     /**
      * Create a PixelGrabber object to grab the (x, y, w, h) rectangular
@@ -137,7 +133,64 @@ public class PixelGrabber implements ImageConsumer {
 	dstH = h;
 	dstOff = off;
 	dstScan = scansize;
-	pixelbuf = pix;
+	intPixels = pix;
+	imageModel = ColorModel.getRGBdefault();
+    }
+
+    /**
+     * Create a PixelGrabber object to grab the (x, y, w, h) rectangular
+     * section of pixels from the specified image.  The pixels are
+     * accumulated in the original ColorModel if the same ColorModel
+     * is used for every call to setPixels, otherwise the pixels are
+     * accumulated in the default RGB ColorModel.  If the forceRGB
+     * parameter is true, then the pixels will be accumulated in the
+     * default RGB ColorModel anyway.  A buffer is allocated by the
+     * PixelGrabber to hold the pixels in either case.  If (w < 0) or
+     * (h < 0), then they will default to the remaining width and
+     * height of the source data when that information is delivered.
+     * @param img the image to retrieve the image data from
+     * @param x the x coordinate of the upper left corner of the rectangle
+     * of pixels to retrieve from the image, relative to the default
+     * (unscaled) size of the image
+     * @param y the y coordinate of the upper left corner of the rectangle
+     * of pixels to retrieve from the image
+     * @param w the width of the rectangle of pixels to retrieve
+     * @param h the height of the rectangle of pixels to retrieve
+     * @param forceRGB true if the pixels should always be converted to
+     * the default RGB ColorModel
+     */
+    public PixelGrabber(Image img, int x, int y, int w, int h,
+			boolean forceRGB)
+    {
+	producer = img.getSource();
+	dstX = x;
+	dstY = y;
+	dstW = w;
+	dstH = h;
+	if (forceRGB) {
+	    imageModel = ColorModel.getRGBdefault();
+	}
+    }
+
+    /**
+     * Request the PixelGrabber to start fetching the pixels.
+     */
+    public synchronized void startGrabbing() {
+	if ((flags & DONEBITS) != 0) {
+	    return;
+	}
+	if (!grabbing) {
+	    grabbing = true;
+	    flags &= ~(ImageObserver.ABORT);
+	    producer.startProduction(this);
+	}
+    }
+
+    /**
+     * Request the PixelGrabber to abort the image fetch.
+     */
+    public synchronized void abortGrabbing() {
+	imageComplete(IMAGEABORTED);
     }
 
     /**
@@ -146,7 +199,7 @@ public class PixelGrabber implements ImageConsumer {
      * delivered.
      * @return true if the pixels were successfully grabbed, false on
      * abort, error or timeout
-     * @exception InterruptedException 
+     * @exception InterruptedException
      *            Another thread has interrupted this thread.
      */
     public boolean grabPixels() throws InterruptedException {
@@ -156,13 +209,22 @@ public class PixelGrabber implements ImageConsumer {
     /**
      * Request the Image or ImageProducer to start delivering pixels and
      * wait for all of the pixels in the rectangle of interest to be
-     * delivered or until the specified timeout has elapsed.
+     * delivered or until the specified timeout has elapsed.  This method
+     * behaves in the following ways, depending on the value of 
+     * <code>ms</code>:
+     * <ul>
+     * <li> If <code>ms</code> == 0, waits until all pixels are delivered
+     * <li> If <code>ms</code> > 0, waits until all pixels are delivered 
+     * as timeout expires.
+     * <li> If <code>ms</code> < 0, returns <code>true</code> if all pixels 
+     * are grabbed, <code>false</code> otherwise and does not wait.
+     * </ul>
      * @param ms the number of milliseconds to wait for the image pixels
      * to arrive before timing out
      * @return true if the pixels were successfully grabbed, false on
      * abort, error or timeout
-     * @exception InterruptedException 
-     *            Another thread has interrupted this thread. 
+     * @exception InterruptedException
+     *            Another thread has interrupted this thread.
      */
     public synchronized boolean grabPixels(long ms)
 	throws InterruptedException
@@ -172,9 +234,9 @@ public class PixelGrabber implements ImageConsumer {
 	}
 	long end = ms + System.currentTimeMillis();
 	if (!grabbing) {
-	    producer.startProduction(this);
 	    grabbing = true;
 	    flags &= ~(ImageObserver.ABORT);
+	    producer.startProduction(this);
 	}
 	while (grabbing) {
 	    long timeout;
@@ -197,21 +259,112 @@ public class PixelGrabber implements ImageConsumer {
      * @see ImageObserver
      * @return the bitwise OR of all relevant ImageObserver flags
      */
-    public synchronized int status() {
+    public synchronized int getStatus() {
 	return flags;
+    }
+
+    /**
+     * Get the width of the pixel buffer (after adjusting for image width).
+     * If no width was specified for the rectangle of pixels to grab then
+     * then this information will only be available after the image has
+     * delivered the dimensions.
+     * @return the final width used for the pixel buffer or -1 if the width
+     * is not yet known
+     * @see #getStatus
+     */
+    public synchronized int getWidth() {
+	return (dstW < 0) ? -1 : dstW;
+    }
+
+    /**
+     * Get the height of the pixel buffer (after adjusting for image height).
+     * If no width was specified for the rectangle of pixels to grab then
+     * then this information will only be available after the image has
+     * delivered the dimensions.
+     * @return the final height used for the pixel buffer or -1 if the height
+     * is not yet known
+     * @see #getStatus
+     */
+    public synchronized int getHeight() {
+	return (dstH < 0) ? -1 : dstH;
+    }
+
+    /**
+     * Get the pixel buffer.  If the PixelGrabber was not constructed
+     * with an explicit pixel buffer to hold the pixels then this method
+     * will return null until the size and format of the image data is
+     * known.
+     * Since the PixelGrabber may fall back on accumulating the data
+     * in the default RGB ColorModel at any time if the source image
+     * uses more than one ColorModel to deliver the data, the array
+     * object returned by this method may change over time until the
+     * image grab is complete.
+     * @return either a byte array or an int array
+     * @see #getStatus
+     */
+    public synchronized Object getPixels() {
+	return (bytePixels == null)
+	    ? ((Object) intPixels)
+	    : ((Object) bytePixels);
+    }
+
+    /**
+     * Get the ColorModel for the pixels stored in the array.  If the
+     * PixelGrabber was constructed with an explicit pixel buffer then
+     * this method will always return the default RGB ColorModel,
+     * otherwise it may return null until the ColorModel used by the
+     * ImageProducer is known.
+     * Since the PixelGrabber may fall back on accumulating the data
+     * in the default RGB ColorModel at any time if the source image
+     * uses more than one ColorModel to deliver the data, the ColorModel
+     * object returned by this method may change over time until the
+     * image grab is complete and may not reflect any of the ColorModel
+     * objects that was used by the ImageProducer to deliver the pixels.
+     * @return the ColorModel object used for storing the pixels
+     * @see #getStatus
+     * @see ColorModel#getRGBdefault
+     */
+    public synchronized ColorModel getColorModel() {
+	return imageModel;
     }
 
     /**
      * The setDimensions method is part of the ImageConsumer API which
      * this class must implement to retrieve the pixels.
+     * <p>
+     * Note: This method is intended to be called by the ImageProducer
+     * of the Image whose pixels are being grabbed.  Developers using
+     * this class to retrieve pixels from an image should avoid calling
+     * this method directly since that operation could result in problems
+     * with retrieving the requested pixels.
      */
     public void setDimensions(int width, int height) {
-	return;
+	if (dstW < 0) {
+	    dstW = width - dstX;
+	}
+	if (dstH < 0) {
+	    dstH = height - dstY;
+	}
+	if (dstW <= 0 || dstH <= 0) {
+	    imageComplete(STATICIMAGEDONE);
+	} else if (intPixels == null &&
+		   imageModel == ColorModel.getRGBdefault()) {
+	    intPixels = new int[dstW * dstH];
+	    dstScan = dstW;
+	    dstOff = 0;
+	}
+	flags |= (ImageObserver.WIDTH | ImageObserver.HEIGHT);
     }
 
     /**
      * The setHints method is part of the ImageConsumer API which
      * this class must implement to retrieve the pixels.
+     * <p>
+     * Note: This method is intended to be called by the ImageProducer
+     * of the Image whose pixels are being grabbed.  Developers using
+     * this class to retrieve pixels from an image should avoid calling
+     * this method directly since that operation could result in problems
+     * with retrieving the requested pixels.
      */
     public void setHints(int hints) {
 	return;
@@ -220,6 +373,12 @@ public class PixelGrabber implements ImageConsumer {
     /**
      * The setProperties method is part of the ImageConsumer API which
      * this class must implement to retrieve the pixels.
+     * <p>
+     * Note: This method is intended to be called by the ImageProducer
+     * of the Image whose pixels are being grabbed.  Developers using
+     * this class to retrieve pixels from an image should avoid calling
+     * this method directly since that operation could result in problems
+     * with retrieving the requested pixels.
      */
     public void setProperties(Hashtable props) {
 	return;
@@ -228,14 +387,45 @@ public class PixelGrabber implements ImageConsumer {
     /**
      * The setColorModel method is part of the ImageConsumer API which
      * this class must implement to retrieve the pixels.
+     * <p>
+     * Note: This method is intended to be called by the ImageProducer
+     * of the Image whose pixels are being grabbed.  Developers using
+     * this class to retrieve pixels from an image should avoid calling
+     * this method directly since that operation could result in problems
+     * with retrieving the requested pixels.
      */
     public void setColorModel(ColorModel model) {
 	return;
     }
 
+    private void convertToRGB() {
+	int size = dstW * dstH;
+	int newpixels[] = new int[size];
+	if (bytePixels != null) {
+	    for (int i = 0; i < size; i++) {
+		newpixels[i] = imageModel.getRGB(bytePixels[i] & 0xff);
+	    }
+	} else if (intPixels != null) {
+	    for (int i = 0; i < size; i++) {
+		newpixels[i] = imageModel.getRGB(intPixels[i]);
+	    }
+	}
+	bytePixels = null;
+	intPixels = newpixels;
+	dstScan = dstW;
+	dstOff = 0;
+	imageModel = ColorModel.getRGBdefault();
+    }
+
     /**
      * The setPixels method is part of the ImageConsumer API which
      * this class must implement to retrieve the pixels.
+     * <p>
+     * Note: This method is intended to be called by the ImageProducer
+     * of the Image whose pixels are being grabbed.  Developers using
+     * this class to retrieve pixels from an image should avoid calling
+     * this method directly since that operation could result in problems
+     * with retrieving the requested pixels.
      */
     public void setPixels(int srcX, int srcY, int srcW, int srcH,
 			  ColorModel model,
@@ -271,14 +461,33 @@ public class PixelGrabber implements ImageConsumer {
 	    }
 	}
 	int dstPtr = dstOff + (srcY - dstY) * dstScan + (srcX - dstX);
-	int dstRem = dstScan - dstW;
-	int srcRem = srcScan - srcW;
-	for (int h = srcH; h > 0; h--) {
-	    for (int w = srcW; w > 0; w--) {
-		pixelbuf[dstPtr++] = model.getRGB(pixels[srcOff++] & 0xff);
+	if (intPixels == null) {
+	    if (bytePixels == null) {
+		bytePixels = new byte[dstW * dstH];
+		dstScan = dstW;
+		dstOff = 0;
+		imageModel = model;
+	    } else if (imageModel != model) {
+		convertToRGB();
 	    }
-	    srcOff += srcRem;
-	    dstPtr += dstRem;
+	    if (bytePixels != null) {
+		for (int h = srcH; h > 0; h--) {
+		    System.arraycopy(pixels, srcOff, bytePixels, dstPtr, srcW);
+		    srcOff += srcScan;
+		    dstPtr += dstScan;
+		}
+	    }
+	}
+	if (intPixels != null) {
+	    int dstRem = dstScan - srcW;
+	    int srcRem = srcScan - srcW;
+	    for (int h = srcH; h > 0; h--) {
+		for (int w = srcW; w > 0; w--) {
+		    intPixels[dstPtr++] = model.getRGB(pixels[srcOff++]&0xff);
+		}
+		srcOff += srcRem;
+		dstPtr += dstRem;
+	    }
 	}
 	flags |= ImageObserver.SOMEBITS;
     }
@@ -286,6 +495,12 @@ public class PixelGrabber implements ImageConsumer {
     /**
      * The setPixels method is part of the ImageConsumer API which
      * this class must implement to retrieve the pixels.
+     * <p>
+     * Note: This method is intended to be called by the ImageProducer
+     * of the Image whose pixels are being grabbed.  Developers using
+     * this class to retrieve pixels from an image should avoid calling
+     * this method directly since that operation could result in problems
+     * with retrieving the requested pixels.
      */
     public void setPixels(int srcX, int srcY, int srcW, int srcH,
 			  ColorModel model,
@@ -320,15 +535,36 @@ public class PixelGrabber implements ImageConsumer {
 		return;
 	    }
 	}
-	int dstPtr = dstOff + (srcY - dstY) * dstScan + (srcX - dstX);
-	int dstRem = dstScan - dstW;
-	int srcRem = srcScan - srcW;
-	for (int h = srcH; h > 0; h--) {
-	    for (int w = srcW; w > 0; w--) {
-		pixelbuf[dstPtr++] = model.getRGB(pixels[srcOff++]);
+	if (intPixels == null) {
+	    if (bytePixels == null) {
+		intPixels = new int[dstW * dstH];
+		dstScan = dstW;
+		dstOff = 0;
+		imageModel = model;
+	    } else {
+		convertToRGB();
 	    }
-	    srcOff += srcRem;
-	    dstPtr += dstRem;
+	}
+	int dstPtr = dstOff + (srcY - dstY) * dstScan + (srcX - dstX);
+	if (imageModel == model) {
+	    for (int h = srcH; h > 0; h--) {
+		System.arraycopy(pixels, srcOff, intPixels, dstPtr, srcW);
+		srcOff += srcScan;
+		dstPtr += dstScan;
+	    }
+	} else {
+	    if (imageModel != ColorModel.getRGBdefault()) {
+		convertToRGB();
+	    }
+	    int dstRem = dstScan - srcW;
+	    int srcRem = srcScan - srcW;
+	    for (int h = srcH; h > 0; h--) {
+		for (int w = srcW; w > 0; w--) {
+		    intPixels[dstPtr++] = model.getRGB(pixels[srcOff++]);
+		}
+		srcOff += srcRem;
+		dstPtr += dstRem;
+	    }
 	}
 	flags |= ImageObserver.SOMEBITS;
     }
@@ -336,6 +572,12 @@ public class PixelGrabber implements ImageConsumer {
     /**
      * The imageComplete method is part of the ImageConsumer API which
      * this class must implement to retrieve the pixels.
+     * <p>
+     * Note: This method is intended to be called by the ImageProducer
+     * of the Image whose pixels are being grabbed.  Developers using
+     * this class to retrieve pixels from an image should avoid calling
+     * this method directly since that operation could result in problems
+     * with retrieving the requested pixels.
      */
     public synchronized void imageComplete(int status) {
 	grabbing = false;
@@ -356,5 +598,21 @@ public class PixelGrabber implements ImageConsumer {
 	}
 	producer.removeConsumer(this);
 	notifyAll();
+    }
+
+    /**
+     * Returns the status of the pixels.  The ImageObserver flags
+     * representing the available pixel information are returned.
+     * This method and {@link #getStatus() getStatus} have the
+     * same implementation, but <code>getStatus</code> is the
+     * preferred method because it conforms to the convention of
+     * naming information-retrieval methods with the form
+     * "getXXX".
+     * @return the bitwise OR of all relevant ImageObserver flags
+     * @see ImageObserver
+     * @see #getStatus()
+     */  
+    public synchronized int status() {
+	return flags;
     }
 }

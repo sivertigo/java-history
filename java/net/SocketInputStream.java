@@ -1,41 +1,32 @@
 /*
- * @(#)SocketInputStream.java	1.11 95/11/06 Jonathan Payne
- *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.net;
 
 import java.io.IOException;
 import java.io.FileInputStream;
+import java.io.FileDescriptor;
 
 /**
  * This stream extends FileInputStream to implement a
  * SocketInputStream. Note that this class should <b>NOT</b> be
  * public.
  *
- * @version     1.11, 11/06/95
+ * @version     1.25, 02/06/02
  * @author	Jonathan Payne
  * @author	Arthur van Hoff
  */
 class SocketInputStream extends FileInputStream
 {
+    static {
+        init();
+    }
+    
     private boolean eof;
-    private SocketImpl impl;
-    private byte temp[] = new byte[1];
+    private PlainSocketImpl impl;
+    private byte temp[]; 
 
     /**
      * Creates a new SocketInputStream. Can only be called
@@ -43,7 +34,7 @@ class SocketInputStream extends FileInputStream
      * that the fd will not be closed.
      * @param impl the implemented socket input stream
      */
-    SocketInputStream(SocketImpl impl) throws IOException {
+    SocketInputStream(PlainSocketImpl impl) throws IOException {
 	super(impl.getFileDescriptor());
 	this.impl = impl;
     }
@@ -83,11 +74,22 @@ class SocketInputStream extends FileInputStream
      * @exception IOException If an I/O error has occurred.
      */
     public int read(byte b[], int off, int length) throws IOException {
+	int n;
 	if (eof) {
 	    return -1;
 	}
-	int n = socketRead(b, off, length);
+        if (length == 0)
+            return 0;
+	FileDescriptor fd = impl.acquireFD(); 
+	try {
+		n = socketRead(b, off, length);
+	} finally {
+		impl.releaseFD(); 
+	}
 	if (n <= 0) {
+		if (impl.isClosedOrPending()) {
+			throw new SocketException("Socket closed");
+		}
 	    eof = true;
 	    return -1;
 	}
@@ -101,7 +103,7 @@ class SocketInputStream extends FileInputStream
 	if (eof) {
 	    return -1;
 	}
-
+	temp = new byte[1];
  	int n = read(temp, 0, 1);
 	if (n <= 0) {
 	    return -1;
@@ -112,14 +114,24 @@ class SocketInputStream extends FileInputStream
     /** 
      * Skips n bytes of input.
      * @param n the number of bytes to skip
+     * @return	the actual number of bytes skipped.
+     * @exception IOException If an I/O error has occurred.
      */
-    public int skip(int numbytes) throws IOException {
-	int n = numbytes;
-	byte data[] = new byte[n];
-	while (n > 0) {
-	    n -= read(data, 0, n);
+    public long skip(long numbytes) throws IOException {
+	if (numbytes <= 0) {
+	    return 0;
 	}
-	return numbytes;
+	long n = numbytes;
+	int buflen = (int) Math.min(1024, n);
+	byte data[] = new byte[buflen];
+	while (n > 0) {
+	    int r = read(data, 0, (int) Math.min((long) buflen, n));
+	    if (r < 0) {
+		break;
+	    }
+	    n -= r;
+	}
+	return numbytes - n;
     }
 
     /**
@@ -137,9 +149,18 @@ class SocketInputStream extends FileInputStream
 	impl.close();
     }
 
+    void setEOF(boolean eof) {
+	this.eof = eof;
+    }
+
     /** 
      * Overrides finalize, the fd is closed by the Socket.
      */
     protected void finalize() {}
+
+    /**
+     * Perform class load-time initializations.
+     */
+    private native static void init();
 }
 

@@ -1,47 +1,41 @@
 /*
- * @(#)Error.java	1.5 95/08/16  
- *
- * Copyright (c) 1995 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang;
 
 /**
- * Error is a subtype of Throwable for abnormal events that should not occur.
+ * An <code>Error</code> is a subclass of <code>Throwable</code> 
+ * that indicates serious problems that a reasonable application 
+ * should not try to catch. Most such errors are abnormal conditions. 
+ * The <code>ThreadDeath</code> error, though a "normal" condition,
+ * is also a subclass of <code>Error</code> because most applications
+ * should not try to catch it. 
+ * <p>
+ * A method is not required to declare in its <code>throws</code> 
+ * clause any subclasses of <code>Error</code> that might be thrown 
+ * during the execution of the method but not caught, since these 
+ * errors are abnormal conditions that should never occur. 
  *
- * Do not try to catch Error's unless you really know what you're
- * doing.
- *
- * @version 	1.5, 08/16/95
- * @author      Frank Yellin
+ * @author  Frank Yellin
+ * @version 1.13, 02/06/02
+ * @see     java.lang.ThreadDeath
+ * @since   JDK1.0
  */
 public
 class Error extends Throwable {
     /**
-     * Constructs an Error with no specified detail message.
-     * A detail message is a String that describes this particular error.
+     * Constructs an <code>Error</code> with no specified detail message.
      */
     public Error() {
 	super();
     }
 
     /**
-     * Constructs an Error with the specified detail message.
-     * A detail message is a String that describes this particular error
-     * @param s the detail message
+     * Constructs an Error with the specified detail message. 
+     *
+     * @param   s   the detail message.
      */
     public Error(String s) {
 	super(s);
