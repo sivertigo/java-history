@@ -1,29 +1,70 @@
 /*
- * @(#)DialogPeer.java	1.3 95/08/07 Arthur van Hoff
+ * Copyright (c) 1995, 2007, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  *
- * Copyright (c) 1995 Sun Microsystems, Inc. All Rights Reserved.
  *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
  *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.awt.peer;
 
 import java.awt.*;
 
+/**
+ * The peer interface for {@link Dialog}. This adds a couple of dialog specific
+ * features to the {@link WindowPeer} interface.
+ *
+ * The peer interfaces are intended only for use in porting
+ * the AWT. They are not intended for use by application
+ * developers, and developers should not implement peers
+ * nor invoke any of the peer methods directly on the peer
+ * instances.
+ */
 public interface DialogPeer extends WindowPeer {
+
+    /**
+     * Sets the title on the dialog window.
+     *
+     * @param title the title to set
+     *
+     * @see Dialog#setTitle(String)
+     */
     void setTitle(String title);
+
+    /**
+     * Sets if the dialog should be resizable or not.
+     *
+     * @param resizeable {@code true} when the dialog should be resizable,
+     *        {@code false} if not
+     *
+     * @see Dialog#setResizable(boolean)
+     */
     void setResizable(boolean resizeable);
+
+    /**
+     * Block the specified windows. This is used for modal dialogs.
+     *
+     * @param windows the windows to block
+     *
+     * @see Dialog#modalShow()
+     * @see Dialog#blockWindows()
+     */
+    void blockWindows(java.util.List<Window> windows);
 }
-
-

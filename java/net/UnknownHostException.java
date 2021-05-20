@@ -1,20 +1,26 @@
 /*
- * @(#)UnknownHostException.java	1.5 95/08/16 Jonathan Payne
+ * Copyright (c) 1995, 2008, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
  *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
  *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.net;
@@ -22,31 +28,29 @@ package java.net;
 import java.io.IOException;
 
 /**
- * Signals that the address of the server specified by a network client could not
- * be resolved.
- * 
- * @version     1.5,08/16/95
- * @author      Jonathan Payne 
+ * Thrown to indicate that the IP address of a host could not be determined.
+ *
+ * @author  Jonathan Payne
+ * @since   JDK1.0
  */
-public 
+public
 class UnknownHostException extends IOException {
-    
+    private static final long serialVersionUID = -4639126076052875403L;
+
     /**
-     * Constructs a new UnknownHostException with the specified detail message.
-     * A detail message is a String that gives a specific description
-     * of this error. 
-     * @param host the detail message
+     * Constructs a new <code>UnknownHostException</code> with the
+     * specified detail message.
+     *
+     * @param   host   the detail message.
      */
     public UnknownHostException(String host) {
-	super(host);
+        super(host);
     }
 
     /**
-     * Constructs a new UnknownHostException with no detail message. 
-     * A detail message is a String that gives a specific description
-     * of this error.  
+     * Constructs a new <code>UnknownHostException</code> with no detail
+     * message.
      */
     public UnknownHostException() {
     }
 }
-

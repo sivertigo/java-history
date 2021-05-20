@@ -1,47 +1,119 @@
 /*
- * @(#)RuntimeException.java	1.2 95/08/07  
+ * Copyright (c) 1995, 2011, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  *
- * Copyright (c) 1995 Sun Microsystems, Inc. All Rights Reserved.
  *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
  *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.lang;
 
 /**
- * An exception that can reasonably occur during the execution of a Java
- * program by the Virtual machine.<p>
+ * {@code RuntimeException} is the superclass of those
+ * exceptions that can be thrown during the normal operation of the
+ * Java Virtual Machine.
  *
- * @version 	1.2, 08/07/95
- * @author      Frank Yellin
+ * <p>{@code RuntimeException} and its subclasses are <em>unchecked
+ * exceptions</em>.  Unchecked exceptions do <em>not</em> need to be
+ * declared in a method or constructor's {@code throws} clause if they
+ * can be thrown by the execution of the method or constructor and
+ * propagate outside the method or constructor boundary.
+ *
+ * @author  Frank Yellin
+ * @jls 11.2 Compile-Time Checking of Exceptions
+ * @since   JDK1.0
  */
-public
-class RuntimeException extends Exception {
-    /**
-     * Constructs a RuntimeException with no detail message.
-     * A detail message is a String that describes this particular exception.
+public class RuntimeException extends Exception {
+    static final long serialVersionUID = -7034897190745766939L;
+
+    /** Constructs a new runtime exception with {@code null} as its
+     * detail message.  The cause is not initialized, and may subsequently be
+     * initialized by a call to {@link #initCause}.
      */
     public RuntimeException() {
-	super();
+        super();
+    }
+
+    /** Constructs a new runtime exception with the specified detail message.
+     * The cause is not initialized, and may subsequently be initialized by a
+     * call to {@link #initCause}.
+     *
+     * @param   message   the detail message. The detail message is saved for
+     *          later retrieval by the {@link #getMessage()} method.
+     */
+    public RuntimeException(String message) {
+        super(message);
     }
 
     /**
-     * Constructs a RuntimeException with the specified detail message.
-     * A detail message is a String that describes this particular exception.
-     * @param s the detail message
+     * Constructs a new runtime exception with the specified detail message and
+     * cause.  <p>Note that the detail message associated with
+     * {@code cause} is <i>not</i> automatically incorporated in
+     * this runtime exception's detail message.
+     *
+     * @param  message the detail message (which is saved for later retrieval
+     *         by the {@link #getMessage()} method).
+     * @param  cause the cause (which is saved for later retrieval by the
+     *         {@link #getCause()} method).  (A <tt>null</tt> value is
+     *         permitted, and indicates that the cause is nonexistent or
+     *         unknown.)
+     * @since  1.4
      */
-    public RuntimeException(String s) {
-	super(s);
+    public RuntimeException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    /** Constructs a new runtime exception with the specified cause and a
+     * detail message of <tt>(cause==null ? null : cause.toString())</tt>
+     * (which typically contains the class and detail message of
+     * <tt>cause</tt>).  This constructor is useful for runtime exceptions
+     * that are little more than wrappers for other throwables.
+     *
+     * @param  cause the cause (which is saved for later retrieval by the
+     *         {@link #getCause()} method).  (A <tt>null</tt> value is
+     *         permitted, and indicates that the cause is nonexistent or
+     *         unknown.)
+     * @since  1.4
+     */
+    public RuntimeException(Throwable cause) {
+        super(cause);
+    }
+
+    /**
+     * Constructs a new runtime exception with the specified detail
+     * message, cause, suppression enabled or disabled, and writable
+     * stack trace enabled or disabled.
+     *
+     * @param  message the detail message.
+     * @param cause the cause.  (A {@code null} value is permitted,
+     * and indicates that the cause is nonexistent or unknown.)
+     * @param enableSuppression whether or not suppression is enabled
+     *                          or disabled
+     * @param writableStackTrace whether or not the stack trace should
+     *                           be writable
+     *
+     * @since 1.7
+     */
+    protected RuntimeException(String message, Throwable cause,
+                               boolean enableSuppression,
+                               boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
     }
 }

@@ -1,47 +1,65 @@
 /*
- * W% 95/08/15  
+ * Copyright (c) 1995, 2008, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
  *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
  *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.io;
 
 /**
- * Signals that and EOF has been reached unexpectedly during input.
- * @see	java.io.IOException
- * @see	java.io.DataInputStream
- * @version 	1.1, 08/15/95
- * @author	Frank Yellin
+ * Signals that an end of file or end of stream has been reached
+ * unexpectedly during input.
+ * <p>
+ * This exception is mainly used by data input streams to signal end of
+ * stream. Note that many other input operations return a special value on
+ * end of stream rather than throwing an exception.
+ * <p>
+ *
+ * @author  Frank Yellin
+ * @see     java.io.DataInputStream
+ * @see     java.io.IOException
+ * @since   JDK1.0
  */
 public
 class EOFException extends IOException {
+    private static final long serialVersionUID = 6433858223774886977L;
+
     /**
-     * Constructs an EOFException with no detail message.
-     * A detail message is a String that describes this particular exception.
+     * Constructs an <code>EOFException</code> with <code>null</code>
+     * as its error detail message.
      */
     public EOFException() {
-	super();
+        super();
     }
 
     /**
-     * Constructs an EOFException with the specified detail message.
-     * A detail message is a String that describes this particular exception.
-     * @param s the detail message
+     * Constructs an <code>EOFException</code> with the specified detail
+     * message. The string <code>s</code> may later be retrieved by the
+     * <code>{@link java.lang.Throwable#getMessage}</code> method of class
+     * <code>java.lang.Throwable</code>.
+     *
+     * @param   s   the detail message.
      */
     public EOFException(String s) {
-	super(s);
+        super(s);
     }
 }

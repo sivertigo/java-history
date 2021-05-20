@@ -1,47 +1,124 @@
 /*
- * @(#)Exception.java	1.20 95/12/02
+ * Copyright (c) 1994, 2011, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  *
- * Copyright (c) 1995 Sun Microsystems, Inc. All Rights Reserved.
  *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
  *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.lang;
 
 /**
- * Exception are a form of Throwable that normal programs may wish to try and catch.
+ * The class {@code Exception} and its subclasses are a form of
+ * {@code Throwable} that indicates conditions that a reasonable
+ * application might want to catch.
  *
+ * <p>The class {@code Exception} and any subclasses that are not also
+ * subclasses of {@link RuntimeException} are <em>checked
+ * exceptions</em>.  Checked exceptions need to be declared in a
+ * method or constructor's {@code throws} clause if they can be thrown
+ * by the execution of the method or constructor and propagate outside
+ * the method or constructor boundary.
  *
- * @version 	1.0, 10 Aug 1995
- * @author      Frank Yellin
+ * @author  Frank Yellin
+ * @see     java.lang.Error
+ * @jls 11.2 Compile-Time Checking of Exceptions
+ * @since   JDK1.0
  */
-public
-class Exception extends Throwable {
+public class Exception extends Throwable {
+    static final long serialVersionUID = -3387516993124229948L;
+
     /**
-     * Constructs an Exception with no specified detail message.
-     * A detail message is a String that describes this particular exception.
+     * Constructs a new exception with {@code null} as its detail message.
+     * The cause is not initialized, and may subsequently be initialized by a
+     * call to {@link #initCause}.
      */
     public Exception() {
-	super();
+        super();
     }
 
     /**
-     * Constructs a Exception with the specified detail message.
-     * A detail message is a String that describes this particular exception.
-     * @param s the detail message
+     * Constructs a new exception with the specified detail message.  The
+     * cause is not initialized, and may subsequently be initialized by
+     * a call to {@link #initCause}.
+     *
+     * @param   message   the detail message. The detail message is saved for
+     *          later retrieval by the {@link #getMessage()} method.
      */
-    public Exception(String s) {
-	super(s);
+    public Exception(String message) {
+        super(message);
+    }
+
+    /**
+     * Constructs a new exception with the specified detail message and
+     * cause.  <p>Note that the detail message associated with
+     * {@code cause} is <i>not</i> automatically incorporated in
+     * this exception's detail message.
+     *
+     * @param  message the detail message (which is saved for later retrieval
+     *         by the {@link #getMessage()} method).
+     * @param  cause the cause (which is saved for later retrieval by the
+     *         {@link #getCause()} method).  (A <tt>null</tt> value is
+     *         permitted, and indicates that the cause is nonexistent or
+     *         unknown.)
+     * @since  1.4
+     */
+    public Exception(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    /**
+     * Constructs a new exception with the specified cause and a detail
+     * message of <tt>(cause==null ? null : cause.toString())</tt> (which
+     * typically contains the class and detail message of <tt>cause</tt>).
+     * This constructor is useful for exceptions that are little more than
+     * wrappers for other throwables (for example, {@link
+     * java.security.PrivilegedActionException}).
+     *
+     * @param  cause the cause (which is saved for later retrieval by the
+     *         {@link #getCause()} method).  (A <tt>null</tt> value is
+     *         permitted, and indicates that the cause is nonexistent or
+     *         unknown.)
+     * @since  1.4
+     */
+    public Exception(Throwable cause) {
+        super(cause);
+    }
+
+    /**
+     * Constructs a new exception with the specified detail message,
+     * cause, suppression enabled or disabled, and writable stack
+     * trace enabled or disabled.
+     *
+     * @param  message the detail message.
+     * @param cause the cause.  (A {@code null} value is permitted,
+     * and indicates that the cause is nonexistent or unknown.)
+     * @param enableSuppression whether or not suppression is enabled
+     *                          or disabled
+     * @param writableStackTrace whether or not the stack trace should
+     *                           be writable
+     * @since 1.7
+     */
+    protected Exception(String message, Throwable cause,
+                        boolean enableSuppression,
+                        boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
     }
 }

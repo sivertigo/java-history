@@ -1,27 +1,60 @@
 /*
- * @(#)LabelPeer.java	1.6 95/07/28 Sami Shaio
+ * Copyright (c) 1995, 2007, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  *
- * Copyright (c) 1995 Sun Microsystems, Inc. All Rights Reserved.
  *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
  *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 package java.awt.peer;
 
-import java.awt.Color;
-import java.awt.Font;
+import java.awt.Label;
 
+/**
+ * The peer interface for {@link Label}.
+ *
+ * The peer interfaces are intended only for use in porting
+ * the AWT. They are not intended for use by application
+ * developers, and developers should not implement peers
+ * nor invoke any of the peer methods directly on the peer
+ * instances.
+ */
 public interface LabelPeer extends ComponentPeer {
+
+    /**
+     * Sets the text to be displayed on the label.
+     *
+     * @param label the text to be displayed on the label
+     *
+     * @see Label#setText
+     */
     void setText(String label);
+
+    /**
+     * Sets the alignment of the label text.
+     *
+     * @param alignment the alignment of the label text
+     *
+     * @see Label#setAlignment(int)
+     * @see Label#CENTER
+     * @see Label#RIGHT
+     * @see Label#LEFT
+     */
     void setAlignment(int alignment);
 }
