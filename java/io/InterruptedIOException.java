@@ -1,53 +1,74 @@
 /*
- * @(#)IOException.java	1.10 95/08/09  
+ * Copyright (c) 1995, 2008, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
  *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
  *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.io;
 
 /**
- * Signals that an I/O operation has been interrupted.
- * @see	java.io.InputStream
- * @see	java.io.OutputStream
- * @version 	1.10, 09 Aug 1995
+ * Signals that an I/O operation has been interrupted. An
+ * <code>InterruptedIOException</code> is thrown to indicate that an
+ * input or output transfer has been terminated because the thread
+ * performing it was interrupted. The field {@link #bytesTransferred}
+ * indicates how many bytes were successfully transferred before
+ * the interruption occurred.
+ *
+ * @author  unascribed
+ * @see     java.io.InputStream
+ * @see     java.io.OutputStream
+ * @see     java.lang.Thread#interrupt()
+ * @since   JDK1.0
  */
 public
 class InterruptedIOException extends IOException {
+    private static final long serialVersionUID = 4020568460727500567L;
+
     /**
-     * Constructs an IOException with no detail message.
-     * A detail message is a String that describes this particular exception.
+     * Constructs an <code>InterruptedIOException</code> with
+     * <code>null</code> as its error detail message.
      */
     public InterruptedIOException() {
-	super();
+        super();
     }
 
     /**
-     * Constructs an IOException with the specified detail message.
-     * A detail message is a String that describes this particular exception.
-     * @param s the detail message
+     * Constructs an <code>InterruptedIOException</code> with the
+     * specified detail message. The string <code>s</code> can be
+     * retrieved later by the
+     * <code>{@link java.lang.Throwable#getMessage}</code>
+     * method of class <code>java.lang.Throwable</code>.
+     *
+     * @param   s   the detail message.
      */
     public InterruptedIOException(String s) {
-	super(s);
+        super(s);
     }
 
     /**
-     * Reports how many bytes had been transferred as
-     * part of the IO operation before it was interrupted.
-     */ 
+     * Reports how many bytes had been transferred as part of the I/O
+     * operation before it was interrupted.
+     *
+     * @serial
+     */
     public int bytesTransferred = 0;
-    
 }

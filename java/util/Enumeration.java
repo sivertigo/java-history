@@ -1,51 +1,79 @@
 /*
- * @(#)Enumeration.java	1.9 95/08/13  
+ * Copyright (c) 1994, 2005, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
  *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
  *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.util;
 
 /**
- * The Enumeration interface specifies a set of methods that may be used
- * to enumerate, or count through, a set of values. The enumeration is
- * consumed by use; its values may only be counted once.<p>
- *
- * For example, to print all elements of a Vector v:
+ * An object that implements the Enumeration interface generates a
+ * series of elements, one at a time. Successive calls to the
+ * <code>nextElement</code> method return successive elements of the
+ * series.
+ * <p>
+ * For example, to print all elements of a <tt>Vector&lt;E&gt;</tt> <i>v</i>:
  * <pre>
- *	for (Enumeration e = v.elements() ; e.hasMoreElements() ;) {
- *	    System.out.println(e.nextElement());
- *	}
- * </pre>
- * @see Vector
- * @see Hashtable
- * @version 	1.9, 08/13/95
- * @author	Lee Boynton
+ *   for (Enumeration&lt;E&gt; e = v.elements(); e.hasMoreElements();)
+ *       System.out.println(e.nextElement());</pre>
+ * <p>
+ * Methods are provided to enumerate through the elements of a
+ * vector, the keys of a hashtable, and the values in a hashtable.
+ * Enumerations are also used to specify the input streams to a
+ * <code>SequenceInputStream</code>.
+ * <p>
+ * NOTE: The functionality of this interface is duplicated by the Iterator
+ * interface.  In addition, Iterator adds an optional remove operation, and
+ * has shorter method names.  New implementations should consider using
+ * Iterator in preference to Enumeration.
+ *
+ * @see     java.util.Iterator
+ * @see     java.io.SequenceInputStream
+ * @see     java.util.Enumeration#nextElement()
+ * @see     java.util.Hashtable
+ * @see     java.util.Hashtable#elements()
+ * @see     java.util.Hashtable#keys()
+ * @see     java.util.Vector
+ * @see     java.util.Vector#elements()
+ *
+ * @author  Lee Boynton
+ * @since   JDK1.0
  */
-public interface Enumeration {
+public interface Enumeration<E> {
     /**
-     * Returns true if the enumeration contains more elements; false
-     * if its empty.
+     * Tests if this enumeration contains more elements.
+     *
+     * @return  <code>true</code> if and only if this enumeration object
+     *           contains at least one more element to provide;
+     *          <code>false</code> otherwise.
      */
     boolean hasMoreElements();
 
     /**
-     * Returns the next element of the enumeration. Calls to this
-     * method will enumerate successive elements.
-     * @exception NoSuchElementException If no more elements exist.
+     * Returns the next element of this enumeration if this enumeration
+     * object has at least one more element to provide.
+     *
+     * @return     the next element of this enumeration.
+     * @exception  NoSuchElementException  if no more elements exist.
      */
-    Object nextElement();
+    E nextElement();
 }

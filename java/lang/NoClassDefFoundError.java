@@ -1,44 +1,61 @@
 /*
- * @(#)NoClassDefFoundError.java	1.10 95/08/11  
+ * Copyright (c) 1994, 2008, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
  *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
  *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.lang;
 
 /**
- * Signals that a class could not be found.
- * @version 	1.10, 08/11/95
+ * Thrown if the Java Virtual Machine or a <code>ClassLoader</code> instance
+ * tries to load in the definition of a class (as part of a normal method call
+ * or as part of creating a new instance using the <code>new</code> expression)
+ * and no definition of the class could be found.
+ * <p>
+ * The searched-for class definition existed when the currently
+ * executing class was compiled, but the definition can no longer be
+ * found.
+ *
+ * @author  unascribed
+ * @since   JDK1.0
  */
 public
 class NoClassDefFoundError extends LinkageError {
+    private static final long serialVersionUID = 9095859863287012458L;
+
     /**
-     * Constructs a NoClassDefFoundError with no detail message.
-     * A detail message is a String that describes this particular exception.
+     * Constructs a <code>NoClassDefFoundError</code> with no detail message.
      */
     public NoClassDefFoundError() {
-	super();
+        super();
     }
 
     /**
-     * Constructs a NoClassDefFoundError with the specified detail message.
-     * A detail message is a String that describes this particular exception.
-     * @param s the detail message
+     * Constructs a <code>NoClassDefFoundError</code> with the specified
+     * detail message.
+     *
+     * @param   s   the detail message.
      */
     public NoClassDefFoundError(String s) {
-	super(s);
+        super(s);
     }
 }

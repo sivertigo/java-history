@@ -1,48 +1,62 @@
 /*
- * @(#)IllegalMonitorStateException.java	1.2 95/12/03  
+ * Copyright (c) 1995, 2008, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
  *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
  *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.lang;
 
 /**
- * Signals that a monitor operation has been attempted when the monitor
- * is in an invalid state.  For example, trying to notify a monitor that
- * you do not own would invoke this class.
+ * Thrown to indicate that a thread has attempted to wait on an
+ * object's monitor or to notify other threads waiting on an object's
+ * monitor without owning the specified monitor.
  *
- * @version 	1.2, 12/03/95
+ * @author  unascribed
+ * @see     java.lang.Object#notify()
+ * @see     java.lang.Object#notifyAll()
+ * @see     java.lang.Object#wait()
+ * @see     java.lang.Object#wait(long)
+ * @see     java.lang.Object#wait(long, int)
+ * @since   JDK1.0
  */
 public
 class IllegalMonitorStateException extends RuntimeException {
+    private static final long serialVersionUID = 3713306369498869069L;
+
     /**
-     * Constructs an IllegalMonitorStateException with no detail message.
-     * A detail message is a String that describes this particular exception.
+     * Constructs an <code>IllegalMonitorStateException</code> with no
+     * detail message.
      */
     public IllegalMonitorStateException() {
-	super();
+        super();
     }
 
     /**
-     * Constructs an IllegalMonitorStateException with the specified detail
-     * message.  A detail message is a String that describes this particular
-     * exception.
-     * @param s the String that contains a detailed message
+     * Constructs an <code>IllegalMonitorStateException</code> with the
+     * specified detail message.
+     *
+     * @param   s   the detail message.
      */
     public IllegalMonitorStateException(String s) {
-	super(s);
+        super(s);
     }
 }

@@ -1,49 +1,69 @@
 /*
- * @(#)InterruptedException.java	1.5 95/09/08  
+ * Copyright (c) 1995, 2008, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  *
- * Copyright (c) 1995 Sun Microsystems, Inc. All Rights Reserved.
  *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
  *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.lang;
 
 /**
- * An exception indicated that some thread has interrupted this thread.
- * <p>
+ * Thrown when a thread is waiting, sleeping, or otherwise occupied,
+ * and the thread is interrupted, either before or during the activity.
+ * Occasionally a method may wish to test whether the current
+ * thread has been interrupted, and if so, to immediately throw
+ * this exception.  The following code can be used to achieve
+ * this effect:
+ * <pre>
+ *  if (Thread.interrupted())  // Clears interrupted status!
+ *      throw new InterruptedException();
+ * </pre>
  *
- * @see Thread#interrupt
- * @see Thread#interrupted
- * @version 	1.5, 09/08/95
- * @author      Frank Yellin
+ * @author  Frank Yellin
+ * @see     java.lang.Object#wait()
+ * @see     java.lang.Object#wait(long)
+ * @see     java.lang.Object#wait(long, int)
+ * @see     java.lang.Thread#sleep(long)
+ * @see     java.lang.Thread#interrupt()
+ * @see     java.lang.Thread#interrupted()
+ * @since   JDK1.0
  */
 public
 class InterruptedException extends Exception {
+    private static final long serialVersionUID = 6700697376100628473L;
+
     /**
-     * Constructs an InterruptedException with no detail message.
-     * A detail message is a String that describes this particular exception.
+     * Constructs an <code>InterruptedException</code> with no detail  message.
      */
     public InterruptedException() {
-	super();
+        super();
     }
 
     /**
-     * Constructs an InterruptedException with the specified detail message.
-     * A detail message is a String that describes this particular exception.
-     * @param s the detail message
+     * Constructs an <code>InterruptedException</code> with the
+     * specified detail message.
+     *
+     * @param   s   the detail message.
      */
     public InterruptedException(String s) {
-	super(s);
+        super(s);
     }
 }

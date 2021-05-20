@@ -1,29 +1,122 @@
 /*
- * @(#)WindowPeer.java	1.2 95/08/04 Arthur van Hoff
+ * Copyright (c) 1995, 2013, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  *
- * Copyright (c) 1995 Sun Microsystems, Inc. All Rights Reserved.
  *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
  *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.awt.peer;
 
 import java.awt.*;
 
+import java.awt.image.BufferedImage;
+
+/**
+ * The peer interface for {@link Window}.
+ *
+ * The peer interfaces are intended only for use in porting
+ * the AWT. They are not intended for use by application
+ * developers, and developers should not implement peers
+ * nor invoke any of the peer methods directly on the peer
+ * instances.
+ */
 public interface WindowPeer extends ContainerPeer {
+
+    /**
+     * Makes this window the topmost window on the desktop.
+     *
+     * @see Window#toFront()
+     */
     void toFront();
+
+    /**
+     * Makes this window the bottommost window on the desktop.
+     *
+     * @see Window#toBack()
+     */
     void toBack();
+
+    /**
+     * Updates the window's always-on-top state.
+     * Sets if the window should always stay
+     * on top of all other windows or not.
+     *
+     * @see Window#getAlwaysOnTop()
+     * @see Window#setAlwaysOnTop(boolean)
+     */
+    void updateAlwaysOnTopState();
+
+    /**
+     * Updates the window's focusable state.
+     *
+     * @see Window#setFocusableWindowState(boolean)
+     */
+    void updateFocusableWindowState();
+
+    /**
+     * Sets if this window is blocked by a modal dialog or not.
+     *
+     * @param blocker the blocking modal dialog
+     * @param blocked {@code true} to block the window, {@code false}
+     *        to unblock it
+     */
+    void setModalBlocked(Dialog blocker, boolean blocked);
+
+    /**
+     * Updates the minimum size on the peer.
+     *
+     * @see Window#setMinimumSize(Dimension)
+     */
+    void updateMinimumSize();
+
+    /**
+     * Updates the icons for the window.
+     *
+     * @see Window#setIconImages(java.util.List)
+     */
+    void updateIconImages();
+
+    /**
+     * Sets the level of opacity for the window.
+     *
+     * @see Window#setOpacity(float)
+     */
+    void setOpacity(float opacity);
+
+    /**
+     * Enables the per-pixel alpha support for the window.
+     *
+     * @see Window#setBackground(Color)
+     */
+    void setOpaque(boolean isOpaque);
+
+    /**
+     * Updates the native part of non-opaque window.
+     *
+     * @see Window#setBackground(Color)
+     */
+    void updateWindow();
+
+    /**
+     * Instructs the peer to update the position of the security warning.
+     */
+    void repositionSecurityWarning();
 }
-
-

@@ -1,48 +1,69 @@
 /*
- * @(#)LinkageError.java	1.3 95/08/13  
+ * Copyright (c) 1995, 2010, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  *
- * Copyright (c) 1995 Sun Microsystems, Inc. All Rights Reserved.
  *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
  *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.lang;
 
 /**
- * LinkageError and its subclasses indicate that a class has some 
- * dependency on another class; however the  latter class has incompatibly 
- * changed after the compilation of the former class.<p>
+ * Subclasses of {@code LinkageError} indicate that a class has
+ * some dependency on another class; however, the latter class has
+ * incompatibly changed after the compilation of the former class.
  *
- * @version 	1.3, 08/13/95
- * @author      Frank Yellin
+ *
+ * @author  Frank Yellin
+ * @since   JDK1.0
  */
 public
 class LinkageError extends Error {
+    private static final long serialVersionUID = 3579600108157160122L;
+
     /**
-     * Constructs a LinkageError with no detail message.
-     * A detail message is a String that describes this particular exception.
+     * Constructs a {@code LinkageError} with no detail message.
      */
     public LinkageError() {
-	super();
+        super();
     }
 
     /**
-     * Constructs a LinkageError with the specified detail message.
-     * A detail message is a String that describes this particular exception.
-     * @param s the detail message
+     * Constructs a {@code LinkageError} with the specified detail
+     * message.
+     *
+     * @param   s   the detail message.
      */
     public LinkageError(String s) {
-	super(s);
+        super(s);
+    }
+
+    /**
+     * Constructs a {@code LinkageError} with the specified detail
+     * message and cause.
+     *
+     * @param s     the detail message.
+     * @param cause the cause, may be {@code null}
+     * @since 1.7
+     */
+    public LinkageError(String s, Throwable cause) {
+        super(s, cause);
     }
 }

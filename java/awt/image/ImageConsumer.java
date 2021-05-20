@@ -1,20 +1,26 @@
 /*
- * @(#)ImageConsumer.java	1.11 95/12/15 Jim Graham
+ * Copyright (c) 1995, 2006, Oracle and/or its affiliates. All rights reserved.
+ * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
  *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
  *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 package java.awt.image;
@@ -29,23 +35,26 @@ import java.util.Hashtable;
  *
  * @see ImageProducer
  *
- * @version	1.11 12/15/95
- * @author 	Jim Graham
+ * @author      Jim Graham
  */
 public interface ImageConsumer {
     /**
      * The dimensions of the source image are reported using the
      * setDimensions method call.
+     * @param width the width of the source image
+     * @param height the height of the source image
      */
     void setDimensions(int width, int height);
 
     /**
      * Sets the extensible list of properties associated with this image.
+     * @param props the list of properties to be associated with this
+     *        image
      */
-    void setProperties(Hashtable props);
+    void setProperties(Hashtable<?,?> props);
 
     /**
-     * The ColorModel object used for the majority of
+     * Sets the ColorModel object used for the majority of
      * the pixels reported using the setPixels method
      * calls.  Note that each set of pixels delivered using setPixels
      * contains its own ColorModel object, so no assumption should
@@ -57,11 +66,14 @@ public interface ImageConsumer {
      * pixels can be sent on untouched, using the original ColorModel,
      * or whether the pixels should be modified (filtered) and passed
      * on using a ColorModel more convenient for the filtering process.
+     * @param model the specified <code>ColorModel</code>
      * @see ColorModel
      */
     void setColorModel(ColorModel model);
 
     /**
+     * Sets the hints that the ImageConsumer uses to process the
+     * pixels delivered by the ImageProducer.
      * The ImageProducer can deliver the pixels in any order, but
      * the ImageConsumer may be able to scale or convert the pixels
      * to the destination ColorModel more efficiently or with higher
@@ -71,6 +83,8 @@ public interface ImageConsumer {
      * of hints about the manner in which the pixels will be delivered.
      * If the ImageProducer does not follow the guidelines for the
      * indicated hint, the results are undefined.
+     * @param hintflags a set of hints that the ImageConsumer uses to
+     *        process the pixels
      */
     void setHints(int hintflags);
 
@@ -121,18 +135,29 @@ public interface ImageConsumer {
     int SINGLEFRAME = 16;
 
     /**
-     * The pixels of the image are delivered using one or more calls
-     * to the setPixels method.  Each call specifies the location and
+     * Delivers the pixels of the image with one or more calls
+     * to this method.  Each call specifies the location and
      * size of the rectangle of source pixels that are contained in
      * the array of pixels.  The specified ColorModel object should
      * be used to convert the pixels into their corresponding color
      * and alpha components.  Pixel (m,n) is stored in the pixels array
      * at index (n * scansize + m + off).  The pixels delivered using
      * this method are all stored as bytes.
+     * @param x the X coordinate of the upper-left corner of the
+     *        area of pixels to be set
+     * @param y the Y coordinate of the upper-left corner of the
+     *        area of pixels to be set
+     * @param w the width of the area of pixels
+     * @param h the height of the area of pixels
+     * @param model the specified <code>ColorModel</code>
+     * @param pixels the array of pixels
+     * @param off the offset into the <code>pixels</code> array
+     * @param scansize the distance from one row of pixels to the next in
+     * the <code>pixels</code> array
      * @see ColorModel
      */
     void setPixels(int x, int y, int w, int h,
-		   ColorModel model, byte pixels[], int off, int scansize);
+                   ColorModel model, byte pixels[], int off, int scansize);
 
     /**
      * The pixels of the image are delivered using one or more calls
@@ -143,10 +168,22 @@ public interface ImageConsumer {
      * and alpha components.  Pixel (m,n) is stored in the pixels array
      * at index (n * scansize + m + off).  The pixels delivered using
      * this method are all stored as ints.
+     * this method are all stored as ints.
+     * @param x the X coordinate of the upper-left corner of the
+     *        area of pixels to be set
+     * @param y the Y coordinate of the upper-left corner of the
+     *        area of pixels to be set
+     * @param w the width of the area of pixels
+     * @param h the height of the area of pixels
+     * @param model the specified <code>ColorModel</code>
+     * @param pixels the array of pixels
+     * @param off the offset into the <code>pixels</code> array
+     * @param scansize the distance from one row of pixels to the next in
+     * the <code>pixels</code> array
      * @see ColorModel
      */
     void setPixels(int x, int y, int w, int h,
-		   ColorModel model, int pixels[], int off, int scansize);
+                   ColorModel model, int pixels[], int off, int scansize);
 
     /**
      * The imageComplete method is called when the ImageProducer is
@@ -156,6 +193,7 @@ public interface ImageConsumer {
      * image has occured.  The ImageConsumer should remove itself from the
      * list of consumers registered with the ImageProducer at this time,
      * unless it is interested in successive frames.
+     * @param status the status of image loading
      * @see ImageProducer#removeConsumer
      */
     void imageComplete(int status);
