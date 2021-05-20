@@ -1,48 +1,51 @@
 /*
- * @(#)Runnable.java	1.10 95/07/25  
+ * @(#)Runnable.java	1.23 03/01/23
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang;
 
 /**
- * This interface is designed to provide a common protocol for Objects that wish to execute 
- * code while they are active. For example, Runnable is implemented by class Thread.  
- * Being active simply means that a thread has been started and has not yet been stopped. 
+ * The <code>Runnable</code> interface should be implemented by any
+ * class whose instances are intended to be executed by a thread. The
+ * class must define a method of no arguments called <code>run</code>.
  * <p>
- * In addition, Runnable provides the means for a class to be active while 
- * not subclassing Thread. A class that implements Runnable can run without
- * subclassing Thread by instantiating a Thread instance and passing itself in
- * as the target.  In most cases, the Runnable interface should be used if you are only planning 
- * to override the run() method and no other Thread methods.  
+ * This interface is designed to provide a common protocol for objects that
+ * wish to execute code while they are active. For example,
+ * <code>Runnable</code> is implemented by class <code>Thread</code>.
+ * Being active simply means that a thread has been started and has not
+ * yet been stopped.
+ * <p>
+ * In addition, <code>Runnable</code> provides the means for a class to be
+ * active while not subclassing <code>Thread</code>. A class that implements
+ * <code>Runnable</code> can run without subclassing <code>Thread</code>
+ * by instantiating a <code>Thread</code> instance and passing itself in
+ * as the target.  In most cases, the <code>Runnable</code> interface should
+ * be used if you are only planning to override the <code>run()</code>
+ * method and no other <code>Thread</code> methods.
  * This is important because classes should not be subclassed
  * unless the programmer intends on modifying or enhancing the fundamental
  * behavior of the class.
- * @see 	Thread
- * @version 	1.10, 07/25/95
- * @author	Arthur van Hoff
+ *
+ * @author  Arthur van Hoff
+ * @version 1.23, 01/23/03
+ * @see     java.lang.Thread
+ * @since   JDK1.0
  */
 public
 interface Runnable {
     /**
-     * The method that is executed when a Runnable object is activated.  The run() method
-     * is the "soul" of a Thread.  It is in this method that all of the action of a 
-     * Thread takes place.
-     * @see Thread#run
+     * When an object implementing interface <code>Runnable</code> is used 
+     * to create a thread, starting the thread causes the object's 
+     * <code>run</code> method to be called in that separately executing 
+     * thread. 
+     * <p>
+     * The general contract of the method <code>run</code> is that it may 
+     * take any action whatsoever.
+     *
+     * @see     java.lang.Thread#run()
      */
     public abstract void run();
 }

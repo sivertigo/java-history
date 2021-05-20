@@ -1,45 +1,41 @@
 /*
- * @(#)ClassCastException.java	1.10 95/07/30  
+ * @(#)ClassCastException.java	1.19 03/01/23
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang;
 
 /**
- * Signals that an invalid cast has occurred.
- * @version 	1.10, 07/30/95
+ * Thrown to indicate that the code has attempted to cast an object 
+ * to a subclass of which it is not an instance. For example, the 
+ * following code generates a <code>ClassCastException</code>: 
+ * <p><blockquote><pre>
+ *     Object x = new Integer(0);
+ *     System.out.println((String)x);
+ * </pre></blockquote>
+ *
+ * @author  unascribed
+ * @version 1.19, 01/23/03
+ * @since   JDK1.0
  */
 public
 class ClassCastException extends RuntimeException {
     /**
-     * Constructs a ClassCastException with no detail message.
-     * A detail message is a String that describes this particular exception.
+     * Constructs a <code>ClassCastException</code> with no detail message. 
      */
     public ClassCastException() {
 	super();
     }
 
     /**
-     * Constructs a ClassCastException with the specified detail message.
-     * A detail message is a String that describes this particular exception.
-     * @param s the String containing a detail message
+     * Constructs a <code>ClassCastException</code> with the specified 
+     * detail message. 
+     *
+     * @param   s   the detail message.
      */
     public ClassCastException(String s) {
 	super(s);
     }
 }
-

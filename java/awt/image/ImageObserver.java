@@ -1,20 +1,8 @@
 /*
- * @(#)ImageObserver.java	1.16 95/12/14 Jim Graham
+ * @(#)ImageObserver.java	1.26 03/01/23
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.awt.image;
@@ -25,7 +13,7 @@ import java.awt.Image;
  * An asynchronous update interface for receiving notifications about
  * Image information as the Image is constructed.
  *
- * @version 	1.16 12/14/95
+ * @version 	1.26 01/23/03
  * @author 	Jim Graham
  */
 public interface ImageObserver {
@@ -39,7 +27,7 @@ public interface ImageObserver {
      * the overall image itself (in the case of getWidth(ImageObserver))
      * or about an output version of an image (in the case of the
      * drawImage(img, x, y, [w, h,] ImageObserver) call).  
-
+     *
      * <p>This method
      * should return true if further updates are needed or false if the
      * required information has been acquired.  The image which was being
@@ -48,6 +36,34 @@ public interface ImageObserver {
      * information about the image is now available.  The interpretation
      * of the x, y, width, and height arguments depends on the contents
      * of the infoflags argument.
+     * <p>
+     * The <code>infoflags</code> argument should be the bitwise inclusive 
+     * <b>OR</b> of the following flags: <code>WIDTH</code>, 
+     * <code>HEIGHT</code>, <code>PROPERTIES</code>, <code>SOMEBITS</code>, 
+     * <code>FRAMEBITS</code>, <code>ALLBITS</code>, <code>ERROR</code>, 
+     * <code>ABORT</code>.
+     *
+     * @param     img   the image being observed.
+     * @param     infoflags   the bitwise inclusive OR of the following 
+     *               flags:  <code>WIDTH</code>, <code>HEIGHT</code>, 
+     *               <code>PROPERTIES</code>, <code>SOMEBITS</code>,
+     *               <code>FRAMEBITS</code>, <code>ALLBITS</code>, 
+     *               <code>ERROR</code>, <code>ABORT</code>. 
+     * @param     x   the <i>x</i> coordinate.
+     * @param     y   the <i>y</i> coordinate.
+     * @param     width    the width.
+     * @param     height   the height.
+     * @return    <code>false</code> if the infoflags indicate that the
+     *            image is completely loaded; <code>true</code> otherwise.
+     * 
+     * @see #WIDTH
+     * @see #HEIGHT
+     * @see #PROPERTIES
+     * @see #SOMEBITS
+     * @see #FRAMEBITS
+     * @see #ALLBITS
+     * @see #ERROR
+     * @see #ABORT
      * @see Image#getWidth
      * @see Image#getHeight
      * @see java.awt.Graphics#drawImage
@@ -56,7 +72,8 @@ public interface ImageObserver {
 			       int x, int y, int width, int height);
 
     /**
-     * The width of the base image is now available and can be taken
+     * This flag in the infoflags argument to imageUpdate indicates that 
+     * the width of the base image is now available and can be taken
      * from the width argument to the imageUpdate callback method.
      * @see Image#getWidth
      * @see #imageUpdate
@@ -64,7 +81,8 @@ public interface ImageObserver {
     public static final int WIDTH = 1;
 
     /**
-     * The height of the base image is now available and can be taken
+     * This flag in the infoflags argument to imageUpdate indicates that 
+     * the height of the base image is now available and can be taken
      * from the height argument to the imageUpdate callback method.
      * @see Image#getHeight
      * @see #imageUpdate
@@ -72,14 +90,16 @@ public interface ImageObserver {
     public static final int HEIGHT = 2;
 
     /**
-     * The properties of the image are now available.
+     * This flag in the infoflags argument to imageUpdate indicates that 
+     * the properties of the image are now available.
      * @see Image#getProperty
      * @see #imageUpdate
      */
     public static final int PROPERTIES = 4;
 
     /**
-     * More pixels needed for drawing a scaled variation of the image
+     * This flag in the infoflags argument to imageUpdate indicates that 
+     * more pixels needed for drawing a scaled variation of the image
      * are available.  The bounding box of the new pixels can be taken
      * from the x, y, width, and height arguments to the imageUpdate
      * callback method.
@@ -89,7 +109,8 @@ public interface ImageObserver {
     public static final int SOMEBITS = 8;
 
     /**
-     * Another complete frame of a multi-frame image which was previously
+     * This flag in the infoflags argument to imageUpdate indicates that 
+     * another complete frame of a multi-frame image which was previously
      * drawn is now available to be drawn again.  The x, y, width, and height
      * arguments to the imageUpdate callback method should be ignored.
      * @see java.awt.Graphics#drawImage
@@ -98,7 +119,8 @@ public interface ImageObserver {
     public static final int FRAMEBITS = 16;
 
     /**
-     * A static image which was previously drawn is now complete and can
+     * This flag in the infoflags argument to imageUpdate indicates that 
+     * a static image which was previously drawn is now complete and can
      * be drawn again in its final form.  The x, y, width, and height
      * arguments to the imageUpdate callback method should be ignored.
      * @see java.awt.Graphics#drawImage
@@ -107,7 +129,8 @@ public interface ImageObserver {
     public static final int ALLBITS = 32;
 
     /**
-     * An image which was being tracked asynchronously has encountered
+     * This flag in the infoflags argument to imageUpdate indicates that 
+     * an image which was being tracked asynchronously has encountered
      * an error.  No further information will become available and
      * drawing the image will fail.
      * As a convenience, the ABORT flag will be indicated at the same
@@ -117,7 +140,8 @@ public interface ImageObserver {
     public static final int ERROR = 64;
 
     /**
-     * An image which was being tracked asynchronously was aborted before
+     * This flag in the infoflags argument to imageUpdate indicates that 
+     * an image which was being tracked asynchronously was aborted before
      * production was complete.  No more information will become available
      * without further action to trigger another image production sequence.
      * If the ERROR flag was not also set in this image update, then

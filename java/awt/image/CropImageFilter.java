@@ -1,20 +1,8 @@
 /*
- * @(#)CropImageFilter.java	1.3 95/12/14 Jim Graham
+ * @(#)CropImageFilter.java	1.13 03/01/23
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.awt.image;
@@ -35,7 +23,7 @@ import java.awt.Rectangle;
  * @see FilteredImageSource
  * @see ImageFilter
  *
- * @version	1.3 12/14/95
+ * @version	1.13 01/23/03
  * @author 	Jim Graham
  */
 public class CropImageFilter extends ImageFilter {
@@ -63,8 +51,16 @@ public class CropImageFilter extends ImageFilter {
     /**
      * Passes along  the properties from the source object after adding a
      * property indicating the cropped region.
+     * <p>
+     * Note: This method is intended to be called by the 
+     * <code>ImageProducer</code> of the <code>Image</code> whose pixels 
+     * are being filtered. Developers using
+     * this class to filter pixels from an image should avoid calling
+     * this method directly since that operation could interfere
+     * with the filtering operation.
      */
     public void setProperties(Hashtable props) {
+	props = (Hashtable) props.clone();
 	props.put("croprect", new Rectangle(cropX, cropY, cropW, cropH));
 	super.setProperties(props);
     }
@@ -72,6 +68,13 @@ public class CropImageFilter extends ImageFilter {
     /**
      * Override the source image's dimensions and pass the dimensions
      * of the rectangular cropped region to the ImageConsumer.
+     * <p>
+     * Note: This method is intended to be called by the 
+     * <code>ImageProducer</code> of the <code>Image</code> whose 
+     * pixels are being filtered. Developers using
+     * this class to filter pixels from an image should avoid calling
+     * this method directly since that operation could interfere
+     * with the filtering operation.
      * @see ImageConsumer
      */
     public void setDimensions(int w, int h) {
@@ -82,6 +85,13 @@ public class CropImageFilter extends ImageFilter {
      * Determine whether the delivered byte pixels intersect the region to
      * be extracted and passes through only that subset of pixels that
      * appear in the output region.
+     * <p>
+     * Note: This method is intended to be called by the 
+     * <code>ImageProducer</code> of the <code>Image</code> whose 
+     * pixels are being filtered. Developers using
+     * this class to filter pixels from an image should avoid calling
+     * this method directly since that operation could interfere
+     * with the filtering operation.
      */
     public void setPixels(int x, int y, int w, int h,
 			  ColorModel model, byte pixels[], int off,
@@ -114,6 +124,13 @@ public class CropImageFilter extends ImageFilter {
      * Determine if the delivered int pixels intersect the region to
      * be extracted and pass through only that subset of pixels that
      * appear in the output region.
+     * <p>
+     * Note: This method is intended to be called by the 
+     * <code>ImageProducer</code> of the <code>Image</code> whose 
+     * pixels are being filtered. Developers using
+     * this class to filter pixels from an image should avoid calling
+     * this method directly since that operation could interfere
+     * with the filtering operation.
      */
     public void setPixels(int x, int y, int w, int h,
 			  ColorModel model, int pixels[], int off,

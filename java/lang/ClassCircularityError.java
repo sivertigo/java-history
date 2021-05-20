@@ -1,41 +1,32 @@
 /*
- * @(#)ClassCircularityError.java	1.3 95/08/13  
+ * @(#)ClassCircularityError.java	1.14 03/01/23
  *
- * Copyright (c) 1995 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang;
 
 /**
- * Signals that a circularity has been detected when initializing a class.
- * @version 	1.3, 08/13/95
+ * Thrown when a circularity has been detected while initializing a class.
+ *
+ * @author     unascribed
+ * @version    1.14, 01/23/03
+ * @since      JDK1.0
  */
 public class ClassCircularityError extends LinkageError {
     /**
-     * Constructs a ClassCircularityError with no detail message.
-     * A detail message is a String that describes this particular exception.
+     * Constructs a <code>ClassCircularityError</code> with no detail  message.
      */
     public ClassCircularityError() {
 	super();
     }
 
     /**
-     * Constructs a ClassCircularityError with the specified detail message.
-     * A detail message is a String that describes this particular exception.
-     * @param s the detail message
+     * Constructs a <code>ClassCircularityError</code> with the 
+     * specified detail message. 
+     *
+     * @param      s   the detail message.
      */
     public ClassCircularityError(String s) {
 	super(s);

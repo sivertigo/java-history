@@ -1,20 +1,8 @@
 /*
- * @(#)AWTException.java	1.5 95/08/17 Arthur van Hoff
+ * @(#)AWTException.java	1.15 03/01/23
  *
- * Copyright (c) 1995 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package java.awt;
 
@@ -22,16 +10,23 @@ package java.awt;
 /**
  * Signals that an Absract Window Toolkit exception has occurred.
  *
- * @version 	1.5 08/17/95
+ * @version 	1.15 01/23/03
  * @author 	Arthur van Hoff
  */
 public class AWTException extends Exception {
  
+    /*
+     * JDK 1.1 serialVersionUID 
+     */
+     private static final long serialVersionUID = -1900414231151323879L;
+
     /**
-     * Constructs an AWTException with the specified detail message. 
-     * A detail message is a String that describes this particular
+     * Constructs an instance of <code>AWTException</code> with the 
+     * specified detail message. A detail message is an 
+     * instance of <code>String</code> that describes this particular
      * exception. 
-     * @param msg the detail message
+     * @param   msg     the detail message
+     * @since   JDK1.0
      */
     public AWTException(String msg) {
 	super(msg);

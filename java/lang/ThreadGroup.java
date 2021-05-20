@@ -1,35 +1,39 @@
 /*
- * @(#)ThreadGroup.java	1.21 95/12/06  
+ * @(#)ThreadGroup.java	1.55 03/01/23
  *
- * Copyright (c) 1994 Sun Microsystems, Inc. All Rights Reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for NON-COMMERCIAL purposes and without
- * fee is hereby granted provided that this copyright notice
- * appears in all copies. Please refer to the file "copyright.html"
- * for further important copyright and licensing information.
- *
- * SUN MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. SUN SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
 package java.lang;
 
 import java.io.PrintStream;
+import sun.misc.VM;
 
 /**
- * A group of Threads. A Thread group can contain a set of Threads
- * as well as a set of other Thread groups. A Thread can access its
- * Thread group, but it can't access the parent of its Thread group.
- * This makes it possible to encapsulate a Thread in a Thread group
- * and stop it from manipulating Threads in the parent group.
+ * A thread group represents a set of threads. In addition, a thread 
+ * group can also include other thread groups. The thread groups form 
+ * a tree in which every thread group except the initial thread group 
+ * has a parent. 
+ * <p>
+ * A thread is allowed to access information about its own thread 
+ * group, but not to access information about its thread group's 
+ * parent thread group or any other thread groups. 
  *
- * @version 	1.21, 12/06/95
- * @author	Arthur van Hoff
+ * @author  unascribed
+ * @version 1.55, 01/23/03
+ * @since   JDK1.0
+ */
+/* The locking strategy for this code is to try to lock only one level of the
+ * tree wherever possible, but otherwise to lock from the bottom up.
+ * That is, from child thread groups to parents.
+ * This has the advantage of limiting the number of locks that need to be held
+ * and in particular avoids having to grab the lock for the root thread group,
+ * (or a global lock) which would be a source of contention on a 
+ * multi-processor system with many thread groups.
+ * This policy often leads to taking a snapshot of the state of a thread group
+ * and working off of that snapshot, rather than holding the thread group locked
+ * while we work on the children.
  */
 public
 class ThreadGroup {
@@ -38,6 +42,7 @@ class ThreadGroup {
     int maxPriority;
     boolean destroyed;
     boolean daemon;
+    boolean vmAllowSuspension;
 
     int nthreads;
     Thread threads[];
@@ -55,19 +60,38 @@ class ThreadGroup {
     }
 
     /**
-     * Creates a new ThreadGroup. Its parent will be the Thread group
-     * of the current Thread.
-     * @param name the name of the new Thread group created
+     * Constructs a new thread group. The parent of this new group is 
+     * the thread group of the currently running thread. 
+     * <p>
+     * The <code>checkAccess</code> method of the parent thread group is 
+     * called with no arguments; this may result in a security exception. 
+     *
+     * @param   name   the name of the new thread group.
+     * @exception  SecurityException  if the current thread cannot create a
+     *               thread in the specified thread group.
+     * @see     java.lang.ThreadGroup#checkAccess()
+     * @since   JDK1.0
      */
     public ThreadGroup(String name) {
 	this(Thread.currentThread().getThreadGroup(), name);
     }
 
     /**
-     * Creates a new ThreadGroup with a specified name in the specified Thread group.
-     * @param parent the specified parent Thread group
-     * @param name the name of the new Thread group being created
-     * @exception NullPointerException If the given thread group is equal to null.
+     * Creates a new thread group. The parent of this new group is the 
+     * specified thread group. 
+     * <p>
+     * The <code>checkAccess</code> method of the parent thread group is 
+     * called with no arguments; this may result in a security exception. 
+     *
+     * @param     parent   the parent thread group.
+     * @param     name     the name of the new thread group.
+     * @exception  NullPointerException  if the thread group argument is
+     *               <code>null</code>.
+     * @exception  SecurityException  if the current thread cannot create a
+     *               thread in the specified thread group.
+     * @see     java.lang.SecurityException
+     * @see     java.lang.ThreadGroup#checkAccess()
+     * @since   JDK1.0
      */
     public ThreadGroup(ThreadGroup parent, String name) {
 	if (parent == null) {
@@ -77,44 +101,97 @@ class ThreadGroup {
 	this.name = name;
 	this.maxPriority = parent.maxPriority;
 	this.daemon = parent.daemon;
+	this.vmAllowSuspension = parent.vmAllowSuspension;
 	this.parent = parent;
 	parent.add(this);
     }
 
     /**
-     * Gets the name of this Thread group.
+     * Returns the name of this thread group.
+     *
+     * @return  the name of this thread group.
+     * @since   JDK1.0
      */
     public final String getName() {
 	return name;
     }
 
     /**
-     * Gets the parent of this Thread group.
+     * Returns the parent of this thread group.
+     * <p>
+     * First, if the parent is not <code>null</code>, the 
+     * <code>checkAccess</code> method of the parent thread group is 
+     * called with no arguments; this may result in a security exception. 
+     *
+     * @return  the parent of this thread group. The top-level thread group
+     *          is the only thread group whose parent is <code>null</code>.
+     * @exception  SecurityException  if the current thread cannot modify
+     *               this thread group.
+     * @see        java.lang.ThreadGroup#checkAccess()
+     * @see        java.lang.SecurityException
+     * @see        java.lang.RuntimePermission
+     * @since   JDK1.0
      */
     public final ThreadGroup getParent() {
+	if (parent != null)
+	    parent.checkAccess();
 	return parent;
     }
 
     /**
-     * Gets the maximum priority of the group. Threads that are
-     * part of this group cannot have a higher priority than the maximum priority.
+     * Returns the maximum priority of this thread group. Threads that are
+     * part of this group cannot have a higher priority than the maximum
+     * priority.
+     *
+     * @return  the maximum priority that a thread in this thread group
+     *          can have.
+     * @see     #setMaxPriority
+     * @since   JDK1.0
      */
     public final int getMaxPriority() {
 	return maxPriority;
     }
 
     /**
-     * Returns the daemon flag of the Thread group. A daemon Thread group
-     * is automatically destroyed when it is found empty after a Thread
-     * group or Thread is removed from it.
+     * Tests if this thread group is a daemon thread group. A 
+     * daemon thread group is automatically destroyed when its last 
+     * thread is stopped or its last thread group is destroyed. 
+     *
+     * @return  <code>true</code> if this thread group is a daemon thread group;
+     *          <code>false</code> otherwise.
+     * @since   JDK1.0
      */
     public final boolean isDaemon() {
 	return daemon;
     }
 
     /**
-     * Changes the daemon status of this group.
-     * @param daemon the daemon boolean which is to be set.
+     * Tests if this thread group has been destroyed.
+     *
+     * @return  true if this object is destroyed
+     * @since   JDK1.1
+     */
+    public synchronized boolean isDestroyed() {
+	return destroyed;
+    }
+
+    /**
+     * Changes the daemon status of this thread group.
+     * <p>
+     * First, the <code>checkAccess</code> method of this thread group is 
+     * called with no arguments; this may result in a security exception. 
+     * <p>
+     * A daemon thread group is automatically destroyed when its last 
+     * thread is stopped or its last thread group is destroyed. 
+     *
+     * @param      daemon   if <code>true</code>, marks this thread group as
+     *                      a daemon thread group; otherwise, marks this
+     *                      thread group as normal.
+     * @exception  SecurityException  if the current thread cannot modify
+     *               this thread group.
+     * @see        java.lang.SecurityException
+     * @see        java.lang.ThreadGroup#checkAccess()
+     * @since      JDK1.0
      */
     public final void setDaemon(boolean daemon) {
 	checkAccess();
@@ -122,29 +199,65 @@ class ThreadGroup {
     }
 
     /**
-     * Sets the maximum priority of the group. Threads
-     * that are already in the group <b>can</b> have a higher priority than the
-     * set maximum.
-     * @param pri the priority of the Thread group
+     * Sets the maximum priority of the group. Threads in the thread 
+     * group that already have a higher priority are not affected. 
+     * <p>
+     * First, the <code>checkAccess</code> method of this thread group is 
+     * called with no arguments; this may result in a security exception. 
+     * <p>
+     * If the <code>pri</code> argument is less than 
+     * {@link Thread#MIN_PRIORITY} or greater than 
+     * {@link Thread#MAX_PRIORITY}, the maximum priority of the group 
+     * remains unchanged.
+     * <p>
+     * Otherwise, the priority of this ThreadGroup object is set to the 
+     * smaller of the specified <code>pri</code> and the maximum permitted 
+     * priority of the parent of this thread group. (If this thread group 
+     * is the system thread group, which has no parent, then its maximum 
+     * priority is simply set to <code>pri</code>.) Then this method is 
+     * called recursively, with <code>pri</code> as its argument, for 
+     * every thread group that belongs to this thread group.
+     *
+     * @param      pri   the new priority of the thread group.
+     * @exception  SecurityException  if the current thread cannot modify
+     *               this thread group.
+     * @see        #getMaxPriority
+     * @see        java.lang.SecurityException
+     * @see        java.lang.ThreadGroup#checkAccess()
+     * @since      JDK1.0
      */
-    public final synchronized void setMaxPriority(int pri) {
-	checkAccess();
-	if (pri < Thread.MIN_PRIORITY) {
-	    maxPriority = Thread.MIN_PRIORITY;
-	} else if (pri < maxPriority) {
-	    maxPriority = pri;
+    public final void setMaxPriority(int pri) {
+	int ngroupsSnapshot;
+	ThreadGroup[] groupsSnapshot;
+	synchronized (this) {
+	    checkAccess();
+	    if (pri < Thread.MIN_PRIORITY) {
+		maxPriority = Thread.MIN_PRIORITY;
+	    } else if (pri < maxPriority) {
+		maxPriority = pri;
+	    }
+	    ngroupsSnapshot = ngroups;
+	    if (groups != null) {
+		groupsSnapshot = new ThreadGroup[ngroupsSnapshot];
+		System.arraycopy(groups, 0, groupsSnapshot, 0, ngroupsSnapshot);
+	    } else {
+		groupsSnapshot = null;
+	    }
 	}
-	for (int i = 0 ; i < ngroups ; i++) {
-	    groups[i].setMaxPriority(i);
+	for (int i = 0 ; i < ngroupsSnapshot ; i++) {
+	    groupsSnapshot[i].setMaxPriority(pri);
 	}
     }
 
     /**
-     * Checks to see if this Thread group is a parent of or is equal to
-     * another Thread group.
-     * @param g the Thread group to be checked
-     * @return true if this Thread group is equal to or is the parent of another Thread
-     * group; false otherwise.
+     * Tests if this thread group is either the thread group 
+     * argument or one of its ancestor thread groups. 
+     *
+     * @param   g   a thread group.
+     * @return  <code>true</code> if this thread group is the thread group
+     *          argument or one of its ancestor thread groups;
+     *          <code>false</code> otherwise.
+     * @since   JDK1.0
      */
     public final boolean parentOf(ThreadGroup g) {
 	for (; g != null ; g = g.parent) {
@@ -156,9 +269,17 @@ class ThreadGroup {
     }
 
     /**
-     * Checks to see if the current Thread is allowed to modify this group.
-     * @exception SecurityException If the current Thread is not allowed 
-     * to access this Thread group.
+     * Determines if the currently running thread has permission to 
+     * modify this thread group. 
+     * <p>
+     * If there is a security manager, its <code>checkAccess</code> method 
+     * is called with this thread group as its argument. This may result 
+     * in throwing a <code>SecurityException</code>. 
+     *
+     * @exception  SecurityException  if the current thread is not allowed to
+     *               access this thread group.
+     * @see        java.lang.SecurityManager#checkAccess(java.lang.ThreadGroup)
+     * @since      JDK1.0
      */
     public final void checkAccess() {
 	SecurityManager security = System.getSecurityManager();
@@ -168,166 +289,446 @@ class ThreadGroup {
     }
 
     /**
-     * Returns an estimate of the number of active Threads in the
-     * Thread group.
+     * Returns an estimate of the number of active threads in this
+     * thread group.
+     *
+     * @return  the number of active threads in this thread group and in any
+     *          other thread group that has this thread group as an ancestor.
+     * @since   JDK1.0
      */
-    public synchronized int activeCount() {
-	int n = nthreads;
-	for (int i = 0 ; i < ngroups ; i++) {
-	    n += groups[i].activeCount();
+    public int activeCount() {
+	int result;
+	// Snapshot sub-group data so we don't hold this lock
+	// while our children are computing.
+	int ngroupsSnapshot;
+	ThreadGroup[] groupsSnapshot;
+	synchronized (this) {
+	    if (destroyed) {
+		return 0;
+	    }
+	    result = nthreads;
+	    ngroupsSnapshot = ngroups;
+	    if (groups != null) {
+		groupsSnapshot = new ThreadGroup[ngroupsSnapshot];
+		System.arraycopy(groups, 0, groupsSnapshot, 0, ngroupsSnapshot);
+	    } else {
+		groupsSnapshot = null;
+	    }
 	}
-	return n;
+	for (int i = 0 ; i < ngroupsSnapshot ; i++) {
+	    result += groupsSnapshot[i].activeCount();
+	}
+	return result;
     }
 
     /**
-     * Copies, into the specified array, references to every active Thread in this Thread group.
-     * You can use the activeCount() method to get an estimate of how big
-     * the array should be.
-     * @param list an array of Threads
-     * @return the number of Threads put into the array
+     * Copies into the specified array every active thread in this 
+     * thread group and its subgroups. 
+     * <p>
+     * First, the <code>checkAccess</code> method of this thread group is 
+     * called with no arguments; this may result in a security exception. 
+     * <p>
+     * An application should use the <code>activeCount</code> method to 
+     * get an estimate of how big the array should be. If the array is 
+     * too short to hold all the threads, the extra threads are silently 
+     * ignored. 
+     *
+     * @param   list   an array into which to place the list of threads.
+     * @return  the number of threads put into the array.
+     * @exception  SecurityException  if the current thread does not
+     *               have permission to enumerate this thread group.
+     * @see     java.lang.ThreadGroup#activeCount()
+     * @see     java.lang.ThreadGroup#checkAccess()
+     * @since   JDK1.0
      */
     public int enumerate(Thread list[]) {
+        checkAccess();
 	return enumerate(list, 0, true);
     }
 
     /**
-     * Copies, into the specified array, references to every active Thread in this Thread group.
-     * You can use the activeCount() method to get an estimate of how big
-     * the array should be.
-     * @param list an array list of Threads
-     * @param recurse a boolean indicating whether a Thread has reapearred
-     * @return the number of Threads placed into the array.
+     * Copies into the specified array every active thread in this 
+     * thread group. If the <code>recurse</code> flag is 
+     * <code>true</code>, references to every active thread in this 
+     * thread's subgroups are also included. If the array is too short to 
+     * hold all the threads, the extra threads are silently ignored. 
+     * <p>
+     * First, the <code>checkAccess</code> method of this thread group is 
+     * called with no arguments; this may result in a security exception. 
+     * <p>
+     * An application should use the <code>activeCount</code> method to 
+     * get an estimate of how big the array should be. 
+     *
+     * @param   list      an array into which to place the list of threads.
+     * @param   recurse   a flag indicating whether also to include threads
+     *                    in thread groups that are subgroups of this
+     *                    thread group.
+     * @return  the number of threads placed into the array.
+     * @exception  SecurityException  if the current thread does not
+     *               have permission to enumerate this thread group.
+     * @see     java.lang.ThreadGroup#activeCount()
+     * @see     java.lang.ThreadGroup#checkAccess()
+     * @since   JDK1.0
      */
     public int enumerate(Thread list[], boolean recurse) {
+        checkAccess();
 	return enumerate(list, 0, recurse);
     }
 
-    private synchronized int enumerate(Thread list[], int n, boolean recurse) {
-	int nt = nthreads;
-	if (nt > list.length - n) {
-	    nt = list.length - n;
-	}
-	if (nt > 0) {
-	    System.arraycopy(threads, 0, list, n, nt);
-	    n += nt;
+    private int enumerate(Thread list[], int n, boolean recurse) {
+	int ngroupsSnapshot = 0;
+	ThreadGroup[] groupsSnapshot = null;
+	synchronized (this) {
+	    if (destroyed) {
+		return 0;
+	    }
+	    int nt = nthreads;
+	    if (nt > list.length - n) {
+		nt = list.length - n;
+	    }
+	    for (int i = 0; i < nt; i++) {
+                if (threads[i].isAlive()) {
+                    list[n++] = threads[i];
+                }
+            }
+	    if (recurse) {
+		ngroupsSnapshot = ngroups;
+		if (groups != null) {
+		    groupsSnapshot = new ThreadGroup[ngroupsSnapshot];
+		    System.arraycopy(groups, 0, groupsSnapshot, 0, ngroupsSnapshot);
+		} else {
+		    groupsSnapshot = null;
+		}
+	    }
 	}
 	if (recurse) {
-	    for (int i = 0 ; i < ngroups ; i++) {
-		n = groups[i].enumerate(list, n, true);
+	    for (int i = 0 ; i < ngroupsSnapshot ; i++) {
+		n = groupsSnapshot[i].enumerate(list, n, true);
 	    }
 	}
 	return n;
     }
 
     /**
-     * Returns an estimate of the number of active groups in the
-     * Thread group.
+     * Returns an estimate of the number of active groups in this
+     * thread group.
+     *
+     * @return  the number of active thread groups with this thread group as
+     *          an ancestor.
+     * @since   JDK1.0
      */
-    public synchronized int activeGroupCount() {
-	int n = ngroups;
-	for (int i = 0 ; i < ngroups ; i++) {
-	    n += groups[i].activeGroupCount();
+    public int activeGroupCount() {
+	int ngroupsSnapshot;
+	ThreadGroup[] groupsSnapshot;
+	synchronized (this) {
+	    if (destroyed) {
+		return 0;
+	    }
+	    ngroupsSnapshot = ngroups;
+	    if (groups != null) {
+		groupsSnapshot = new ThreadGroup[ngroupsSnapshot];
+		System.arraycopy(groups, 0, groupsSnapshot, 0, ngroupsSnapshot);
+	    } else {
+		groupsSnapshot = null;
+	    }
+	}
+	int n = ngroupsSnapshot;
+	for (int i = 0 ; i < ngroupsSnapshot ; i++) {
+	    n += groupsSnapshot[i].activeGroupCount();
 	}
 	return n;
     }
 
     /**
-     * Copies, into the specified array, references to every active Thread group in this Thread 
-     * group.  You can use the activeGroupCount() method to get an estimate of how big
-     * the array should be.
-     * @param list an array of Thread groups
-     * @return the number of Thread groups placed into the array.
+     * Copies into the specified array references to every active 
+     * subgroup in this thread group. 
+     * <p>
+     * First, the <code>checkAccess</code> method of this thread group is 
+     * called with no arguments; this may result in a security exception. 
+     * <p>
+     * An application should use the <code>activeGroupCount</code> 
+     * method to get an estimate of how big the array should be. If the 
+     * array is too short to hold all the thread groups, the extra thread 
+     * groups are silently ignored. 
+     *
+     * @param   list   an array into which to place the list of thread groups.
+     * @return  the number of thread groups put into the array.
+     * @exception  SecurityException  if the current thread does not
+     *               have permission to enumerate this thread group.
+     * @see     java.lang.ThreadGroup#activeGroupCount()
+     * @see     java.lang.ThreadGroup#checkAccess()
+     * @since   JDK1.0
      */
     public int enumerate(ThreadGroup list[]) {
+        checkAccess();
 	return enumerate(list, 0, true);
     }
 
     /**
-     * Copies, into the specified array, references to every active Thread group in this Thread 
-     * group.  You can use the activeGroupCount() method to get an estimate of how big
-     * the array should be.
-     * @param list an array list of Thread groups
-     * @param recurse a boolean indicating if a Thread group has reappeared
-     * @return the number of Thread groups placed into the array.
+     * Copies into the specified array references to every active 
+     * subgroup in this thread group. If the <code>recurse</code> flag is 
+     * <code>true</code>, references to all active subgroups of the 
+     * subgroups and so forth are also included. 
+     * <p>
+     * First, the <code>checkAccess</code> method of this thread group is 
+     * called with no arguments; this may result in a security exception. 
+     * <p>
+     * An application should use the <code>activeGroupCount</code> 
+     * method to get an estimate of how big the array should be. 
+     *
+     * @param   list      an array into which to place the list of threads.
+     * @param   recurse   a flag indicating whether to recursively enumerate
+     *                    all included thread groups.
+     * @return  the number of thread groups put into the array.
+     * @exception  SecurityException  if the current thread does not
+     *               have permission to enumerate this thread group.
+     * @see     java.lang.ThreadGroup#activeGroupCount()
+     * @see     java.lang.ThreadGroup#checkAccess()
+     * @since   JDK1.0
      */
     public int enumerate(ThreadGroup list[], boolean recurse) {
+        checkAccess();
 	return enumerate(list, 0, recurse);
     }
 
-    private synchronized int enumerate(ThreadGroup list[], int n, boolean recurse) {
-	int ng = ngroups;
-	if (ng > list.length - n) {
-	    ng = list.length - n;
-	}
-	if (ng > 0) {
-	    System.arraycopy(groups, 0, list, n, ng);
-	    n += ng;
+    private int enumerate(ThreadGroup list[], int n, boolean recurse) {
+	int ngroupsSnapshot = 0;
+	ThreadGroup[] groupsSnapshot = null;
+	synchronized (this) {
+	    if (destroyed) {
+		return 0;
+	    }
+	    int ng = ngroups;
+	    if (ng > list.length - n) {
+		ng = list.length - n;
+	    }
+	    if (ng > 0) {
+		System.arraycopy(groups, 0, list, n, ng);
+		n += ng;
+	    }
+	    if (recurse) {
+		ngroupsSnapshot = ngroups;
+		if (groups != null) {
+		    groupsSnapshot = new ThreadGroup[ngroupsSnapshot];
+		    System.arraycopy(groups, 0, groupsSnapshot, 0, ngroupsSnapshot);
+		} else {
+		    groupsSnapshot = null;
+		}
+	    }
 	}
 	if (recurse) {
-	    for (int i = 0 ; i < ngroups ; i++) {
-		n = groups[i].enumerate(list, n, true);
+	    for (int i = 0 ; i < ngroupsSnapshot ; i++) {
+		n = groupsSnapshot[i].enumerate(list, n, true);
 	    }
 	}
 	return n;
     }
 
     /**
-     * Stops all the Threads in this Thread group and all of its sub groups.
+     * Stops all threads in this thread group.
+     * <p>
+     * First, the <code>checkAccess</code> method of this thread group is 
+     * called with no arguments; this may result in a security exception. 
+     * <p>
+     * This method then calls the <code>stop</code> method on all the 
+     * threads in this thread group and in all of its subgroups. 
+     *
+     * @exception  SecurityException  if the current thread is not allowed
+     *               to access this thread group or any of the threads in
+     *               the thread group.
+     * @see        java.lang.SecurityException
+     * @see        java.lang.Thread#stop()
+     * @see        java.lang.ThreadGroup#checkAccess()
+     * @since      JDK1.0
+     * @deprecated    This method is inherently unsafe.  See
+     *     {@link Thread#stop} for details.
      */
-    public final synchronized void stop() {
-	checkAccess();
-	for (int i = 0 ; i < ngroups ; i++) {
-	    groups[i].stop();
+    public final void stop() {
+        if (stopOrSuspend(false))
+            Thread.currentThread().stop();
+    }
+
+    /**
+     * Interrupts all threads in this thread group.
+     * <p>
+     * First, the <code>checkAccess</code> method of this thread group is 
+     * called with no arguments; this may result in a security exception. 
+     * <p>
+     * This method then calls the <code>interrupt</code> method on all the 
+     * threads in this thread group and in all of its subgroups.
+     *
+     * @exception  SecurityException  if the current thread is not allowed
+     *               to access this thread group or any of the threads in
+     *               the thread group.
+     * @see        java.lang.Thread#interrupt()
+     * @see        java.lang.SecurityException
+     * @see        java.lang.ThreadGroup#checkAccess()
+     * @since      1.2
+     */
+    public final void interrupt() {
+	int ngroupsSnapshot;
+	ThreadGroup[] groupsSnapshot;
+	synchronized (this) {
+	    checkAccess();
+	    for (int i = 0 ; i < nthreads ; i++) {
+		threads[i].interrupt();
+	    }
+	    ngroupsSnapshot = ngroups;
+	    if (groups != null) {
+		groupsSnapshot = new ThreadGroup[ngroupsSnapshot];
+		System.arraycopy(groups, 0, groupsSnapshot, 0, ngroupsSnapshot);
+	    } else {
+		groupsSnapshot = null;
+	    }
 	}
-	for (int i = 0 ; i < nthreads ; i++) {
-	    threads[i].stop();
+	for (int i = 0 ; i < ngroupsSnapshot ; i++) {
+	    groupsSnapshot[i].interrupt();
 	}
     }
 
     /**
-     * Suspends all the Threads in this Thread group and all of its sub groups.
+     * Suspends all threads in this thread group.
+     * <p>
+     * First, the <code>checkAccess</code> method of this thread group is 
+     * called with no arguments; this may result in a security exception. 
+     * <p>
+     * This method then calls the <code>suspend</code> method on all the 
+     * threads in this thread group and in all of its subgroups. 
+     *
+     * @exception  SecurityException  if the current thread is not allowed
+     *               to access this thread group or any of the threads in
+     *               the thread group.
+     * @see        java.lang.Thread#suspend()
+     * @see        java.lang.SecurityException
+     * @see        java.lang.ThreadGroup#checkAccess()
+     * @since      JDK1.0
+     * @deprecated    This method is inherently deadlock-prone.  See
+     *     {@link Thread#suspend} for details.
      */
-    public final synchronized void suspend() {
-	checkAccess();
-	for (int i = 0 ; i < ngroups ; i++) {
-	    groups[i].suspend();
+    public final void suspend() {
+        if (stopOrSuspend(true))
+            Thread.currentThread().suspend();
+    }
+
+    /**
+     * Helper method: recursively stops or suspends (as directed by the
+     * boolean argument) all of the threads in this thread group and its
+     * subgroups, except the current thread.  This method returns true
+     * if (and only if) the current thread is found to be in this thread
+     * group or one of its subgroups.
+     */
+    private boolean stopOrSuspend(boolean suspend) {
+        boolean suicide = false;
+        Thread us = Thread.currentThread();
+	int ngroupsSnapshot;
+	ThreadGroup[] groupsSnapshot = null;
+	synchronized (this) {
+	    checkAccess();
+	    for (int i = 0 ; i < nthreads ; i++) {
+                if (threads[i]==us)
+                    suicide = true;
+                else if (suspend)
+                    threads[i].suspend();
+                else
+                    threads[i].stop();
+	    }
+
+	    ngroupsSnapshot = ngroups;
+	    if (groups != null) {
+		groupsSnapshot = new ThreadGroup[ngroupsSnapshot];
+		System.arraycopy(groups, 0, groupsSnapshot, 0, ngroupsSnapshot);
+	    }
 	}
-	for (int i = 0 ; i < nthreads ; i++) {
-	    threads[i].suspend();
+	for (int i = 0 ; i < ngroupsSnapshot ; i++)
+	    suicide = groupsSnapshot[i].stopOrSuspend(suspend) || suicide;
+
+        return suicide;
+    }
+
+    /**
+     * Resumes all threads in this thread group.
+     * <p>
+     * First, the <code>checkAccess</code> method of this thread group is 
+     * called with no arguments; this may result in a security exception. 
+     * <p>
+     * This method then calls the <code>resume</code> method on all the 
+     * threads in this thread group and in all of its sub groups. 
+     *
+     * @exception  SecurityException  if the current thread is not allowed to
+     *               access this thread group or any of the threads in the
+     *               thread group.
+     * @see        java.lang.SecurityException
+     * @see        java.lang.Thread#resume()
+     * @see        java.lang.ThreadGroup#checkAccess()
+     * @since      JDK1.0
+     * @deprecated    This method is used solely in conjunction with
+     *      <tt>Thread.suspend</tt> and <tt>ThreadGroup.suspend</tt>,
+     *       both of which have been deprecated, as they are inherently
+     *       deadlock-prone.  See {@link Thread#suspend} for details.
+     */
+    public final void resume() {
+	int ngroupsSnapshot;
+	ThreadGroup[] groupsSnapshot;
+	synchronized (this) {
+	    checkAccess();
+	    for (int i = 0 ; i < nthreads ; i++) {
+		threads[i].resume();
+	    }
+	    ngroupsSnapshot = ngroups;
+	    if (groups != null) {
+		groupsSnapshot = new ThreadGroup[ngroupsSnapshot];
+		System.arraycopy(groups, 0, groupsSnapshot, 0, ngroupsSnapshot);
+	    } else {
+		groupsSnapshot = null;
+	    }
+	}
+	for (int i = 0 ; i < ngroupsSnapshot ; i++) {
+	    groupsSnapshot[i].resume();
 	}
     }
 
     /**
-     * Resumes all the Threads in this Thread group and all of its sub groups.
+     * Destroys this thread group and all of its subgroups. This thread 
+     * group must be empty, indicating that all threads that had been in 
+     * this thread group have since stopped. 
+     * <p>
+     * First, the <code>checkAccess</code> method of this thread group is 
+     * called with no arguments; this may result in a security exception. 
+     *
+     * @exception  IllegalThreadStateException  if the thread group is not
+     *               empty or if the thread group has already been destroyed.
+     * @exception  SecurityException  if the current thread cannot modify this
+     *               thread group.
+     * @see        java.lang.ThreadGroup#checkAccess()
+     * @since      JDK1.0
      */
-    public final synchronized void resume() {
-	checkAccess();
-	for (int i = 0 ; i < ngroups ; i++) {
-	    groups[i].resume();
+    public final void destroy() {
+	int ngroupsSnapshot;
+	ThreadGroup[] groupsSnapshot;
+	synchronized (this) {
+	    checkAccess();
+	    if (destroyed || (nthreads > 0)) {
+		throw new IllegalThreadStateException();
+	    }
+	    ngroupsSnapshot = ngroups;
+	    if (groups != null) {
+		groupsSnapshot = new ThreadGroup[ngroupsSnapshot];
+		System.arraycopy(groups, 0, groupsSnapshot, 0, ngroupsSnapshot);
+	    } else {
+		groupsSnapshot = null;
+	    }
+	    if (parent != null) {
+		destroyed = true;
+		ngroups = 0;
+		groups = null;
+		nthreads = 0;
+		threads = null;
+	    }
 	}
-	for (int i = 0 ; i < nthreads ; i++) {
-	    threads[i].resume();
-	}
-    }
-
-    /**
-     * Destroys a Thread group. This does <b>NOT</b> stop the Threads
-     * in the Thread group.
-     * @exception IllegalThreadStateException If the Thread group is not empty
-     * 		or if the Thread group was already destroyed.
-     */
-    public final synchronized void destroy() {
-	checkAccess();
-	if (destroyed || (nthreads > 0)) {
-	    throw new IllegalThreadStateException();
-	}
-	while (ngroups > 0) {
-	    groups[0].destroy();
+	for (int i = 0 ; i < ngroupsSnapshot ; i += 1) {
+	    groupsSnapshot[i].destroy();
 	}
 	if (parent != null) {
-	    destroyed = true;
-	    groups = null;
-	    threads = null;
 	    parent.remove(this);
 	}
     }
@@ -337,22 +738,24 @@ class ThreadGroup {
      * @param g the specified Thread group to be added
      * @exception IllegalThreadStateException If the Thread group has been destroyed.
      */
-    private final synchronized void add(ThreadGroup g){
-	if (destroyed) {
-	    throw new IllegalThreadStateException();
-	}
-	if (groups == null) {
-	    groups = new ThreadGroup[4];
-	} else if (ngroups == groups.length) {
-	    ThreadGroup newgroups[] = new ThreadGroup[ngroups * 2];
-	    System.arraycopy(groups, 0, newgroups, 0, ngroups);
-	    groups = newgroups;
-	}
-	groups[ngroups] = g;
+    private final void add(ThreadGroup g){
+	synchronized (this) {
+	    if (destroyed) {
+		throw new IllegalThreadStateException();
+	    }
+	    if (groups == null) {
+		groups = new ThreadGroup[4];
+	    } else if (ngroups == groups.length) {
+		ThreadGroup newgroups[] = new ThreadGroup[ngroups * 2];
+		System.arraycopy(groups, 0, newgroups, 0, ngroups);
+		groups = newgroups;
+	    }
+	    groups[ngroups] = g;
 
-	// This is done last so it doesn't matter in case the
-	// thread is killed
-	ngroups++;
+	    // This is done last so it doesn't matter in case the
+	    // thread is killed
+	    ngroups++;
+	}
     }
 
     /**
@@ -360,24 +763,27 @@ class ThreadGroup {
      * @param g the Thread group to be removed
      * @return if this Thread has already been destroyed.
      */
-    private synchronized void remove(ThreadGroup g) {
-	if (destroyed) {
-	    return;
-	}
-	for (int i = 0 ; i < ngroups ; i++) {
-	    if (groups[i] == g) {
-		System.arraycopy(groups, i + 1, groups, i, --ngroups - i);
-		// Zap dangling reference to the dead group so that
-		// the garbage collector will collect it.
-		groups[ngroups] = null;
-		break;
+    private void remove(ThreadGroup g) {
+	synchronized (this) {
+	    if (destroyed) {
+		return;
 	    }
-	}
-	if (nthreads == 0) {
-	    notifyAll();
-	}
-	if (daemon && (nthreads == 0) && (ngroups == 0)) {
-	    destroy();
+	    for (int i = 0 ; i < ngroups ; i++) {
+		if (groups[i] == g) {
+		    ngroups -= 1;
+		    System.arraycopy(groups, i + 1, groups, i, ngroups - i);
+		    // Zap dangling reference to the dead group so that
+		    // the garbage collector will collect it.
+		    groups[ngroups] = null;
+		    break;
+		}
+	    }
+	    if (nthreads == 0) {
+		notifyAll();
+	    }
+	    if (daemon && (nthreads == 0) && (ngroups == 0)) {
+		destroy();
+	    }
 	}
     }
     
@@ -386,22 +792,24 @@ class ThreadGroup {
      * @param t the Thread to be added
      * @exception IllegalThreadStateException If the Thread group has been destroyed.
      */
-    synchronized void add(Thread t) {
-	if (destroyed) {
-	    throw new IllegalThreadStateException();
-	}
-	if (threads == null) {
-	    threads = new Thread[4];
-	} else if (nthreads == threads.length) {
-	    Thread newthreads[] = new Thread[nthreads * 2];
-	    System.arraycopy(threads, 0, newthreads, 0, nthreads);
-	    threads = newthreads;
-	}
-	threads[nthreads] = t;
+    void add(Thread t) {
+	synchronized (this) {
+	    if (destroyed) {
+		throw new IllegalThreadStateException();
+	    }
+	    if (threads == null) {
+		threads = new Thread[4];
+	    } else if (nthreads == threads.length) {
+		Thread newthreads[] = new Thread[nthreads * 2];
+		System.arraycopy(threads, 0, newthreads, 0, nthreads);
+		threads = newthreads;
+	    }
+	    threads[nthreads] = t;
 
-	// This is done last so it doesn't matter in case the
-	// thread is killed
-	nthreads++;
+	    // This is done last so it doesn't matter in case the
+	    // thread is killed
+	    nthreads++;
+	}
     }
 
     /**
@@ -409,53 +817,93 @@ class ThreadGroup {
      * @param t the Thread to be removed
      * @return if the Thread has already been destroyed.
      */
-    synchronized void remove(Thread t) {
-	if (destroyed) {
-	    return;
-	}
-	for (int i = 0 ; i < nthreads ; i++) {
-	    if (threads[i] == t) {
-		System.arraycopy(threads, i + 1, threads, i, --nthreads - i);
-		// Zap dangling reference to the dead thread so that
-		// the garbage collector will collect it.
-		threads[nthreads] = null;
-		break;
+    void remove(Thread t) {
+	synchronized (this) {
+	    if (destroyed) {
+		return;
 	    }
-	}
-	if (nthreads == 0) {
-	    notifyAll();
-	}
-	if (daemon && (nthreads == 0) && (ngroups == 0)) {
-	    destroy();
+	    for (int i = 0 ; i < nthreads ; i++) {
+		if (threads[i] == t) {
+		    System.arraycopy(threads, i + 1, threads, i, --nthreads - i);
+		    // Zap dangling reference to the dead thread so that
+		    // the garbage collector will collect it.
+		    threads[nthreads] = null;
+		    break;
+		}
+	    }
+	    if (nthreads == 0) {
+		notifyAll();
+	    }
+	    if (daemon && (nthreads == 0) && (ngroups == 0)) {
+		destroy();
+	    }
 	}
     }
 
     /**
-     * Lists this Thread group. Useful for debugging only.
+     * Prints information about this thread group to the standard 
+     * output. This method is useful only for debugging. 
+     *
+     * @since   JDK1.0
      */
-     public synchronized void list() {
+    public void list() {
 	list(System.out, 0);
-     }
-     void list(PrintStream out, int indent) {
-	for (int j = 0 ; j < indent ; j++) {
-	    out.print(" ");
-	}
-	out.println(this);
-	indent += 4;
-	for (int i = 0 ; i < nthreads ; i++) {
+    }
+    void list(PrintStream out, int indent) {
+	int ngroupsSnapshot;
+	ThreadGroup[] groupsSnapshot;
+	synchronized (this) {
 	    for (int j = 0 ; j < indent ; j++) {
 		out.print(" ");
 	    }
-	    out.println(threads[i]);
+	    out.println(this);
+	    indent += 4;
+	    for (int i = 0 ; i < nthreads ; i++) {
+		for (int j = 0 ; j < indent ; j++) {
+		    out.print(" ");
+		}
+		out.println(threads[i]);
+	    }
+	    ngroupsSnapshot = ngroups;
+	    if (groups != null) {
+		groupsSnapshot = new ThreadGroup[ngroupsSnapshot];
+		System.arraycopy(groups, 0, groupsSnapshot, 0, ngroupsSnapshot);
+	    } else {
+		groupsSnapshot = null;
+	    }
 	}
-	for (int i = 0 ; i < ngroups ; i++) {
-	    groups[i].list(out, indent);
+	for (int i = 0 ; i < ngroupsSnapshot ; i++) {
+	    groupsSnapshot[i].list(out, indent);
 	}
-     }
+    }
 
     /**
-     * Called when a thread in this group exists because of
-     * an uncaught exception.
+     * Called by the Java Virtual Machine when a thread in this 
+     * thread group stops because of an uncaught exception. 
+     * <p>
+     * The <code>uncaughtException</code> method of 
+     * <code>ThreadGroup</code> does the following: 
+     * <ul>
+     * <li>If this thread group has a parent thread group, the
+     *     <code>uncaughtException</code> method of that parent is called
+     *     with the same two arguments. 
+     * <li>Otherwise, this method determines if the <code>Throwable</code>
+     *     argument is an instance of <code>ThreadDeath</code>. If so, nothing
+     *     special is done. Otherwise, the <code>Throwable</code>'s
+     *     <code>printStackTrace</code> method is called to print a stack
+     *     backtrace to the standard error stream.
+     * </ul>
+     * <p>
+     * Applications can override this method in subclasses of 
+     * <code>ThreadGroup</code> to provide alternative handling of 
+     * uncaught exceptions. 
+     *
+     * @param   t   the thread that is about to exit.
+     * @param   e   the uncaught exception.
+     * @see     java.lang.System#err
+     * @see     java.lang.ThreadDeath
+     * @see     java.lang.Throwable#printStackTrace(java.io.PrintStream)
+     * @since   JDK1.0
      */
     public void uncaughtException(Thread t, Throwable e) {
 	if (parent != null) {
@@ -466,7 +914,28 @@ class ThreadGroup {
     }
 
     /**
-     * Returns a String representation of the Thread group.
+     * Used by VM to control lowmem implicit suspension.
+     *
+     * @param b boolean to allow or disallow suspension
+     * @return true on success
+     * @since   JDK1.1
+     * @deprecated The definition of this call depends on {@link #suspend},
+     *		   which is deprecated.  Further, the behavior of this call
+     *		   was never specified.
+     */
+    public boolean allowThreadSuspension(boolean b) {
+	this.vmAllowSuspension = b;
+	if (!b) {
+	    VM.unsuspendSomeThreads();
+	}
+	return true;
+    }
+
+    /**
+     * Returns a string representation of this Thread group.
+     *
+     * @return  a string representation of this thread group.
+     * @since   JDK1.0
      */
     public String toString() {
 	return getClass().getName() + "[name=" + getName() + ",maxpri=" + maxPriority + "]";
